@@ -9,7 +9,9 @@ private:
     TreeNode* rightSon;
     TreeNode* leftSon;
     long data;
+    bool symbol;
 public:
+    TreeNode();
     TreeNode(long data);
     TreeNode(const TreeNode& other);
     TreeNode& operator=(const TreeNode& other);
@@ -24,6 +26,7 @@ public:
     inline TreeNode* getRightSon() const {return rightSon;}
     inline TreeNode* getLeftSon() const {return leftSon;}
     inline long getData() const{return data;}
+    inline bool getIsSymbol() const{return symbol;}
 };
 
 class ParseTree{
@@ -60,6 +63,13 @@ private:
     int size;
     void copy(const ParseTree& other);
     void clear();
+};
+
+class Context: public ParseTree{
+public:
+    Context(ParseTree*, TreeNode*);
+private:
+    void removeSubtree(TreeNode*);
 };
 
 #endif //GENEALIGNER_PARSETREE_H

@@ -5,9 +5,12 @@ using namespace std;
 
 typedef pair<TreeNode*, TreeNode*> nodePair;
 
-TreeNode::TreeNode(long data):rightSon(nullptr),leftSon(nullptr),data(data){}
+TreeNode::TreeNode():rightSon(nullptr),leftSon(nullptr),data(-1),symbol(true){
+}
 
-TreeNode::TreeNode(const TreeNode& other):rightSon(nullptr),leftSon(nullptr),data(other.data){}
+TreeNode::TreeNode(long data):rightSon(nullptr),leftSon(nullptr),data(data),symbol(false){}
+
+TreeNode::TreeNode(const TreeNode& other):rightSon(nullptr),leftSon(nullptr),data(other.data),symbol(other.symbol){}
 
 TreeNode& TreeNode::operator=(const TreeNode& other){
     if(this==&other){
@@ -16,10 +19,11 @@ TreeNode& TreeNode::operator=(const TreeNode& other){
     rightSon = nullptr;
     leftSon = nullptr;
     data = other.data;
+    symbol = other.symbol;
     return *this;
 }
 
-TreeNode::TreeNode(TreeNode&& other) noexcept:rightSon(other.rightSon),leftSon(other.leftSon),data(other.data){
+TreeNode::TreeNode(TreeNode&& other) noexcept:rightSon(other.rightSon),leftSon(other.leftSon),data(other.data),symbol(other.symbol){
     other.rightSon = nullptr;
     other.leftSon = nullptr;
 }
@@ -33,6 +37,7 @@ TreeNode& TreeNode::operator=(TreeNode&& other) noexcept{
     other.rightSon = nullptr;
     other.leftSon = nullptr;
     data = other.data;
+    symbol = other.symbol;
     return *this;
 }
 
@@ -122,6 +127,14 @@ void ParseTree::clear(){
         }
         delete(curr);
     }
+}
+
+Context::Context(ParseTree* tree, TreeNode* node):ParseTree(*tree){
+    removeSubtree(node);
+}
+
+void Context::removeSubtree(TreeNode* node){
+
 }
 
 ParseTree::iterator::iterator(const ParseTree& tree):stack(),currNode(tree.root),currStr(),locIterator(false){
