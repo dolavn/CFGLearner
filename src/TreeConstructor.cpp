@@ -42,22 +42,22 @@ int TreeConstructor::createTree(const Sequence& seq){
 
 ParseTree* TreeConstructor::traceback(const Trees::dpTable& table, const Sequence& seq){
     typedef pair<int, int> intTuple;
-    typedef pair<TreeNode*, intTuple> stackPair;
+    typedef pair<ParseTree*, intTuple> stackPair;
     stack<stackPair> buildStack;
-    auto root = new TreeNode(0);
+    auto root = new ParseTree(0);
     intTuple rootTup = intTuple(0, seq.getLength()-1);
     buildStack.emplace(root, rootTup);
     while(!buildStack.empty()){
-        auto top = buildStack.top(); TreeNode* node = top.first; intTuple currTup = top.second;
+        auto top = buildStack.top(); ParseTree* node = top.first; intTuple currTup = top.second;
         //cout << currTup.first << "," << currTup.second << endl;
         //cout << "visiting" << endl;
         buildStack.pop();
         if(currTup.first!=currTup.second){ //Node is an internal node
             int k = currTup.second==currTup.first+1?currTup.first:table.getTrace(currTup.first, currTup.second);
             //cout << "[" << currTup.first << "," << k << "] [" << k+1 << "," << currTup.second << "]" << endl;
-            auto rightNode = new TreeNode(0);
-            auto leftNode = new TreeNode(0);
-            node->setRightSon(rightNode); node->setLeftSon(leftNode);
+            auto rightNode = new ParseTree(0);
+            auto leftNode = new ParseTree(0);
+            node->setRightPointer(rightNode); node->setLeftPointer(leftNode);
             buildStack.emplace(leftNode, intTuple(currTup.first, k));
             buildStack.emplace(rightNode, intTuple(k+1, currTup.second));
         }else{ //Node is a leaf
@@ -65,7 +65,7 @@ ParseTree* TreeConstructor::traceback(const Trees::dpTable& table, const Sequenc
             //cout << "data:" << node->getData() << "addr:" << node <<  endl;
         }
     }
-    return new ParseTree(root);
+    return root;
 }
 
 ParseTree* TreeConstructor::getTree(){
