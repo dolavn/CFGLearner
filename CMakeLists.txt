@@ -4,13 +4,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 14)
 
 add_subdirectory(tests)
+
+SET (SRCS src/ParseTree.cpp
+          src/TreeConstructor.cpp
+          src/Sequence.cpp
+          src/TreeAcceptor.cpp)
+
 add_library(mainProg
-        src/ParseTree.cpp
-        src/TreeConstructor.cpp
-        src/Sequence.cpp)
+        ${SRCS})
 include_directories(include)
 add_executable(CFGLearner
-        src/ParseTree.cpp
-        src/TreeConstructor.cpp
-        src/Sequence.cpp
-        include/TreeAcceptor.h include/Teacher.h include/Learner.h)
+        ${SRCS})

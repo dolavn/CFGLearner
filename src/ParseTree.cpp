@@ -13,10 +13,11 @@ ParseTree::ParseTree(bool context,bool context2):empty(true),data(0),isContext(c
 
 }
 
-ParseTree::ParseTree(long data):empty(false),data(data), isContext(false),leftSubtree(nullptr), rightSubtree(nullptr){}
+ParseTree::ParseTree(int data):empty(false),data(data), isContext(false),leftSubtree(nullptr), rightSubtree(nullptr){}
 
+ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data), isContext(false),leftSubtree(new ParseTree(v[0])), rightSubtree(new ParseTree(v[1])){}
 
-ParseTree::ParseTree(long data, bool context):empty(false),data(data), isContext(context),leftSubtree(nullptr), rightSubtree(nullptr){}
+ParseTree::ParseTree(int data, bool context):empty(false),data(data), isContext(context),leftSubtree(nullptr), rightSubtree(nullptr){}
 
 ParseTree::ParseTree(const ParseTree& other):data(other.data),isContext(other.isContext),size(other.size),leftSubtree(nullptr), rightSubtree(nullptr){
     copy(other);
@@ -66,6 +67,10 @@ ParseTree::indexIterator ParseTree::getIndexIterator(){
     return ParseTree::indexIterator(*this);
 }
 
+ParseTree::indexIterator ParseTree::getLeafIterator(){
+    return ParseTree::indexIterator(*this,true);
+}
+
 void ParseTree::copy(const ParseTree& other){
     typedef std::pair<ParseTree*,const ParseTree*> treePair;
     stack<treePair> callStack;
@@ -102,20 +107,6 @@ void ParseTree::clear(){
     }
 }
 
-void ParseTree::removeLeftSubtree(){
-    if(leftSubtree){
-        delete(leftSubtree);
-        leftSubtree = nullptr;
-    }
-}
-
-void ParseTree::removeRightSubtree(){
-    if(rightSubtree){
-        delete(rightSubtree);
-        rightSubtree = nullptr;
-    }
-}
-
 ParseTree* ParseTree::getSubtree(string string){
     stack<ParseTree*> stack;
     stack.push(this);
@@ -133,11 +124,28 @@ ParseTree* ParseTree::getSubtree(string string){
     }
 }
 
-const ParseTree& ParseTree::operator[](string string){
-    return *getSubtree(std::move(string));
+ParseTree& ParseTree::operator[](string str){
+    return *getSubtree(std::move(str));
 }
 
-std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(std::string str){
+const ParseTree& ParseTree::getNode(string str) const{
+    stack<const ParseTree*> stack;
+    stack.push(this);
+    const char* currStr = str.c_str();
+    while(!stack.empty()){
+        const ParseTree& currTree = *stack.top();
+        stack.pop();
+        if(!*currStr){return currTree;}
+        ParseTree* next = *currStr=='1'?currTree.rightSubtree:currTree.leftSubtree;
+        if(!next){
+            throw std::invalid_argument("Index out of bounds");
+        }
+        currStr++;
+        stack.push(next);
+    }
+}
+
+std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(std::string str) const{
     std::string loc;
     auto context = new ParseTree(true,true);
     auto tree = new ParseTree();
@@ -214,6 +222,18 @@ void ParseTree::setLeftSubtree(const ParseTree & left) {
     leftSubtree = new ParseTree(left);
 }
 
+bool ParseTree::isLeaf() const{
+    return leftSubtree==nullptr && rightSubtree==nullptr;
+}
+
+ParseTree ParseTree::getSkeleton() const{
+     ParseTree ans(*this);
+     for(auto it=ans.getIndexIterator();it.hasNext();++it){
+         (ans)[*it].setData(-1);
+     }
+     return ans;
+}
+
 ParseTree::iterator::iterator(ParseTree& tree):currNode(&tree),stack(),currStr(){
 }
 
@@ -230,22 +250,30 @@ ParseTree::iterator& ParseTree::iterator::operator++(){
     return *this;
 }
 
-long ParseTree::iterator::operator*() const{
+int ParseTree::iterator::operator*() const{
     if(currNode==nullptr){
         throw runtime_error("No next node!");
     }
     return currNode->data;
 }
 
-long* ParseTree::iterator::operator->() const{
+int* ParseTree::iterator::operator->() const{
     if(currNode==nullptr){
         throw runtime_error("No next node!");
     }
     return &currNode->data;
 }
 
-ParseTree::indexIterator::indexIterator(ParseTree& tree):currNode(&tree),currStr(){
+ParseTree::indexIterator::indexIterator(ParseTree& tree):currNode(&tree),currStr(),leaves(false){
 
+}
+
+ParseTree::indexIterator::indexIterator(ParseTree& tree,bool leaves):currNode(&tree),currStr(),leaves(leaves){
+    if(leaves){
+        if(!currNode->isLeaf()){
+            operator++();
+        }
+    }
 }
 
 bool ParseTree::indexIterator::hasNext(){
@@ -254,7 +282,9 @@ bool ParseTree::indexIterator::hasNext(){
 
 ParseTree::indexIterator& ParseTree::indexIterator::operator++(){
     stackPair p(currNode, currStr);
-    p = incStack(stack, p);
+    do{
+        p = incStack(stack,p);
+    }while(leaves && p.first!=nullptr && !p.first->isLeaf());
     currNode = p.first;
     currStr = p.second;
     return *this;
