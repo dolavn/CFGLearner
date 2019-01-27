@@ -8,7 +8,9 @@ add_subdirectory(tests)
 SET (SRCS src/ParseTree.cpp
           src/TreeConstructor.cpp
           src/Sequence.cpp
-          src/TreeAcceptor.cpp)
+          src/TreeAcceptor.cpp
+          src/SimpleTeacher.cpp
+          src/Learner.cpp)
 
 add_library(mainProg
         ${SRCS})

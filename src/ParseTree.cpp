@@ -3,23 +3,26 @@
 #include <iostream> //TODO: Delete
 #include <ParseTree.h>
 
+#define IS_NULL(A)  A==nullptr
 
 using namespace std;
 
 
-ParseTree::ParseTree():empty(true),data(0),leftSubtree(nullptr), rightSubtree(nullptr){}
+ParseTree::ParseTree():empty(true),data(0),isContext(false),contextLoc(),leftSubtree(nullptr), rightSubtree(nullptr){}
 
-ParseTree::ParseTree(bool context,bool context2):empty(true),data(0),isContext(context),leftSubtree(nullptr),rightSubtree(nullptr){
-
+ParseTree::ParseTree(bool context,std::string contextLoc):empty(true),data(0),isContext(context),contextLoc(contextLoc),leftSubtree(nullptr),rightSubtree(nullptr){
+    if(!context){contextLoc="";}
 }
 
-ParseTree::ParseTree(int data):empty(false),data(data), isContext(false),leftSubtree(nullptr), rightSubtree(nullptr){}
+ParseTree::ParseTree(int data):empty(false),data(data), isContext(false),contextLoc(),leftSubtree(nullptr), rightSubtree(nullptr){}
 
-ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data), isContext(false),leftSubtree(new ParseTree(v[0])), rightSubtree(new ParseTree(v[1])){}
+ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data), isContext(false),contextLoc(),leftSubtree(new ParseTree(v[0])), rightSubtree(new ParseTree(v[1])){}
 
-ParseTree::ParseTree(int data, bool context):empty(false),data(data), isContext(context),leftSubtree(nullptr), rightSubtree(nullptr){}
+ParseTree::ParseTree(int data, bool context, std::string contextLoc):empty(false),data(data),isContext(context),contextLoc(contextLoc),leftSubtree(nullptr), rightSubtree(nullptr){
+    if(!context){contextLoc="";}
+}
 
-ParseTree::ParseTree(const ParseTree& other):data(other.data),isContext(other.isContext),size(other.size),leftSubtree(nullptr), rightSubtree(nullptr){
+ParseTree::ParseTree(const ParseTree& other):data(other.data),isContext(other.isContext),contextLoc(other.contextLoc),size(other.size),leftSubtree(nullptr), rightSubtree(nullptr){
     copy(other);
 }
 
@@ -30,11 +33,12 @@ ParseTree& ParseTree::operator=(const ParseTree& other){
     clear();
     size = other.size;
     isContext = other.isContext;
+    contextLoc = other.contextLoc;
     copy(other);
     return *this;
 }
 
-ParseTree::ParseTree(ParseTree&& other) noexcept:leftSubtree(other.leftSubtree),rightSubtree(other.rightSubtree),data(other.data),size(other.size),isContext(other.isContext){
+ParseTree::ParseTree(ParseTree&& other) noexcept:data(other.data),isContext(other.isContext),contextLoc(other.contextLoc),leftSubtree(other.leftSubtree),rightSubtree(other.rightSubtree),size(other.size){
     other.leftSubtree = nullptr;
     other.rightSubtree = nullptr;
     other.size = 0;
@@ -147,7 +151,7 @@ const ParseTree& ParseTree::getNode(string str) const{
 
 std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(std::string str) const{
     std::string loc;
-    auto context = new ParseTree(true,true);
+    auto context = new ParseTree(true,str);
     auto tree = new ParseTree();
     stack<stackElem> stack;
     stack.emplace(context,this,"");
@@ -165,17 +169,36 @@ std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(std::string str) const{
         }
         currTree->data = otherTree->data;
         if(otherTree->rightSubtree){
-            auto newRight = new ParseTree(true,true);
+            bool isContext = str.substr(0,curr_str.size()+1)==curr_str + "1";
+            auto newRight = new ParseTree(isContext,str.substr(curr_str.size()+1));
             currTree->rightSubtree = newRight;
             stack.emplace(newRight, otherTree->rightSubtree, curr_str + "1");
         }
         if(otherTree->leftSubtree){
-            auto newLeft = new ParseTree(true,true);
+            bool isContext = str.substr(0,curr_str.size()+1)==curr_str + "0";
+            auto newLeft = new ParseTree(isContext,str.substr(curr_str.size()+1));
             currTree->leftSubtree = newLeft;
             stack.emplace(newLeft, otherTree->leftSubtree, curr_str + "0");
         }
     }
     return {context,tree};
+}
+
+ParseTree* ParseTree::mergeContext(const ParseTree& other) const{
+    if(!this->isContext){
+        throw std::invalid_argument("Tree must be a context");
+    }
+    auto ans = new ParseTree(*this);
+    ans->isContext = false;
+    ans->contextLoc = "";
+    (*ans)[contextLoc].setData(other.getData());
+    if(other.leftSubtree){
+        (*ans)[contextLoc].setLeftPointer(new ParseTree(*other.leftSubtree));
+    }
+    if(other.rightSubtree){
+        (*ans)[contextLoc].setRightPointer(new ParseTree(*other.rightSubtree));
+    }
+    return ans;
 }
 
 ParseTree::stackPair ParseTree::incStack(stack<stackPair>& stack, stackPair& currPair){
@@ -295,4 +318,16 @@ std::string ParseTree::indexIterator::operator*() const{
         throw runtime_error("No next node!");
     }
     return currStr;
+}
+
+bool operator==(const ParseTree& lhs, const ParseTree& rhs){
+    if((IS_NULL(lhs.leftSubtree) ||  IS_NULL(rhs.leftSubtree)) && !(IS_NULL(lhs.leftSubtree) && IS_NULL(rhs.leftSubtree))){ //only one left son is null
+        return false;
+    }
+    if((IS_NULL(lhs.rightSubtree) ||  IS_NULL(rhs.rightSubtree)) && !(IS_NULL(lhs.rightSubtree) && IS_NULL(rhs.rightSubtree))){ //only one right son is null
+        return false;
+    }
+    bool leftSon = IS_NULL(lhs.leftSubtree) || *lhs.leftSubtree==*rhs.leftSubtree;
+    bool rightSon = IS_NULL(lhs.rightSubtree) || *lhs.rightSubtree==*rhs.rightSubtree;
+    return lhs.data == rhs.data && leftSon && rightSon;
 }

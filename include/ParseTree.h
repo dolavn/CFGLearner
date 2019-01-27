@@ -13,6 +13,7 @@ private:
     void copy(const ParseTree& other);
     void clear();
     bool isContext;
+    std::string contextLoc;
     bool empty;
     static stackPair incStack(std::stack<stackPair>&, stackPair&);
     ParseTree* getSubtree(std::string);
@@ -22,6 +23,7 @@ private:
         ParseTree* curr;
         const ParseTree* other;
         std::string str;
+        stackElem(ParseTree* curr, const ParseTree* other, std::string str):curr(curr),other(other),str(str){}
     };
 public:
     class iterator{
@@ -60,15 +62,17 @@ public:
         bool leaves;
     };
     ParseTree();
-    ParseTree(bool context,bool context2);
-    ParseTree(int data);
-    ParseTree(int data, std::vector<ParseTree>);
-    ParseTree(int data, bool context);
-    ParseTree(const ParseTree& other);
-    ParseTree& operator=(const ParseTree& other);
-    ParseTree(ParseTree&& other) noexcept;
-    ParseTree& operator=(ParseTree&& other) noexcept;
+    ParseTree(bool,std::string);
+    ParseTree(int);
+    ParseTree(int, std::vector<ParseTree>);
+    ParseTree(int, bool,std::string);
+    ParseTree(const ParseTree&);
+    ParseTree& operator=(const ParseTree&);
+    ParseTree(ParseTree&&) noexcept;
+    ParseTree& operator=(ParseTree&&) noexcept;
     ParseTree& operator[](std::string);
+    friend bool operator==(const ParseTree&, const ParseTree&);
+    inline friend bool operator!=(const ParseTree& lhs, const ParseTree& rhs){return !(lhs==rhs);}
     const ParseTree& getNode(std::string) const;
     iterator getIterator();
     indexIterator getIndexIterator();
@@ -79,14 +83,16 @@ public:
     void setLeftSubtree(const ParseTree&);
     bool hasRightSubtree() const{return rightSubtree!=nullptr;}
     bool hasLeftSubtree() const{return leftSubtree!=nullptr;}
-    void setData(long data){this->data = data;this->empty=false;}
+    void setData(int data){this->data = data;this->empty=false;}
     bool isLeaf() const;
+    inline bool getIsContext() const{return isContext;}
     inline bool isEmpty() const{return empty;}
     int getData() const{return this->data;}
+    std::string getContextLoc() const{return this->contextLoc;}
     std::pair<ParseTree*,ParseTree*> makeContext(std::string) const;
+    ParseTree* mergeContext(const ParseTree&) const;
     ParseTree getSkeleton() const;
     ~ParseTree();
 };
-
 
 #endif //GENEALIGNER_PARSETREE_H

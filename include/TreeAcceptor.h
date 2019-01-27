@@ -5,10 +5,10 @@
 #ifndef CFGLEARNER_TREEACCEPTOR_H
 #define CFGLEARNER_TREEACCEPTOR_H
 
-#include <set>
 #include <unordered_map>
 #include <vector>
 #include "ParseTree.h"
+#include <set>
 #include <boost/functional/hash.hpp>
 
 struct rankedChar{
@@ -40,7 +40,7 @@ public:
 
 private:
     typedef std::vector<int> intVec;
-    template <typename Container> // we can make this generic for any container [1]
+    template <typename Container>
     struct container_hash {
         std::size_t operator()(Container const& c) const {
             return boost::hash_range(c.begin(), c.end());
