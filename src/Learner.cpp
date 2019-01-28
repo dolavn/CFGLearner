@@ -166,12 +166,13 @@ void addTransition(observationTable& s, TreeAcceptor& acc, const ParseTree& tree
     }
     int targetState = s.getSObsInd(tree);
     rankedChar c{value,(int)(states.size())};
+    //TODO: delete this section
     string vecStr = "[";
     for(auto state: states){
         vecStr = vecStr + (char)(state+'0') + " , ";
     }
     vecStr = vecStr + "]";
-    std::cerr << vecStr << " - " << value << " - " << targetState << std::endl;
+    //std::cerr << vecStr << " - " << value << " - " << targetState << std::endl;
     acc.addTransition(states,c,targetState);
 }
 
