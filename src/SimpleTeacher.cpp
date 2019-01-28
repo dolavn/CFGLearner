@@ -25,7 +25,7 @@ SimpleTeacher::SimpleTeacher(SimpleTeacher&& other) noexcept:positiveExamples(st
 
 }
 
-SimpleTeacher& SimpleTeacher::operator=(SimpleTeacher&& other){
+SimpleTeacher& SimpleTeacher::operator=(SimpleTeacher&& other) noexcept{
     if(this==&other){
         return *this;
     }
