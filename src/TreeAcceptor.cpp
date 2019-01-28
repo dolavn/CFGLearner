@@ -8,7 +8,8 @@
 
 using namespace std;
 
-TreeAcceptor::TreeAcceptor(set<rankedChar> alphabet):statesNum(0),acceptingStates(),alphabet(std::move(alphabet)),transitions(){
+TreeAcceptor::
+TreeAcceptor(set<rankedChar> alphabet):statesNum(0),acceptingStates(),alphabet(std::move(alphabet)),transitions(){
 
 }
 
@@ -33,6 +34,11 @@ void TreeAcceptor::addTransition(std::vector<int> states, rankedChar c, int targ
     }
     transition t{states,c,targetState};
     transitionPairVec& v = transitions[states];
+    for(auto& pair: v){
+        if(pair.first==c){
+            return;
+        }
+    }
     v.emplace_back(c,t);
 }
 

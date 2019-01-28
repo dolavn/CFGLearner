@@ -23,12 +23,12 @@ private:
         ParseTree* curr;
         const ParseTree* other;
         std::string str;
-        stackElem(ParseTree* curr, const ParseTree* other, std::string str):curr(curr),other(other),str(str){}
+        stackElem(ParseTree* curr, const ParseTree* other, std::string str):curr(curr),other(other),str(std::move(str)){}
     };
 public:
     class iterator{
     public:
-        iterator(ParseTree&);
+        explicit iterator(ParseTree&);
         bool hasNext();
         int operator*() const;
         int* operator->() const;
@@ -45,7 +45,7 @@ public:
     };
     class indexIterator{
     public:
-        indexIterator(ParseTree&);
+        explicit indexIterator(ParseTree&);
         indexIterator(ParseTree&,bool);
         bool hasNext();
         std::string operator*() const;
@@ -63,7 +63,7 @@ public:
     };
     ParseTree();
     ParseTree(bool,std::string);
-    ParseTree(int);
+    explicit ParseTree(int);
     ParseTree(int, std::vector<ParseTree>);
     ParseTree(int, bool,std::string);
     ParseTree(const ParseTree&);

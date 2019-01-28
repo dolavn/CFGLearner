@@ -17,6 +17,7 @@ public:
     virtual bool membership(const ParseTree&) const=0;
     virtual ParseTree* equivalence(const TreeAcceptor&) const=0;
     virtual Teacher* clone()=0;
+    virtual ~Teacher()=default;
 };
 
 class SimpleTeacher: public Teacher{
@@ -25,15 +26,15 @@ public:
     SimpleTeacher(const SimpleTeacher&);
     SimpleTeacher& operator=(const SimpleTeacher&);
     SimpleTeacher(SimpleTeacher&&) noexcept;
-    SimpleTeacher& operator=(SimpleTeacher&&);
-    ~SimpleTeacher();
+    SimpleTeacher& operator=(SimpleTeacher&&) noexcept;
+    ~SimpleTeacher() override;
 
     void addPositiveExample(const ParseTree&);
     void addNegativeExample(const ParseTree&);
 
-    bool membership(const ParseTree&) const;
-    ParseTree* equivalence(const TreeAcceptor&) const;
-    Teacher* clone();
+    bool membership(const ParseTree&) const override;
+    ParseTree* equivalence(const TreeAcceptor&) const override;
+    Teacher* clone() override;
 private:
     void copy(const SimpleTeacher&);
     void clear();

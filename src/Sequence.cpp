@@ -1,6 +1,6 @@
 #include "Sequence.h"
 #include <iostream>
-
+#include <vector>
 using namespace std;
 
 ostream& operator<<(ostream& stream, const Sequence& seq){

@@ -15,8 +15,8 @@ struct rankedChar{
     int c;
     int rank;
 
-    bool operator==(const rankedChar& other){
-        return c==other.c && rank==other.rank;
+    friend inline bool operator==(const rankedChar& lhs,const rankedChar& rhs){
+        return lhs.c==rhs.c && lhs.rank==rhs.rank;
     }
 
     friend inline bool operator<(const rankedChar& lhs,const rankedChar& rhs){
@@ -29,7 +29,7 @@ struct rankedChar{
 
 class TreeAcceptor{
 public:
-    TreeAcceptor(std::set<rankedChar>); //Empty constructor
+    explicit TreeAcceptor(std::set<rankedChar>); //Empty constructor
     TreeAcceptor(std::set<rankedChar>, int); //Constructs a tree acceptor with n states
     void setAccepting(int,bool);
     inline int getStatesNum(){return statesNum;}
@@ -50,6 +50,10 @@ private:
         const intVec statesSeq;
         const rankedChar c;
         const int targetState;
+
+        inline friend bool operator==(const transition& lhs, const transition& rhs){
+            return lhs.statesSeq==rhs.statesSeq && lhs.c==rhs.c && lhs.targetState == rhs.targetState;
+        }
     };
     typedef std::pair<rankedChar,transition> transitionPair;
     typedef std::vector<transitionPair> transitionPairVec;
