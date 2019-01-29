@@ -18,9 +18,10 @@ TreeAcceptor learn(const Teacher&);
 void initLearner(const Teacher&);
 void learnerAddTree(const ParseTree&);
 void learnerAddContext(const ParseTree&);
+void learnerExtend(const ParseTree&);
 std::vector<bool> learnerGetObs(const ParseTree&);
 void clearLearner();
 TreeAcceptor learnerSynthesize();
-
+std::pair<ParseTree*,ParseTree*> learnerDecompose(ParseTree&);
 
 #endif //CFGLEARNER_LEARNER_H

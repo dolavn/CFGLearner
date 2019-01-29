@@ -21,6 +21,15 @@ Teacher* getTeacher(){
     return teacher;
 }
 
+Teacher* getTeacher2(){
+    ParseTree t(0,{ParseTree(1),ParseTree(2)});
+    ParseTree t2(0,{ParseTree(2),ParseTree(1)});
+    auto teacher = new SimpleTeacher();
+    teacher->addPositiveExample(t);
+    teacher->addNegativeExample(t2);
+    return teacher;
+}
+
 void clearTeacher(Teacher* t){
     if(t){
         delete(t);
@@ -73,6 +82,58 @@ TEST(learner_test, synthesize_test){
     ASSERT_EQ(acc.run(t),false);
     delete(con.first);
     delete(con.second);
+    clearLearner();
+    clearTeacher(teacher);
+}
+
+TEST(learner_test, decompose_test){
+    Teacher* teacher = getTeacher();
+    initLearner(*teacher);
+    ParseTree t(0);
+    ParseTree t2(1,{ParseTree(1,{ParseTree(0),ParseTree(0)}),ParseTree(0)});
+    pair<ParseTree*,ParseTree*> pObserved = learnerDecompose(t2);
+    pair<ParseTree*,ParseTree*> pExpected = t2.makeContext("00");
+    ASSERT_EQ(*pObserved.first,*pExpected.first);
+    ASSERT_EQ(*pObserved.second,*pExpected.second);
+    learnerAddTree(*pObserved.second);
+    delete(pObserved.first); delete(pObserved.second);
+    delete(pExpected.first); delete(pExpected.second);
+    pObserved = learnerDecompose(t2);
+    pExpected = t2.makeContext("0");
+    ASSERT_EQ(*pObserved.first,*pExpected.first);
+    ASSERT_EQ(*pObserved.second,*pExpected.second);
+    learnerAddTree(*pObserved.second);
+    delete(pObserved.first); delete(pObserved.second);
+    delete(pExpected.first); delete(pExpected.second);
+    pObserved = learnerDecompose(t2);
+    pExpected = t2.makeContext("0");
+    ASSERT_EQ(*pObserved.first,*pExpected.first);
+    ASSERT_EQ(*pObserved.second,*pExpected.second);
+    delete(pObserved.first); delete(pObserved.second);
+    delete(pExpected.first); delete(pExpected.second);
+    ParseTree t3(1,{ParseTree(0),ParseTree(0)});
+    pair<ParseTree*,ParseTree*> context = t3.makeContext("0");
+    learnerAddContext(*context.first);
+    delete(context.first); delete(context.second);
+    pObserved = learnerDecompose(t2);
+    pExpected = t2.makeContext("");
+    ASSERT_EQ(*pObserved.first,*pExpected.first);
+    ASSERT_EQ(*pObserved.second,*pExpected.second);
+    delete(pObserved.first); delete(pObserved.second);
+    delete(pExpected.first); delete(pExpected.second);
+    clearLearner();
+    clearTeacher(teacher);
+}
+
+TEST(learner_test, extend_test){
+    Teacher* teacher = getTeacher2();
+    initLearner(*teacher);
+    learnerExtend(ParseTree(0,{ParseTree(1),ParseTree(2)}));
+    ASSERT_EQ(learnerGetObs(ParseTree(1)),vector<bool>{});
+    learnerExtend(ParseTree(0,{ParseTree(1),ParseTree(2)}));
+    ASSERT_EQ(learnerGetObs(ParseTree(1)),vector<bool>{});
+    learnerExtend(ParseTree(0,{ParseTree(1),ParseTree(2)}));
+    ASSERT_EQ(learnerGetObs(ParseTree(1)),vector<bool>{false});
     clearLearner();
     clearTeacher(teacher);
 }

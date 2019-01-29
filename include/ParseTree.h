@@ -74,6 +74,7 @@ public:
     friend bool operator==(const ParseTree&, const ParseTree&);
     inline friend bool operator!=(const ParseTree& lhs, const ParseTree& rhs){return !(lhs==rhs);}
     const ParseTree& getNode(std::string) const;
+    std::vector<ParseTree*> getSubtrees() const;
     iterator getIterator();
     indexIterator getIndexIterator();
     indexIterator getLeafIterator();

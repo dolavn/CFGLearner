@@ -32,11 +32,12 @@ public:
     explicit TreeAcceptor(std::set<rankedChar>); //Empty constructor
     TreeAcceptor(std::set<rankedChar>, int); //Constructs a tree acceptor with n states
     void setAccepting(int,bool);
-    inline int getStatesNum(){return statesNum;}
+    inline int getStatesNum() const{return statesNum;}
     bool isAccepting(int) const; //TODO: make private
     int nextState(std::vector<int>, rankedChar) const; //TODO: make private
     void addTransition(std::vector<int>,rankedChar,int);
     bool run(const ParseTree&) const;
+    void printDescription() const;
 
 private:
     typedef std::vector<int> intVec;

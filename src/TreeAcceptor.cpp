@@ -103,3 +103,23 @@ int TreeAcceptor::hasTransition(TreeAcceptor::transitionPairVec v, rankedChar c)
     }
     return -1;
 }
+
+void TreeAcceptor::printDescription() const{
+    std::cout << "States num : " << statesNum << std::endl;
+    for(int i=0;i<statesNum;++i) {
+        string acc = isAccepting(i) ? "Accepting" : "Not Accepting";
+        std::cout << "State : " << i << " " << acc << std::endl;
+    }
+    std::cout << "Transitions:" << std::endl;
+    for(auto& t: transitions){
+        for(auto& p: t.second){
+            string vec = "<";
+            for(int i=0;i<t.first.size();++i){
+                vec = vec + char(t.first[i]+'0');
+                if(i<t.first.size()-1){vec = vec + ",";}
+            }
+            vec = vec + ">";
+            std::cout << "delta(" << vec << "," << p.second.c.c << ")=" << p.second.targetState << std::endl;
+        }
+    }
+}

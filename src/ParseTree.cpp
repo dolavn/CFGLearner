@@ -38,7 +38,7 @@ ParseTree& ParseTree::operator=(const ParseTree& other){
     return *this;
 }
 
-ParseTree::ParseTree(ParseTree&& other) noexcept:data(other.data),isContext(other.isContext),contextLoc(other.contextLoc),leftSubtree(other.leftSubtree),rightSubtree(other.rightSubtree),size(other.size){
+ParseTree::ParseTree(ParseTree&& other) noexcept:data(other.data),isContext(other.isContext),contextLoc(std::move(other.contextLoc)),leftSubtree(other.leftSubtree),rightSubtree(other.rightSubtree),size(other.size){
     other.leftSubtree = nullptr;
     other.rightSubtree = nullptr;
     other.size = 0;
@@ -149,6 +149,10 @@ const ParseTree& ParseTree::getNode(string str) const{
     }
 }
 
+vector<ParseTree*> ParseTree::getSubtrees() const{
+    return {leftSubtree,rightSubtree};
+}
+
 std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(std::string str) const{
     std::string loc;
     auto context = new ParseTree(true,str);
@@ -170,13 +174,23 @@ std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(std::string str) const{
         currTree->data = otherTree->data;
         if(otherTree->rightSubtree){
             bool isContext = str.substr(0,curr_str.size()+1)==curr_str + "1";
-            auto newRight = new ParseTree(isContext,str.substr(curr_str.size()+1));
+            ParseTree* newRight;
+            if(isContext){
+                newRight = new ParseTree(true,str.substr(curr_str.size()+1));
+            }else{
+                newRight = new ParseTree();
+            }
             currTree->rightSubtree = newRight;
             stack.emplace(newRight, otherTree->rightSubtree, curr_str + "1");
         }
         if(otherTree->leftSubtree){
             bool isContext = str.substr(0,curr_str.size()+1)==curr_str + "0";
-            auto newLeft = new ParseTree(isContext,str.substr(curr_str.size()+1));
+            ParseTree* newLeft;
+            if(isContext){
+                newLeft = new ParseTree(true,str.substr(curr_str.size()+1));
+            }else{
+                newLeft = new ParseTree();
+            }
             currTree->leftSubtree = newLeft;
             stack.emplace(newLeft, otherTree->leftSubtree, curr_str + "0");
         }

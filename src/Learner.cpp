@@ -8,6 +8,8 @@
 
 using namespace std;
 
+typedef pair<ParseTree*,ParseTree*> contextTreePair;
+
 inline void vectorClear(vector<ParseTree*>& vec){
     for(auto& t:vec){
         if(t){
@@ -78,13 +80,21 @@ public:
         c.push_back(newContext);
         for (auto tree: s) {
             ParseTree *merged = newContext->mergeContext(*tree);
-            obs[tree][c.size() - 1] = teacher.membership(*merged);
+            obs[tree].push_back(teacher.membership(*merged));
             delete (merged);
         }
-        for (auto tree: r) {
+        auto it = r.begin();
+        while(it!=r.end()) {
+            ParseTree *tree = *it;
             ParseTree *merged = newContext->mergeContext(*tree);
-            obs[tree][c.size() - 1] = teacher.membership(*merged);
+            obs[tree].push_back(teacher.membership(*merged));
             delete (merged);
+            if(getSObsInd(*tree)==-1){//Find if the new context creates a new state.
+                s.push_back(tree);
+                r.erase(it);
+            }else{
+                ++it;
+            }
         }
     }
     vector<bool> getObs(const ParseTree& tree){
@@ -125,12 +135,34 @@ public:
         }
         return -1;
     }
+    const ParseTree& getTreeS(int ind) const{
+        return *s[ind];
+    }
+    bool hasTree(const ParseTree& tree){
+        for(auto t: s){
+            if(*t==tree){
+                return true;
+            }
+        }
+        for(auto t: r){
+            if(*t==tree){
+                return true;
+            }
+        }
+        return false;
+    }
+    bool treeInS(const ParseTree& tree){
+        for(auto t: s){
+            if(*t==tree){
+                return true;
+            }
+        }
+        return false;
+    }
     inline const vector<ParseTree*>& getR(){return r;}
     inline const vector<ParseTree*>& getS(){return s;}
     inline const vector<ParseTree*>& getC(){return c;}
 };
-
-typedef vector<vector<ParseTree>> setsVec;
 
 set<rankedChar> getAlphabet(observationTable& s){
     set<rankedChar> alphabet;
@@ -199,7 +231,49 @@ TreeAcceptor synthesize(observationTable& s, const Teacher& teacher){
     return ans;
 }
 
-void extend(observationTable& s, ParseTree* t){
+contextTreePair decompose(observationTable& s, ParseTree& t){
+    string splitInd;
+    for(auto it = t.getIndexIterator();it.hasNext();++it){
+        splitInd = *it;
+        const ParseTree& currTree = t.getNode(splitInd);
+        if(s.treeInS(currTree)){
+            continue;
+        }
+        bool contextClosed = true;
+        for(auto subtree: currTree.getSubtrees()){
+            if(subtree && !s.treeInS(*subtree)){
+                contextClosed = false;
+                break;
+            }
+        }
+        if(contextClosed){
+            break;
+        }
+    }
+    return t.makeContext(splitInd);
+}
+
+void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
+    contextTreePair pair = decompose(s,*t);
+    ParseTree* context = pair.first;
+    ParseTree* tree = pair.second;
+    if(s.hasTree(*tree)){
+        int sInd = s.getSObsInd(*tree);
+        const ParseTree& sTree = s.getTreeS(sInd);
+        ParseTree* mergedTree = context->mergeContext(sTree);
+        if(teacher.membership(*t)==teacher.membership(*mergedTree)){
+            extend(s, mergedTree, teacher);
+            delete(mergedTree);
+        }else{
+            delete(mergedTree);
+            s.addContext(*context);
+            s.addTree(*tree);
+        }
+    }else{
+        s.addTree(*tree);
+    }
+    delete(tree);
+    delete(context);
 }
 
 TreeAcceptor learn(const Teacher& teacher){
@@ -211,7 +285,8 @@ TreeAcceptor learn(const Teacher& teacher){
         if(!counterExample){
             break;
         }
-        extend(table,counterExample);
+        extend(table,counterExample,teacher);
+        delete(counterExample);
     }
     return ans;
 }
@@ -246,4 +321,14 @@ vector<bool> learnerGetObs(const ParseTree& tree){
 
 TreeAcceptor learnerSynthesize(){
     return synthesize(*table,*t);
+}
+
+contextTreePair learnerDecompose(ParseTree& tree){
+    return decompose(*table,tree);
+}
+
+void learnerExtend(const ParseTree& tree){
+    ParseTree* treeCopy = new ParseTree(tree);
+    extend(*table,treeCopy,*t);
+    delete(treeCopy);
 }
