@@ -14,4 +14,5 @@ for c in str(a):
     if c != ' ':
         l.append(int(c))
 l = l[1:-1]
-CFGLearner.addTree("hey", True)
+print(l)
+CFGLearner.addTree(l, True)
