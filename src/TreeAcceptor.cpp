@@ -29,7 +29,7 @@ void TreeAcceptor::setAccepting(int state, bool accepting){
 }
 
 void TreeAcceptor::addTransition(std::vector<int> states, rankedChar c, int targetState) {
-    if(c.rank!=states.size()){
+    if(c.rank!=(int)(states.size())){
         throw std::invalid_argument("Rank of character and number of states don't match!");
     }
     transition t{states,c,targetState};
@@ -114,7 +114,7 @@ void TreeAcceptor::printDescription() const{
     for(auto& t: transitions){
         for(auto& p: t.second){
             string vec = "<";
-            for(int i=0;i<t.first.size();++i){
+            for(unsigned int i=0;i<t.first.size();++i){
                 vec = vec + char(t.first[i]+'0');
                 if(i<t.first.size()-1){vec = vec + ",";}
             }

@@ -8,21 +8,21 @@
 using namespace std;
 
 
-ParseTree::ParseTree():empty(true),data(0),isContext(false),contextLoc(),leftSubtree(nullptr), rightSubtree(nullptr){}
+ParseTree::ParseTree():empty(true),data(0),size(0),isContext(false),contextLoc(),leftSubtree(nullptr), rightSubtree(nullptr){}
 
-ParseTree::ParseTree(bool context,std::string contextLoc):empty(true),data(0),isContext(context),contextLoc(contextLoc),leftSubtree(nullptr),rightSubtree(nullptr){
+ParseTree::ParseTree(bool context,std::string contextLoc):empty(true),data(0),size(0),isContext(context),contextLoc(contextLoc),leftSubtree(nullptr),rightSubtree(nullptr){
     if(!context){contextLoc="";}
 }
 
-ParseTree::ParseTree(int data):empty(false),data(data), isContext(false),contextLoc(),leftSubtree(nullptr), rightSubtree(nullptr){}
+ParseTree::ParseTree(int data):empty(false),data(data),size(1),isContext(false),contextLoc(),leftSubtree(nullptr), rightSubtree(nullptr){}
 
-ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data), isContext(false),contextLoc(),leftSubtree(new ParseTree(v[0])), rightSubtree(new ParseTree(v[1])){}
+ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data),size(1),isContext(false),contextLoc(),leftSubtree(new ParseTree(v[0])), rightSubtree(new ParseTree(v[1])){}
 
-ParseTree::ParseTree(int data, bool context, std::string contextLoc):empty(false),data(data),isContext(context),contextLoc(contextLoc),leftSubtree(nullptr), rightSubtree(nullptr){
+ParseTree::ParseTree(int data, bool context, std::string contextLoc):empty(false),data(data),size(1),isContext(context),contextLoc(contextLoc),leftSubtree(nullptr), rightSubtree(nullptr){
     if(!context){contextLoc="";}
 }
 
-ParseTree::ParseTree(const ParseTree& other):data(other.data),isContext(other.isContext),contextLoc(other.contextLoc),size(other.size),leftSubtree(nullptr), rightSubtree(nullptr){
+ParseTree::ParseTree(const ParseTree& other):empty(other.empty),data(other.data),size(other.size),isContext(other.isContext),contextLoc(other.contextLoc),leftSubtree(nullptr), rightSubtree(nullptr){
     copy(other);
 }
 
@@ -38,7 +38,7 @@ ParseTree& ParseTree::operator=(const ParseTree& other){
     return *this;
 }
 
-ParseTree::ParseTree(ParseTree&& other) noexcept:data(other.data),isContext(other.isContext),contextLoc(std::move(other.contextLoc)),leftSubtree(other.leftSubtree),rightSubtree(other.rightSubtree),size(other.size){
+ParseTree::ParseTree(ParseTree&& other) noexcept:empty(other.empty),data(other.data),size(other.size),isContext(other.isContext),contextLoc(std::move(other.contextLoc)),leftSubtree(other.leftSubtree),rightSubtree(other.rightSubtree){
     other.leftSubtree = nullptr;
     other.rightSubtree = nullptr;
     other.size = 0;
@@ -126,6 +126,7 @@ ParseTree* ParseTree::getSubtree(string string){
         currStr++;
         stack.push(next);
     }
+    throw std::invalid_argument("Index out of bounds");
 }
 
 ParseTree& ParseTree::operator[](string str){
@@ -147,6 +148,7 @@ const ParseTree& ParseTree::getNode(string str) const{
         currStr++;
         stack.push(next);
     }
+    throw std::invalid_argument("Index out of bounds");
 }
 
 vector<ParseTree*> ParseTree::getSubtrees() const{
@@ -271,7 +273,7 @@ ParseTree ParseTree::getSkeleton() const{
      return ans;
 }
 
-ParseTree::iterator::iterator(ParseTree& tree):currNode(&tree),stack(),currStr(){
+ParseTree::iterator::iterator(ParseTree& tree):stack(),currNode(&tree),currStr(){
 }
 
 
