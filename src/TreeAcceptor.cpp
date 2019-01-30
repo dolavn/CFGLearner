@@ -104,6 +104,24 @@ int TreeAcceptor::hasTransition(TreeAcceptor::transitionPairVec v, rankedChar c)
     return -1;
 }
 
+vector<rankedChar> TreeAcceptor::getAlphabet() const{
+    vector<rankedChar> ans;
+    for(rankedChar c:alphabet){
+        ans.push_back(c);
+    }
+    return ans;
+}
+
+vector<transition> TreeAcceptor::getTransitions() const{
+    vector<transition> ans;
+    for(auto& states: transitions){
+        for(auto& p: states.second){
+            ans.push_back(p.second);
+        }
+    }
+    return ans;
+}
+
 void TreeAcceptor::printDescription() const{
     std::cout << "States num : " << statesNum << std::endl;
     for(int i=0;i<statesNum;++i) {

@@ -8,13 +8,13 @@
 class ParseTree{
 private:
     typedef std::pair<ParseTree*, std::string> stackPair;
+    bool empty;
     int data;
     int size;
     void copy(const ParseTree& other);
     void clear();
     bool isContext;
     std::string contextLoc;
-    bool empty;
     static stackPair incStack(std::stack<stackPair>&, stackPair&);
     ParseTree* getSubtree(std::string);
     ParseTree* leftSubtree;

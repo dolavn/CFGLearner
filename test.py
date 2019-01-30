@@ -2,7 +2,7 @@ import CFGLearner
 from nltk import Tree
 
 
-a = Tree(2, [Tree(1, []), Tree(1, [])])
+a = Tree(2, [Tree(1, []), Tree(1, [Tree(1, [Tree(2, []), Tree(1, [])])])])
 l = []
 for c in str(a):
     if c == '(':

@@ -5,6 +5,7 @@
 #include "Teacher.h"
 #include "ParseTree.h"
 #include "TreeAcceptor.h"
+#include "CFG.h"
 
 
 using namespace std;
@@ -58,6 +59,8 @@ int main(int argc, char** argv){
     Teacher* t = getTeacher2();
     TreeAcceptor acc = learn(*t);
     acc.printDescription();
+    CFG c(acc);
+    cout << c.getRepr() << endl;
     delete(t);
     return 0;
 }

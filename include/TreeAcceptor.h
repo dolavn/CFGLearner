@@ -27,33 +27,37 @@ struct rankedChar{
     }
 };
 
+typedef std::vector<int> intVec;
+
+struct transition{
+    const intVec statesSeq;
+    const rankedChar c;
+    const int targetState;
+
+    inline friend bool operator==(const transition& lhs, const transition& rhs){
+        return lhs.statesSeq==rhs.statesSeq && lhs.c==rhs.c && lhs.targetState == rhs.targetState;
+    }
+};
+
 class TreeAcceptor{
 public:
     explicit TreeAcceptor(std::set<rankedChar>); //Empty constructor
     TreeAcceptor(std::set<rankedChar>, int); //Constructs a tree acceptor with n states
     void setAccepting(int,bool);
     inline int getStatesNum() const{return statesNum;}
-    bool isAccepting(int) const; //TODO: make private
+    bool isAccepting(int) const;
     int nextState(std::vector<int>, rankedChar) const; //TODO: make private
     void addTransition(std::vector<int>,rankedChar,int);
     bool run(const ParseTree&) const;
     void printDescription() const;
+    std::vector<rankedChar> getAlphabet() const;
+    std::vector<transition> getTransitions() const;
 
 private:
-    typedef std::vector<int> intVec;
     template <typename Container>
     struct container_hash {
         std::size_t operator()(Container const& c) const {
             return boost::hash_range(c.begin(), c.end());
-        }
-    };
-    struct transition{
-        const intVec statesSeq;
-        const rankedChar c;
-        const int targetState;
-
-        inline friend bool operator==(const transition& lhs, const transition& rhs){
-            return lhs.statesSeq==rhs.statesSeq && lhs.c==rhs.c && lhs.targetState == rhs.targetState;
         }
     };
     typedef std::pair<rankedChar,transition> transitionPair;

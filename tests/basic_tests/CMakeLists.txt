@@ -6,6 +6,7 @@ add_executable(runBasicTests
                 TreeTest.cpp
                 SimpleTeacherTest.cpp
                 LearnerTest.cpp
+                CFGTest.cpp
         )
 
 target_link_libraries(runBasicTests gtest gtest_main)
