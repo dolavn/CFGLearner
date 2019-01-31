@@ -1,18 +1,31 @@
-import CFGLearner
-from nltk import Tree
+from CFGLearner import SimpleTeacher, Teacher, learn
+from nltk import Tree, CFG
 
+a1 = Tree(0, [Tree(1, []), Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(2, [])])])
+a2 = Tree(0, [Tree(1, []), Tree(2, [])])
+a3 = Tree(0, [Tree(1, []), Tree(0, [Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(2, [])]), Tree(2, [])])])
 
-a = Tree(2, [Tree(1, []), Tree(1, [Tree(1, [Tree(2, []), Tree(1, [])])])])
-l = []
-for c in str(a):
-    if c == '(':
-        l.append(-1)
-        continue
-    if c == ')':
-        l.append(-2)
-        continue
-    if c != ' ':
-        l.append(int(c))
-l = l[1:-1]
-print(l)
-CFGLearner.addTree(l, True)
+t1 = Tree(0, [Tree(2, []), Tree(1, [])])
+t2 = Tree(0, [Tree(1, []), Tree(2, [])])
+t3 = Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(0, [Tree(2, []), Tree(1, [])])])
+t4 = Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(0, [Tree(2, []), Tree(1, [])])])])
+t5 = Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(0, [Tree(2, []), Tree(1, [])])])])])
+
+print('1')
+t = SimpleTeacher()
+#t.addPositiveExample(a1)
+#t.addPositiveExample(a2)
+#t.addPositiveExample(a3)
+print('2')
+t.addPositiveExample(t1)
+print('3')
+t.addNegativeExample(t2)
+print('4')
+t.addPositiveExample(t3)
+print('5')
+t.addNegativeExample(t4)
+print('6')
+t.addPositiveExample(t5)
+print('7')
+c = learn(t)
+print(c)
