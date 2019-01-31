@@ -8,7 +8,7 @@ using namespace std;
 #define NON_TERMINAL 1
 #define TERMINAL 2
 
-CFG::CFG(int startSymbol):nonTerminals(),terminals(),derivations(){
+CFG::CFG(string startSymbol):nonTerminals(),terminals(),derivations(){
     nonTerminals.emplace_back(startSymbol);
     symbolsMapping[startSymbol] = NON_TERMINAL;
 }
@@ -17,23 +17,23 @@ CFG::CFG(const TreeAcceptor& acc):nonTerminals(),terminals(),derivations(){
     initFromAcceptor(acc);
 }
 
-void CFG::addNonTerminal(int nt){
+void CFG::addNonTerminal(string nt){
     if(checkSymbolExists(nt)){
         throw std::invalid_argument("Symbol already exist in grammar");
     }
-    nonTerminals.push_back(nonTerminal(nt));
+    nonTerminals.emplace_back(nonTerminal(nt));
     symbolsMapping[nt]=NON_TERMINAL;
 }
 
-void CFG::addTerminal(int t){
+void CFG::addTerminal(string t){
     if(checkSymbolExists(t)){
         throw std::invalid_argument("Symbol already exist in grammar");
     }
-    terminals.push_back(terminal(t));
+    terminals.emplace_back(terminal(t));
     symbolsMapping[t]=TERMINAL;
 }
 
-void CFG::addDerivation(int lhs, vector<int> rhs){
+void CFG::addDerivation(string lhs, vector<string> rhs){
     if(!checkSymbolExists(lhs)){
         throw std::invalid_argument("LHS doesn't exist in grammar");
     }
@@ -41,7 +41,7 @@ void CFG::addDerivation(int lhs, vector<int> rhs){
         throw std::invalid_argument("LHS must be a non-terminal symbol");
     }
     vector<symbol> rhsSymbols;
-    for(int& sym: rhs){
+    for(string& sym: rhs){
         if(!checkSymbolExists(sym)){
             throw std::invalid_argument("Not all symbols in RHS exist in grammar");
         }
@@ -50,7 +50,7 @@ void CFG::addDerivation(int lhs, vector<int> rhs){
     derivations.emplace_back(nonTerminal(lhs),rhsSymbols);
 }
 
-bool CFG::checkSymbolExists(int symbol){
+bool CFG::checkSymbolExists(string symbol){
     return symbolsMapping.find(symbol)!=symbolsMapping.end();
 }
 
@@ -76,27 +76,37 @@ string CFG::getRepr() const{
 }
 
 void CFG::initFromAcceptor(const TreeAcceptor& acc){
-    addNonTerminal(0); //start symbol
+    addNonTerminal("S"); //start symbol
     for(int i=0;i<acc.getStatesNum();++i){
-        addNonTerminal(i+1);
+        stringstream stream;
+        stream << "N" << i;
+        addNonTerminal(stream.str());
         if(acc.isAccepting(i)){
-            addDerivation(0,{i+1});
+            addDerivation("S",{stream.str()});
         }
     }
     for(rankedChar& c:acc.getAlphabet()){
         if(c.rank==0){
-            addTerminal(c.c+acc.getStatesNum());
+            stringstream stream;
+            stream << c.c;
+            addTerminal(stream.str());
         }
     }
     for(transition& t:acc.getTransitions()){
-        vector<int> lhs;
+        vector<string> lhs;
         if(t.statesSeq.size()>0) {
             for (int state: t.statesSeq) {
-                lhs.push_back(state+1);
+                stringstream stream;
+                stream << "N" << state;
+                lhs.push_back(stream.str());
             }
         }else{
-            lhs.push_back(t.c.c+acc.getStatesNum());
+            stringstream stream;
+            stream << t.c.c;
+            lhs.push_back(stream.str());
         }
-        addDerivation(t.targetState+1,lhs);
+        stringstream stream;
+        stream << "N" << t.targetState;
+        addDerivation(stream.str(),lhs);
     }
 }

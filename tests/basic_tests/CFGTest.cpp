@@ -3,30 +3,24 @@
 #include "../../include/CFG.h"
 
 TEST(CFG_test, basic_test){
-    CFG c(1);
+    CFG c("S");
     try{
-        c.addNonTerminal(1);
+        c.addNonTerminal("S");
         ASSERT_EQ(1,2);
     }catch(std::invalid_argument& e){
         ASSERT_EQ(e.what(),std::string("Symbol already exist in grammar"));
     }
+    c.addTerminal("a");
+    c.addDerivation("S",{"a"});
+    c.addDerivation("S",{"S","a"});
     try{
-        c.addTerminal(1);
-        ASSERT_EQ(1,2);
-    }catch(std::invalid_argument& e){
-        ASSERT_EQ(e.what(),std::string("Symbol already exist in grammar"));
-    }
-    c.addTerminal(2);
-    c.addDerivation(1,{2});
-    c.addDerivation(1,{1,2});
-    try{
-        c.addDerivation(2,{1});
+        c.addDerivation("a",{"S"});
         ASSERT_EQ(1,2);
     }catch(std::invalid_argument& e){
         ASSERT_EQ(e.what(),std::string("LHS must be a non-terminal symbol"));
     }
     try{
-        c.addDerivation(1,{4});
+        c.addDerivation("S",{"b"});
         ASSERT_EQ(1,2);
     }catch(std::invalid_argument& e){
         ASSERT_EQ(e.what(),std::string("Not all symbols in RHS exist in grammar"));

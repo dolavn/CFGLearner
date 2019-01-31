@@ -1,35 +1,49 @@
-#include <Python.h>
 #include <iostream>
+#include <sstream>
 #include "Teacher.h"
 #include "Learner.h"
 #include "TreeAcceptor.h"
+#include "CFG.h"
 #include <vector>
 #include <stack>
-// This is the definition of a method
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
+
 
 #define BRACKET_OPEN -1
 #define BRACKET_CLOSE -2
 
 using namespace std;
 
-static ParseTree* parseTree(PyObject* tuple){
-    ParseTree* ans = nullptr;
-    if(!PyList_Check(tuple)){
-        return ans;
-    }
-    Py_ssize_t size = PyList_Size(tuple);
-    std::vector<int> seq(size);
-    for (int i = 0; i < size; ++i) {
-        PyObject *curr = PyList_GetItem(tuple, i);
-        if(!PyLong_Check(curr)){
-            return ans;
+static bool checkType(py::object& obj){
+    py::object nltk = py::module::import("nltk");
+    py::object nltkTree = nltk.attr("Tree");
+    return py::isinstance(obj,nltkTree);
+}
+
+ParseTree* parseTree(std::string& str){
+    str = str.substr(1,str.size()-2);
+    vector<int> seq;
+    for(char& c: str){
+        if(c=='('){
+            seq.push_back(BRACKET_OPEN);
+            continue;
         }
-        seq[i] = (int) (PyLong_AsLong(curr));
+        if(c==')'){
+            seq.push_back(BRACKET_CLOSE);
+            continue;
+        }
+        if(c!=' '){
+            seq.push_back(c-'0');
+        }
     }
+    ParseTree* ans = nullptr;
     stack<ParseTree*> s;
     ans = new ParseTree(seq[0]);
     s.push(ans);
-    for(unsigned int i=1;i<size;++i){
+    for(unsigned int i=1;i<seq.size();++i){
         if(s.empty()){ //error
             goto error;
         }
@@ -39,11 +53,11 @@ static ParseTree* parseTree(PyObject* tuple){
                 goto error;
             }
             if(!curr->hasLeftSubtree()){
-                ParseTree* left = new ParseTree(0);
+                auto left = new ParseTree(0);
                 curr->setLeftPointer(left);
                 s.push(left);
             }else{
-                ParseTree* right = new ParseTree(0);
+                auto right = new ParseTree(0);
                 curr->setRightPointer(right);
                 s.push(right);
             }
@@ -61,59 +75,47 @@ static ParseTree* parseTree(PyObject* tuple){
         delete (ans);
         ans=nullptr;
     }
-    return nullptr;
+    return ans;
 }
 
-static PyObject* addTree(PyObject *self, PyObject *args) {
-    PyObject* tree;
-    PyObject* positive;
-    if (PyArg_UnpackTuple(args, "ref", 2, 2, &tree, &positive)) {
-        int truth = PyObject_IsTrue(positive);
-        if(!truth){
+PYBIND11_MODULE(CFGLearner, m) {
+    py::class_<Teacher> teacher(m, "Teacher");
+    py::class_<SimpleTeacher> simpleTeacher(m, "SimpleTeacher",teacher);
+    simpleTeacher.def(py::init<>());
+    simpleTeacher.def("addPositiveExample",[](SimpleTeacher& t,py::object nltkTree){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
         }
-        ParseTree* pTree = parseTree(tree);
-        if(!pTree){
-            PyErr_SetString(PyExc_ValueError, "Invalid tree.");
-            return NULL;
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        t.addPositiveExample(*tree);
+        delete(tree);
+    });
+    simpleTeacher.def("addNegativeExample",[](SimpleTeacher& t,py::object nltkTree){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
         }
-        for(auto it = pTree->getIndexIterator();it.hasNext();++it){
-            cout << (*pTree)[*it].getData() << endl;
-        }
-        delete(pTree);
-    }else{
-        PyErr_SetString(PyExc_ValueError, "Invalid number of parameters.");
-        return NULL;
-    }
-    Py_RETURN_NONE;
-}
-
-
-static PyObject* learn(PyObject *self, PyObject *args) {
-    return PyLong_FromLong(1);
-}
-
-
-// Exported methods are collected in a table
-PyMethodDef method_table[] = {
-        {"addTree", (PyCFunction) addTree, METH_VARARGS, "Method docstring"},
-        {"learn", (PyCFunction) learn, METH_VARARGS, "Method docstring"},
-        {NULL, NULL, 0, NULL} // Sentinel value ending the table
-};
-
-// A struct contains the definition of a module
-PyModuleDef CFGLearner_module = {
-        PyModuleDef_HEAD_INIT,
-        "CFGLearner", // Module name
-        "This is the module docstring",
-        -1,   // Optional size of the module state memory
-        method_table,
-        NULL, // Optional slot definitions
-        NULL, // Optional traversal function
-        NULL, // Optional clear function
-        NULL  // Optional module deallocation function
-};
-
-// The module init function
-PyMODINIT_FUNC PyInit_CFGLearner(void) {
-    return PyModule_Create(&CFGLearner_module);
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        t.addNegativeExample(*tree);
+        delete(tree);
+    });
+    simpleTeacher.def("__repr__",[](const SimpleTeacher& t){
+        stringstream stream;
+        stream << "<SimpleTeacher with ";
+        stream << t.getPosNum() << " positive examples and ";
+        stream << t.getNegNum() << " negative examples>";
+        return stream.str();
+    });
+    m.def("learn",[](const Teacher& t) {
+        py::gil_scoped_release release;
+        TreeAcceptor acc = learn(t);
+        CFG c(acc);
+        py::gil_scoped_acquire acquire;
+        py::object nltk = py::module::import("nltk");
+        py::object nltkCFG = nltk.attr("CFG");
+        py::object nltkCFGFromString = nltkCFG.attr("fromstring");
+        return nltkCFGFromString(c.getRepr());
+    });
+    m.doc() = "A module used to learn context free grammars from structural data.";
 }
