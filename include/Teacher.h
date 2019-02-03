@@ -31,6 +31,8 @@ public:
 
     void addPositiveExample(const ParseTree&);
     void addNegativeExample(const ParseTree&);
+    int getPosNum() const{return positiveExamples.size();}
+    int getNegNum() const{return negativeExamples.size();}
 
     bool membership(const ParseTree&) const override;
     ParseTree* equivalence(const TreeAcceptor&) const override;
@@ -38,6 +40,7 @@ public:
 private:
     void copy(const SimpleTeacher&);
     void clear();
+    bool hasExample(const ParseTree&);
     std::vector<ParseTree*> positiveExamples;
     std::vector<ParseTree*> negativeExamples;
 };

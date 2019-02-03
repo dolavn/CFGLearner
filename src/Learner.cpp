@@ -169,19 +169,19 @@ set<rankedChar> getAlphabet(observationTable& s){
     for(auto t:s.getS()){
         for(auto it=t->getIndexIterator();it.hasNext();++it){
             int value = (*t)[*it].getData();
-            int sign = 0;
-            sign = sign + (*t)[*it].hasLeftSubtree()?1:0;
-            sign = sign + (*t)[*it].hasRightSubtree()?1:0;
-            alphabet.insert({value,sign});
+            int rank = 0;
+            if((*t)[*it].hasLeftSubtree()){rank++;}
+            if((*t)[*it].hasRightSubtree()){rank++;}
+            alphabet.insert({value,rank});
         }
     }
     for(auto t:s.getR()){
         for(auto it=t->getIndexIterator();it.hasNext();++it){
             int value = (*t)[*it].getData();
-            int sign = 0;
-            sign = sign + (*t)[*it].hasLeftSubtree()?1:0;
-            sign = sign + (*t)[*it].hasRightSubtree()?1:0;
-            alphabet.insert({value,sign});
+            int rank = 0;
+            if((*t)[*it].hasLeftSubtree()){rank++;}
+            if((*t)[*it].hasRightSubtree()){rank++;}
+            alphabet.insert({value,rank});
         }
     }
     return alphabet;
@@ -198,13 +198,6 @@ void addTransition(observationTable& s, TreeAcceptor& acc, const ParseTree& tree
     }
     int targetState = s.getSObsInd(tree);
     rankedChar c{value,(int)(states.size())};
-    //TODO: delete this section
-    string vecStr = "[";
-    for(auto state: states){
-        vecStr = vecStr + (char)(state+'0') + " , ";
-    }
-    vecStr = vecStr + "]";
-    //std::cerr << vecStr << " - " << value << " - " << targetState << std::endl;
     acc.addTransition(states,c,targetState);
 }
 
@@ -278,13 +271,15 @@ void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
 
 TreeAcceptor learn(const Teacher& teacher){
     observationTable table(teacher);
-    TreeAcceptor ans(set<rankedChar>{{2,0}});
+    TreeAcceptor ans(set<rankedChar>{});
     for(;;){
         ans = synthesize(table,teacher);
         ParseTree* counterExample = teacher.equivalence(ans);
         if(!counterExample){
             break;
         }
+        cout << "counter example given:" << endl;
+        cout << *counterExample << endl;
         extend(table,counterExample,teacher);
         delete(counterExample);
     }
@@ -328,7 +323,7 @@ contextTreePair learnerDecompose(ParseTree& tree){
 }
 
 void learnerExtend(const ParseTree& tree){
-    ParseTree* treeCopy = new ParseTree(tree);
+    auto treeCopy = new ParseTree(tree);
     extend(*table,treeCopy,*t);
     delete(treeCopy);
 }

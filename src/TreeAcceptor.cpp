@@ -56,7 +56,6 @@ int TreeAcceptor::nextState(std::vector<int> states, rankedChar c) const{
 bool TreeAcceptor::run(const ParseTree& t) const{
     ParseTree runTree = t.getSkeleton();
     stack<string> stack;
-    std::cerr << std::endl;
     for(auto it = runTree.getLeafIterator();it.hasNext();++it){
         stack.push(*it);
     }

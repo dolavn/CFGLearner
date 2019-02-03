@@ -4,6 +4,7 @@
 #include "Learner.h"
 #include "TreeAcceptor.h"
 #include "CFG.h"
+#include <algorithm>
 #include <vector>
 #include <stack>
 #include <pybind11/pybind11.h>
@@ -24,7 +25,10 @@ static bool checkType(py::object& obj){
 }
 
 ParseTree* parseTree(std::string& str){
+    //cout << "before " << str << endl;
     str = str.substr(1,str.size()-2);
+    str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+    //cout << "after " << str << endl;
     vector<int> seq;
     for(char& c: str){
         if(c=='('){

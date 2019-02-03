@@ -4,6 +4,7 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <iostream>
 
 class ParseTree{
 private:
@@ -73,6 +74,7 @@ public:
     ParseTree& operator[](std::string);
     friend bool operator==(const ParseTree&, const ParseTree&);
     inline friend bool operator!=(const ParseTree& lhs, const ParseTree& rhs){return !(lhs==rhs);}
+    friend std::ostream& operator<<(std::ostream&,const ParseTree&);
     const ParseTree& getNode(std::string) const;
     std::vector<ParseTree*> getSubtrees() const;
     iterator getIterator();

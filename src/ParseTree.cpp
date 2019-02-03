@@ -347,3 +347,15 @@ bool operator==(const ParseTree& lhs, const ParseTree& rhs){
     bool rightSon = IS_NULL(lhs.rightSubtree) || *lhs.rightSubtree==*rhs.rightSubtree;
     return lhs.data == rhs.data && leftSon && rightSon;
 }
+
+ostream& operator<<(ostream& output, const ParseTree& tree){
+    output << "(" << tree.data;
+    if(tree.leftSubtree!=nullptr){
+        output << " " << *tree.leftSubtree;
+    }
+    if(tree.rightSubtree!=nullptr){
+        output << " " << *tree.rightSubtree;
+    }
+    output << ")";
+    return output;
+}

@@ -1,7 +1,7 @@
 #include "Teacher.h"
 #include "ParseTree.h"
 #include "TreeAcceptor.h"
-
+#include <iostream>
 using namespace std;
 
 SimpleTeacher::SimpleTeacher():positiveExamples(),negativeExamples(){
@@ -88,11 +88,31 @@ ParseTree* SimpleTeacher::equivalence(const TreeAcceptor & acc) const{
 }
 
 void SimpleTeacher::addPositiveExample(const ParseTree& tree){
+    if(hasExample(tree)){
+        throw std::invalid_argument("Already has this example");
+    }
     positiveExamples.push_back(new ParseTree(tree));
 }
 
 void SimpleTeacher::addNegativeExample(const ParseTree & tree){
+    if(hasExample(tree)){
+        throw std::invalid_argument("Already has this example");
+    }
     negativeExamples.push_back(new ParseTree(tree));
+}
+
+bool SimpleTeacher::hasExample(const ParseTree& tree){
+    for(auto example: positiveExamples){
+        if(*example==tree){
+            return true;
+        }
+    }
+    for(auto example: negativeExamples){
+        if(*example==tree){
+            return true;
+        }
+    }
+    return false;
 }
 
 Teacher* SimpleTeacher::clone(){

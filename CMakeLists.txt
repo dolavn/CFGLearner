@@ -14,7 +14,8 @@ SET (SRCS src/ParseTree.cpp
           src/SimpleTeacher.cpp
           src/Learner.cpp
           src/CFG.cpp
-          src/PythonModule.cpp)
+          )
+
 
 add_library(mainProg
         ${SRCS})
