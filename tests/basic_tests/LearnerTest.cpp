@@ -237,7 +237,6 @@ TEST(learner_test, learn_test_basic){
     EXPECT_TRUE(!acc.isAccepting(q1));
     EXPECT_TRUE(!acc.isAccepting(q2));
     EXPECT_TRUE(acc.isAccepting(qInt));
-    EXPECT_TRUE(acc.isAccepting(qInt));
     ASSERT_EQ(acc.getStatesNum(),3);
     clearTeacher(teacher);
 }
