@@ -20,6 +20,6 @@ SET (SRCS src/ParseTree.cpp
 
 add_library(mainProg
         ${SRCS})
-include_directories(include venv/include/site/python3.6/ ${PYTHON_INCLUDE_DIRS})
+include_directories(include venv/include/site/python3.6/ /users/studs/bsc/2016/dolavn/CFGLearner/venv/include/site/python3.6 ${PYTHON_INCLUDE_DIRS})
 add_executable(CFGLearner
         ${SRCS})
