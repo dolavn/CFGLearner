@@ -15,6 +15,7 @@ namespace py = pybind11;
 
 #define BRACKET_OPEN -1
 #define BRACKET_CLOSE -2
+#define IS_DIGIT(A) (A>='0' && A<='9')
 
 using namespace std;
 
@@ -30,7 +31,8 @@ ParseTree* parseTree(std::string& str){
     str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
     //cout << "after " << str << endl;
     vector<int> seq;
-    for(char& c: str){
+    for(int i=0;i<str.size();i++){
+        char c = str[i];
         if(c=='('){
             seq.push_back(BRACKET_OPEN);
             continue;
@@ -40,7 +42,10 @@ ParseTree* parseTree(std::string& str){
             continue;
         }
         if(c!=' '){
-            seq.push_back(c-'0');
+            int m=i+1;
+            while(IS_DIGIT(str[m])){m++;}
+            int a = std::atoi(str.substr(i,m).c_str());
+            seq.push_back(a);
         }
     }
     ParseTree* ans = nullptr;
