@@ -278,8 +278,8 @@ TreeAcceptor learn(const Teacher& teacher){
         if(!counterExample){
             break;
         }
-        cout << "counter example given:" << endl;
-        cout << *counterExample << endl;
+        //cout << "counter example given:" << endl;
+        //cout << *counterExample << endl;
         extend(table,counterExample,teacher);
         delete(counterExample);
     }

@@ -336,6 +336,12 @@ std::string ParseTree::indexIterator::operator*() const{
     return currStr;
 }
 
+size_t ParseTree::getHash() const{
+    return ((hash<int>()(data)
+             ^ (hash<ParseTree*>()(leftSubtree) << 1)) >> 1)
+           ^ (hash<ParseTree*>()(rightSubtree) << 1);
+}
+
 bool operator==(const ParseTree& lhs, const ParseTree& rhs){
     if((IS_NULL(lhs.leftSubtree) ||  IS_NULL(rhs.leftSubtree)) && !(IS_NULL(lhs.leftSubtree) && IS_NULL(rhs.leftSubtree))){ //only one left son is null
         return false;

@@ -91,6 +91,7 @@ public:
     inline bool getIsContext() const{return isContext;}
     inline bool isEmpty() const{return empty;}
     int getData() const{return this->data;}
+    std::size_t getHash() const;
     std::string getContextLoc() const{return this->contextLoc;}
     std::pair<ParseTree*,ParseTree*> makeContext(std::string) const;
     ParseTree* mergeContext(const ParseTree&) const;

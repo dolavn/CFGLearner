@@ -2,6 +2,8 @@
 #include "ParseTree.h"
 #include "TreeAcceptor.h"
 #include <iostream>
+#include <Teacher.h>
+
 using namespace std;
 
 SimpleTeacher::SimpleTeacher():positiveExamples(),negativeExamples(){
@@ -117,4 +119,18 @@ bool SimpleTeacher::hasExample(const ParseTree& tree){
 
 Teacher* SimpleTeacher::clone(){
     return new SimpleTeacher(*this);
+}
+
+bool operator==(const TreePointer& lhs, const TreePointer& rhs){
+    const ParseTree* lptr;
+    const ParseTree* rptr;
+    lptr = lhs.ptr!=nullptr?lhs.ptr:lhs.constPtr;
+    rptr = rhs.ptr!=nullptr?rhs.ptr:rhs.constPtr;
+    if(lptr==nullptr && rptr==nullptr){
+        return true;
+    }
+    if(lptr==nullptr || rptr==nullptr){ //both can't be null if we reached here.
+        return false;
+    }
+    return *lptr==*rptr;
 }
