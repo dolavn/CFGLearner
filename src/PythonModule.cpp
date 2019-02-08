@@ -117,6 +117,33 @@ PYBIND11_MODULE(CFGLearner, m) {
         stream << t.getNegNum() << " negative examples>";
         return stream.str();
     });
+    py::class_<FrequencyTeacher> frequencyTeacher(m, "FrequencyTeacher",teacher);
+    frequencyTeacher.def(py::init<int,float>(),py::arg("minCount")=0, py::arg("minFreq")=0.5f);
+    frequencyTeacher.def("addPositiveExample",[](FrequencyTeacher& t,py::object nltkTree){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        t.addPositiveExample(*tree);
+        delete(tree);
+    });
+    frequencyTeacher.def("addNegativeExample",[](FrequencyTeacher& t,py::object nltkTree){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        t.addNegativeExample(*tree);
+        delete(tree);
+    });
+    frequencyTeacher.def("__repr__",[](const FrequencyTeacher& t){
+        stringstream stream;
+        stream << "<FrequencyTeacher with minCount=";
+        stream << t.getMinCount() << " and minFreq=";
+        stream << t.getMinFreq() << ">";
+        return stream.str();
+    });
     m.def("learn",[](const Teacher& t) {
         py::gil_scoped_release release;
         TreeAcceptor acc = learn(t);

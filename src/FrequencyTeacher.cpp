@@ -3,7 +3,7 @@
 #include "TreeAcceptor.h"
 #include <iostream> //TODO: delete
 #define DEFAULT_MIN_FREQ 0.5f
-#define DEFAULT_MIN_COUNT 1
+#define DEFAULT_MIN_COUNT 0
 
 
 using namespace std;
@@ -13,7 +13,9 @@ FrequencyTeacher::FrequencyTeacher():minCount(DEFAULT_MIN_COUNT),minFreq(DEFAULT
 }
 
 FrequencyTeacher::FrequencyTeacher(int minCount, float minFreq):minCount(minCount),minFreq(minFreq),map(){
-
+    if(minFreq<0 || minFreq>1 || minCount<0){
+        throw invalid_argument("Invalid parameters");
+    }
 }
 
 FrequencyTeacher::FrequencyTeacher(const FrequencyTeacher& other):minCount(other.minCount),minFreq(other.minFreq),map(){
@@ -95,9 +97,9 @@ bool FrequencyTeacher::inLanguage(const ParseTree& tree) const{
         return false;
     }
     auto p = map.find(temp)->second;
-    float freq = p.first/(p.first+p.second);
+    float freq = (float)(p.first)/(float)(p.first+p.second);
     int count = p.first;
-    return freq>=this->minFreq && count>=this->minCount;
+    return freq>this->minFreq && count>this->minCount;
 }
 
 
