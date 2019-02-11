@@ -55,34 +55,36 @@ int TreeAcceptor::nextState(std::vector<int> states, rankedChar c) const{
 
 bool TreeAcceptor::run(const ParseTree& t) const{
     ParseTree runTree = t.getSkeleton();
-    stack<string> stack;
+    stack<vector<int>> stack;
     for(auto it = runTree.getLeafIterator();it.hasNext();++it){
         stack.push(*it);
     }
     while(!stack.empty()){
-        string nodeInd = stack.top();
+        vector<int> nodeInd = stack.top();
         stack.pop();
         const ParseTree& node = t.getNode(nodeInd);
         vector<int> states;
         int rank = 0;
-        if(node.hasLeftSubtree()){
-            states.push_back(runTree[nodeInd]["0"].getData());
-            rank++;
-        }
-        if(node.hasRightSubtree()){
-            states.push_back(runTree[nodeInd]["1"].getData());
-            rank++;
+        for(int i=0;i<runTree[nodeInd].getChildrenNum();++i){
+            if(node.hasSubtree(i)){
+                states.push_back(runTree[nodeInd][{i}].getData());
+                rank++;
+            }
         }
         runTree[nodeInd].setData(nextState(states,{node.getData(),rank}));
         if(runTree[nodeInd].getData()==-1){ //no transition
             return false;
         }
         if(nodeInd.empty()){break;}
-        string fatherInd = nodeInd.substr(0,nodeInd.size()-1);
+        vector<int> fatherInd = vector<int>(nodeInd.begin(),nodeInd.begin()+nodeInd.size()-1);
         ParseTree& fatherNode = runTree[fatherInd];
-        if(fatherNode.hasLeftSubtree() && fatherNode["0"].getData()==-1){continue;}
-        if(fatherNode.hasRightSubtree() && fatherNode["1"].getData()==-1){continue;}
-        stack.push(fatherInd);
+        bool climb=true;
+        for(int i=0;i<fatherNode.getChildrenNum();++i){
+            if(fatherNode.hasSubtree(i) && fatherNode[{i}].getData()==-1){climb=false;break;}
+        }
+        if(climb) {
+            stack.push(fatherInd);
+        }
     }
     return isAccepting(runTree.getData());
 }

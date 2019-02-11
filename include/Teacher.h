@@ -94,6 +94,8 @@ public:
 
     void addPositiveExample(const ParseTree&);
     void addNegativeExample(const ParseTree&);
+    inline int getMinCount() const{return minCount;};
+    inline float getMinFreq() const{return minFreq;};
 
     bool membership(const ParseTree&) const override;
     ParseTree* equivalence(const TreeAcceptor&) const override;

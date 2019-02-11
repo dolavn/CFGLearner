@@ -57,7 +57,7 @@ ParseTree* TreeConstructor::traceback(const Trees::dpTable& table, const Sequenc
             //cout << "[" << currTup.first << "," << k << "] [" << k+1 << "," << currTup.second << "]" << endl;
             auto rightNode = new ParseTree(0);
             auto leftNode = new ParseTree(0);
-            node->setRightPointer(rightNode); node->setLeftPointer(leftNode);
+            node->setPointer(rightNode,1); node->setPointer(leftNode,0);
             buildStack.emplace(leftNode, intTuple(currTup.first, k));
             buildStack.emplace(rightNode, intTuple(k+1, currTup.second));
         }else{ //Node is a leaf

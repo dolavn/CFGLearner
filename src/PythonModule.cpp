@@ -59,6 +59,7 @@ ParseTree* parseTree(std::string& str){
         }
         ParseTree* curr = s.top();
         if(seq[i]==BRACKET_OPEN){
+            /*
             if(curr->hasLeftSubtree() && curr->hasRightSubtree()){ //already has two sons
                 goto error;
             }
@@ -70,7 +71,10 @@ ParseTree* parseTree(std::string& str){
                 auto right = new ParseTree(0);
                 curr->setRightPointer(right);
                 s.push(right);
-            }
+            }*/
+            auto tree = new ParseTree(0);
+            curr->setPointer(tree,curr->getChildrenNum());
+            s.push(tree);
             continue;
         }
         if(seq[i]==BRACKET_CLOSE){

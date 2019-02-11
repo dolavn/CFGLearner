@@ -170,8 +170,8 @@ set<rankedChar> getAlphabet(observationTable& s){
         for(auto it=t->getIndexIterator();it.hasNext();++it){
             int value = (*t)[*it].getData();
             int rank = 0;
-            if((*t)[*it].hasLeftSubtree()){rank++;}
-            if((*t)[*it].hasRightSubtree()){rank++;}
+            if((*t)[*it].hasSubtree(0)){rank++;}
+            if((*t)[*it].hasSubtree(1)){rank++;}
             alphabet.insert({value,rank});
         }
     }
@@ -179,8 +179,8 @@ set<rankedChar> getAlphabet(observationTable& s){
         for(auto it=t->getIndexIterator();it.hasNext();++it){
             int value = (*t)[*it].getData();
             int rank = 0;
-            if((*t)[*it].hasLeftSubtree()){rank++;}
-            if((*t)[*it].hasRightSubtree()){rank++;}
+            if((*t)[*it].hasSubtree(0)){rank++;}
+            if((*t)[*it].hasSubtree(1)){rank++;}
             alphabet.insert({value,rank});
         }
     }
@@ -190,11 +190,11 @@ set<rankedChar> getAlphabet(observationTable& s){
 void addTransition(observationTable& s, TreeAcceptor& acc, const ParseTree& tree){
     int value = tree.getData();
     vector<int> states;
-    if(tree.hasLeftSubtree()){
-        states.push_back(s.getSObsInd(tree.getNode("0")));
+    if(tree.hasSubtree(0)){
+        states.push_back(s.getSObsInd(tree.getNode({0})));
     }
-    if(tree.hasRightSubtree()){
-        states.push_back(s.getSObsInd(tree.getNode("1")));
+    if(tree.hasSubtree(1)){
+        states.push_back(s.getSObsInd(tree.getNode({1})));
     }
     int targetState = s.getSObsInd(tree);
     rankedChar c{value,(int)(states.size())};
@@ -206,14 +206,14 @@ TreeAcceptor synthesize(observationTable& s, const Teacher& teacher){
     TreeAcceptor ans(alphabet,(int)(s.getS().size()));
     for(auto tree: s.getR()){
         for(auto it = tree->getIndexIterator();it.hasNext();++it){
-            string str = *it;
-            addTransition(s,ans,(*tree)[str]);
+            vector<int> ind = *it;
+            addTransition(s,ans,(*tree)[ind]);
         }
     }
     for(auto tree: s.getS()){
         for(auto it = tree->getIndexIterator();it.hasNext();++it){
-            string str = *it;
-            addTransition(s,ans,(*tree)[str]);
+            vector<int> ind = *it;
+            addTransition(s,ans,(*tree)[ind]);
         }
     }
     for(auto it=s.getS().begin();it!=s.getS().end();it++){
@@ -225,7 +225,7 @@ TreeAcceptor synthesize(observationTable& s, const Teacher& teacher){
 }
 
 contextTreePair decompose(observationTable& s, ParseTree& t){
-    string splitInd;
+    vector<int> splitInd;
     for(auto it = t.getIndexIterator();it.hasNext();++it){
         splitInd = *it;
         const ParseTree& currTree = t.getNode(splitInd);
