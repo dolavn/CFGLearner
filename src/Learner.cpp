@@ -170,8 +170,9 @@ set<rankedChar> getAlphabet(observationTable& s){
         for(auto it=t->getIndexIterator();it.hasNext();++it){
             int value = (*t)[*it].getData();
             int rank = 0;
-            if((*t)[*it].hasSubtree(0)){rank++;}
-            if((*t)[*it].hasSubtree(1)){rank++;}
+            for(int i=0;i<(*t)[*it].getChildrenNum();i++){
+                if((*t)[*it].hasSubtree(i)){rank++;}
+            }
             alphabet.insert({value,rank});
         }
     }
@@ -179,8 +180,9 @@ set<rankedChar> getAlphabet(observationTable& s){
         for(auto it=t->getIndexIterator();it.hasNext();++it){
             int value = (*t)[*it].getData();
             int rank = 0;
-            if((*t)[*it].hasSubtree(0)){rank++;}
-            if((*t)[*it].hasSubtree(1)){rank++;}
+            for(int i=0;i<(*t)[*it].getChildrenNum();i++){
+                if((*t)[*it].hasSubtree(i)){rank++;}
+            }
             alphabet.insert({value,rank});
         }
     }
@@ -190,11 +192,10 @@ set<rankedChar> getAlphabet(observationTable& s){
 void addTransition(observationTable& s, TreeAcceptor& acc, const ParseTree& tree){
     int value = tree.getData();
     vector<int> states;
-    if(tree.hasSubtree(0)){
-        states.push_back(s.getSObsInd(tree.getNode({0})));
-    }
-    if(tree.hasSubtree(1)){
-        states.push_back(s.getSObsInd(tree.getNode({1})));
+    for(int i=0;i<tree.getChildrenNum();i++){
+        if(tree.hasSubtree(i)){
+            states.push_back(s.getSObsInd(tree.getNode({i})));
+        }
     }
     int targetState = s.getSObsInd(tree);
     rankedChar c{value,(int)(states.size())};
@@ -326,4 +327,5 @@ void learnerExtend(const ParseTree& tree){
     auto treeCopy = new ParseTree(tree);
     extend(*table,treeCopy,*t);
     delete(treeCopy);
+
 }

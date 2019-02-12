@@ -61,8 +61,8 @@ struct TreePointer{
     ParseTree* ptr;
     const ParseTree* constPtr;
 
-    TreePointer(ParseTree* ptr):ptr(ptr),constPtr(nullptr){}
-    TreePointer(const ParseTree* constPtr):ptr(nullptr),constPtr(constPtr){}
+    explicit TreePointer(ParseTree* ptr):ptr(ptr),constPtr(nullptr){}
+    explicit TreePointer(const ParseTree* constPtr):ptr(nullptr),constPtr(constPtr){}
 
     friend bool operator==(const TreePointer&, const TreePointer&);
 };

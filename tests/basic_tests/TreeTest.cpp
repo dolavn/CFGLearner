@@ -169,7 +169,7 @@ TEST(tree_test,make_context){
     std::pair<ParseTree*,ParseTree*> contextPair = t.makeContext({0});
     ParseTree* context = contextPair.first;
     ParseTree* tree = contextPair.second;
-    ASSERT_EQ((*context)[{0}].getContextLoc(),vector<int>({0}));
+    ASSERT_EQ((*context)[{}].getContextLoc(),vector<int>({0}));
     ASSERT_EQ((*context)[{}].getIsContext(),true);
     ASSERT_EQ((*context)[{}].getData(),2);
     ASSERT_EQ((*context)[{0}].getData(),-1);
@@ -245,4 +245,16 @@ TEST(tree_test,equivalence_test){
     t9.setSubtree(t2,1);
     ASSERT_EQ(t8==t9,true);
     ASSERT_EQ(t8!=t9,false);
+}
+
+TEST(tree_test,hash_test){
+    ParseTree t(2);
+    ParseTree t2(2);
+    ParseTree t3(3);
+    ASSERT_EQ(t.getHash()==t2.getHash(),true);
+    ParseTree t8(2);
+    ParseTree t9(2);
+    t8.setSubtree(t,1);
+    t9.setSubtree(t,1);
+    ASSERT_EQ(t8.getHash()==t9.getHash(),true);
 }

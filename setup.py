@@ -26,7 +26,8 @@ ext_modules = [
         ["src/Learner.cpp", "src/PythonModule.cpp",
          "src/ParseTree.cpp", "src/Sequence.cpp",
          "src/SimpleTeacher.cpp", "src/TreeAcceptor.cpp",
-         "src/TreeConstructor.cpp", "src/CFG.cpp"],
+         "src/TreeConstructor.cpp", "src/CFG.cpp",
+         "src/FrequencyTeacher.cpp"],
         include_dirs=[
             # Path to pybind11 headers
             get_pybind_include(),

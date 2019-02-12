@@ -350,7 +350,9 @@ std::vector<int> ParseTree::indexIterator::operator*() const{
 size_t ParseTree::getHash() const{
     size_t ans = hash<int>()(data);
     for(auto tree: subtrees){
-        ans = ans ^ (hash<ParseTree*>()(tree) << 1);
+        if(tree){
+            ans = ans ^ (hash<int>()(tree->getData()) << 1);
+        }
         ans = ans >> 1;
     }
     return ans;

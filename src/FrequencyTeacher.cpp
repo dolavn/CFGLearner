@@ -57,7 +57,9 @@ FrequencyTeacher::~FrequencyTeacher(){
 pair<int,int>& FrequencyTeacher::getPair(const ParseTree& tree){
     TreePointer temp(&tree);
     if(map.find(temp)==map.end()){
-        map[temp] = pair<int,int>(0,0);
+        auto newTree = new ParseTree(tree);
+        TreePointer newPtr(newTree);
+        map[newPtr] = pair<int,int>(0,0);
     }
     return map[temp];
 }
@@ -104,10 +106,14 @@ bool FrequencyTeacher::inLanguage(const ParseTree& tree) const{
 
 
 size_t TreeHasher::operator()(const TreePointer& t) const{
-    if(!t.ptr){
+    if(!t.ptr && !t.constPtr){
         return 0;
     }
-    return t.ptr->getHash();
+    if(t.ptr) {
+        return t.ptr->getHash();
+    }else{
+        return t.constPtr->getHash();
+    }
 }
 
 
