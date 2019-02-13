@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <set>
+#include <ctime>
 
 using namespace std;
 
@@ -23,7 +24,9 @@ struct observationTable{
 private:
     const Teacher& teacher;
     vector<ParseTree*> s;
+    vector<int> sNew;
     vector<ParseTree*> r;
+    vector<int> rNew;
     vector<ParseTree*> c;
     unordered_map<ParseTree*,vector<bool>> obs;
     void completeTree(ParseTree* tree){
@@ -45,7 +48,7 @@ private:
         vectorClear(c);
     }
 public:
-    explicit observationTable(const Teacher& teacher):teacher(teacher),s(),r(),c(),obs(){}
+    explicit observationTable(const Teacher& teacher):teacher(teacher),s(),sNew(),r(),rNew(),c(),obs(){}
     observationTable(const observationTable& other)=delete;
     observationTable& operator=(const observationTable& other)=delete;
     observationTable(observationTable&& other)=delete;
@@ -67,8 +70,10 @@ public:
             }
         }
         if(!isComplete){
+            sNew.push_back((int)(s.size()));
             s.push_back(newTree);
         }else {
+            rNew.push_back((int)(r.size()));
             r.push_back(newTree);
         }
     }
@@ -90,6 +95,14 @@ public:
             obs[tree].push_back(teacher.membership(*merged));
             delete (merged);
             if(getSObsInd(*tree)==-1){//Find if the new context creates a new state.
+                for(int ind: rNew){
+                    if(ind==(int)(it-r.begin())){
+                        stringstream stream;
+                        stream << "index:" << ind;
+                        throw invalid_argument(stream.str());
+                    }
+                }
+                sNew.push_back(s.size());
                 s.push_back(tree);
                 r.erase(it);
             }else{
@@ -161,6 +174,22 @@ public:
     }
     inline const vector<ParseTree*>& getR(){return r;}
     inline const vector<ParseTree*>& getS(){return s;}
+    inline const vector<ParseTree*> getRNew(){
+        vector<ParseTree*> ans;
+        for(int ind: rNew){
+            ans.push_back(r[ind]);
+        }
+        rNew.clear();
+        return ans;
+    }
+    inline const vector<ParseTree*> getSNew(){
+        vector<ParseTree*> ans;
+        for(int ind: sNew){
+            ans.push_back(s[ind]);
+        }
+        sNew.clear();
+        return ans;
+    }
     inline const vector<ParseTree*>& getC(){return c;}
 };
 
@@ -189,6 +218,15 @@ set<rankedChar> getAlphabet(observationTable& s){
     return alphabet;
 }
 
+rankedChar getChar(TreeAcceptor& acc, const ParseTree& tree){
+    int value = tree.getData();
+    int rank = 0;
+    for(int i=0;i<tree.getChildrenNum();i++){
+        if(tree.hasSubtree(i)){rank++;}
+    }
+    return rankedChar{value, rank};
+}
+
 void addTransition(observationTable& s, TreeAcceptor& acc, const ParseTree& tree){
     int value = tree.getData();
     vector<int> states;
@@ -202,27 +240,39 @@ void addTransition(observationTable& s, TreeAcceptor& acc, const ParseTree& tree
     acc.addTransition(states,c,targetState);
 }
 
-TreeAcceptor synthesize(observationTable& s, const Teacher& teacher){
+TreeAcceptor synthesize(observationTable& s, const Teacher& teacher, TreeAcceptor* acc){
+    TreeAcceptor temp(set<rankedChar>(),0);
+    if(!acc){
+        acc = &temp;
+    }
     set<rankedChar> alphabet = getAlphabet(s);
-    TreeAcceptor ans(alphabet,(int)(s.getS().size()));
-    for(auto tree: s.getR()){
+    //TreeAcceptor ans(alphabet,(int)(s.getS().size()));
+    for(auto tree: s.getSNew()){
+        int state = acc->addState();
+        acc->setAccepting(state, teacher.membership(*tree));
         for(auto it = tree->getIndexIterator();it.hasNext();++it){
             vector<int> ind = *it;
-            addTransition(s,ans,(*tree)[ind]);
+            rankedChar c = getChar(*acc, (*tree)[ind]);
+            acc->addChar(c);
+            addTransition(s,*acc,(*tree)[ind]);
         }
     }
-    for(auto tree: s.getS()){
+    for(auto tree: s.getRNew()){
         for(auto it = tree->getIndexIterator();it.hasNext();++it){
             vector<int> ind = *it;
-            addTransition(s,ans,(*tree)[ind]);
+            rankedChar c = getChar(*acc, (*tree)[ind]);
+            acc->addChar(c);
+            addTransition(s,*acc,(*tree)[ind]);
         }
     }
-    for(auto it=s.getS().begin();it!=s.getS().end();it++){
+    /*
+    for(auto it=s.getSNew().begin();it!=s.getS().end();it++){
         if(teacher.membership(**it)){
-            ans.setAccepting((int)(it-s.getS().begin()),true);
+            acc->setAccepting((int)(it-s.getS().begin()),true);
         }
     }
-    return ans;
+     */
+    return *acc;
 }
 
 contextTreePair decompose(observationTable& s, ParseTree& t){
@@ -274,14 +324,26 @@ TreeAcceptor learn(const Teacher& teacher){
     observationTable table(teacher);
     TreeAcceptor ans(set<rankedChar>{});
     for(;;){
-        ans = synthesize(table,teacher);
+        clock_t begin = clock();
+        ans = synthesize(table,teacher,&ans);
+        clock_t end = clock();
+        double syntTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
+        begin = clock();
         ParseTree* counterExample = teacher.equivalence(ans);
+        end = clock();
+        double equivTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
         if(!counterExample){
             break;
         }
         //cout << "counter example given:" << endl;
         //cout << *counterExample << endl;
+        begin = clock();
         extend(table,counterExample,teacher);
+        end = clock();
+        double extendTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
+        cout << "syntTime:" << syntTime << endl;
+        cout << "equivTime:" << equivTime << endl;
+        cout << "extendTime:" << extendTime << endl;
         delete(counterExample);
     }
     return ans;
@@ -316,7 +378,7 @@ vector<bool> learnerGetObs(const ParseTree& tree){
 }
 
 TreeAcceptor learnerSynthesize(){
-    return synthesize(*table,*t);
+    return synthesize(*table,*t,nullptr);
 }
 
 contextTreePair learnerDecompose(ParseTree& tree){

@@ -43,6 +43,8 @@ class TreeAcceptor{
 public:
     explicit TreeAcceptor(std::set<rankedChar>); //Empty constructor
     TreeAcceptor(std::set<rankedChar>, int); //Constructs a tree acceptor with n states
+    int addState();
+    void addChar(rankedChar);
     void setAccepting(int,bool);
     inline int getStatesNum() const{return statesNum;}
     bool isAccepting(int) const;

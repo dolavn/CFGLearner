@@ -94,6 +94,8 @@ public:
 
     void addPositiveExample(const ParseTree&);
     void addNegativeExample(const ParseTree&);
+    void addPositiveExamples(const ParseTree&, int);
+    void addNegativeExamples(const ParseTree&, int);
     inline int getMinCount() const{return minCount;};
     inline float getMinFreq() const{return minFreq;};
 

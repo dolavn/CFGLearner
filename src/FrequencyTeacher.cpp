@@ -84,13 +84,21 @@ Teacher* FrequencyTeacher::clone(){
 }
 
 void FrequencyTeacher::addPositiveExample(const ParseTree& tree){
-    auto& p = getPair(tree);
-    p.first++;
+    addPositiveExamples(tree, 1);
 }
 
 void FrequencyTeacher::addNegativeExample(const ParseTree& tree){
+    addNegativeExamples(tree, 1);
+}
+
+void FrequencyTeacher::addPositiveExamples(const ParseTree& tree, int num){
     auto& p = getPair(tree);
-    p.second++;
+    p.first=p.first+num;
+}
+
+void FrequencyTeacher::addNegativeExamples(const ParseTree& tree, int num){
+    auto& p = getPair(tree);
+    p.second=p.second+num;
 }
 
 bool FrequencyTeacher::inLanguage(const ParseTree& tree) const{

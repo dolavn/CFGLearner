@@ -1,6 +1,6 @@
 from CFGLearner import SimpleTeacher, FrequencyTeacher, Teacher, learn
 from nltk import Tree, CFG
-from nltk.parse import generate
+# from nltk.parse import generate
 import matplotlib as plt
 import json
 plt.use('Agg')
@@ -40,17 +40,21 @@ for i in range(T_NUM):
 c = learn(t2)
 print(c)
 """
-t = FrequencyTeacher(1, 0.99)
+t = FrequencyTeacher(1, 0.9)
 fileDict = open('dict.txt')
 d = json.load(fileDict)
 d = {int(key): d[key] for key in d}
 file = open('output_beta.txt')
-for line in file:
-    tree = Tree.fromstring(line)
-    t.addPositiveExample(tree)
+beta_list = json.load(file)
+beta_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in beta_list]
 file = open('output_alpha.txt')
-for line in file:
-    tree = Tree.fromstring(line)
-    t.addNegativeExample(tree)
+alpha_list = json.load(file)
+alpha_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in alpha_list]
+for tree, occ in alpha_list[:50]:
+    t.addPositiveExamples(tree, occ)
+for tree, occ in beta_list[:50]:
+    t.addNegativeExamples(tree, occ)
+print('learning')
+print(len(alpha_list), len(beta_list))
 c = learn(t, d)
 print(c)

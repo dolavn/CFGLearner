@@ -141,6 +141,24 @@ PYBIND11_MODULE(CFGLearner, m) {
         t.addNegativeExample(*tree);
         delete(tree);
     });
+    frequencyTeacher.def("addPositiveExamples",[](FrequencyTeacher& t,py::object nltkTree, int num){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        t.addPositiveExamples(*tree, num);
+        delete(tree);
+    });
+    frequencyTeacher.def("addNegativeExamples",[](FrequencyTeacher& t,py::object nltkTree, int num){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        t.addNegativeExamples(*tree, num);
+        delete(tree);
+    });
     frequencyTeacher.def("__repr__",[](const FrequencyTeacher& t){
         stringstream stream;
         stream << "<FrequencyTeacher with minCount=";

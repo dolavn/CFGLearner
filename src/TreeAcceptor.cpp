@@ -17,6 +17,11 @@ TreeAcceptor::TreeAcceptor(set<rankedChar> alphabet, int statesNum):statesNum(st
 
 }
 
+int TreeAcceptor::addState(){
+    int ans = statesNum++;
+    return ans;
+}
+
 void TreeAcceptor::setAccepting(int state, bool accepting){
     if(state>=statesNum){
         throw std::invalid_argument("No such state!");
@@ -26,6 +31,10 @@ void TreeAcceptor::setAccepting(int state, bool accepting){
     }else{
         acceptingStates.erase(state);
     }
+}
+
+void TreeAcceptor::addChar(rankedChar c){
+    alphabet.insert(c);
 }
 
 void TreeAcceptor::addTransition(std::vector<int> states, rankedChar c, int targetState) {

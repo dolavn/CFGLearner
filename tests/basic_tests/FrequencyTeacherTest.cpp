@@ -18,6 +18,24 @@ TEST(frequency_teacher_test,basic_check){
     ASSERT_EQ(teacher.membership(t2),true);
 }
 
+TEST(frequency_teacher_test,advanced_check){
+    ParseTree t(2);
+    ParseTree t2(3);
+    FrequencyTeacher teacher(4, 0.5);
+    teacher.addPositiveExamples(t, 2);
+    ASSERT_EQ(teacher.membership(t),false);
+    teacher.addPositiveExamples(t, 4);
+    ASSERT_EQ(teacher.membership(t),true);
+    ASSERT_EQ(teacher.membership(t2),false);
+    teacher.addNegativeExamples(t2, 4);
+    ASSERT_EQ(teacher.membership(t2),false);
+    teacher.addPositiveExamples(t2, 2);
+    ASSERT_EQ(teacher.membership(t2),false);
+    teacher.addPositiveExamples(t2, 3);
+    ASSERT_EQ(teacher.membership(t2),true);
+}
+
+
 TEST(frequency_teacher_test,parameters_test){
     ParseTree t(2);
     ParseTree t2(3);

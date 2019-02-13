@@ -8,10 +8,10 @@
 using namespace std;
 
 
-ParseTree::ParseTree():empty(true),data(0),size(0),isContext(false),contextLoc(),
+ParseTree::ParseTree():empty(true),data(-1),size(0),isContext(false),contextLoc(),
 subtrees(){}
 
-ParseTree::ParseTree(bool context,vector<int> contextLoc):empty(true),data(0),size(0),isContext(context),
+ParseTree::ParseTree(bool context,vector<int> contextLoc):empty(true),data(-1),size(0),isContext(context),
 contextLoc(std::move(contextLoc)),subtrees(){
     if(!context){contextLoc = vector<int>();}
 }
@@ -40,6 +40,8 @@ ParseTree& ParseTree::operator=(const ParseTree& other){
         return *this;
     }
     clear();
+    empty = other.empty;
+    data = other.data;
     size = other.size;
     isContext = other.isContext;
     contextLoc = other.contextLoc;
@@ -57,10 +59,11 @@ ParseTree& ParseTree::operator=(ParseTree&& other) noexcept{
         return *this;
     }
     clear();
+    empty = other.empty;
+    data = other.data;
     subtrees = std::move(other.subtrees);
     isContext = other.isContext;
     size = other.size;
-    data = other.data;
     return *this;
 }
 
@@ -89,7 +92,7 @@ void ParseTree::copy(const ParseTree& other){
         callStack.pop();
         ParseTree* currTree = currPair.first;
         const ParseTree* otherTree = currPair.second;
-        currTree->data = otherTree->data;
+        currTree->setData(otherTree->data);
         currTree->subtrees = vector<ParseTree*>(otherTree->subtrees.size());
         for(auto i=(int)(otherTree->subtrees.size()-1);i>=0;--i){
             if(!otherTree->subtrees[i]){continue;}
@@ -165,6 +168,7 @@ std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(vector<int> loc) const{
             continue;
         }
         currTree->data = otherTree->data;
+        currTree->setData(otherTree->data);
         for(auto i=(int)(otherTree->subtrees.size()-1);i>=0;--i){
             if(!otherTree->subtrees[i]){continue;}
             bool isContext = isPrefix(curr_loc,loc) && loc.size()>curr_loc.size() && loc[curr_loc.size()]==i;
