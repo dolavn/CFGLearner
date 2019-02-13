@@ -44,7 +44,7 @@ namespace Trees{
 
 class TreeConstructor{
 public:
-    TreeConstructor(scoreTable);
+    explicit TreeConstructor(scoreTable);
     int createTree(const Sequence&);
     ParseTree* getTree();
 private:

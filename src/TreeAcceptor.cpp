@@ -134,10 +134,10 @@ void TreeAcceptor::printDescription() const{
         for(auto& p: t.second){
             string vec = "<";
             for(unsigned int i=0;i<t.first.size();++i){
-                vec = vec + char(t.first[i]+'0');
-                if(i<t.first.size()-1){vec = vec + ",";}
+                vec += char(t.first[i]+'0');
+                if(i<t.first.size()-1){vec += ",";}
             }
-            vec = vec + ">";
+            vec += ">";
             std::cout << "delta(" << vec << "," << p.second.c.c << ")=" << p.second.targetState << std::endl;
         }
     }

@@ -14,7 +14,12 @@ CFG::CFG(string startSymbol):nonTerminals(),terminals(),derivations(){
 }
 
 CFG::CFG(const TreeAcceptor& acc):nonTerminals(),terminals(),derivations(){
-    initFromAcceptor(acc);
+    unordered_map<int, string> temp;
+    initFromAcceptor(acc,temp);
+}
+
+CFG::CFG(const TreeAcceptor& acc, unordered_map<int,string>& map):nonTerminals(),terminals(),derivations(){
+    initFromAcceptor(acc,map);
 }
 
 void CFG::addNonTerminal(string nt){
@@ -75,7 +80,7 @@ string CFG::getRepr() const{
     return stream.str();
 }
 
-void CFG::initFromAcceptor(const TreeAcceptor& acc){
+void CFG::initFromAcceptor(const TreeAcceptor& acc, unordered_map<int, string> &cogMap){
     addNonTerminal("S"); //start symbol
     for(int i=0;i<acc.getStatesNum();++i){
         stringstream stream;
@@ -88,13 +93,17 @@ void CFG::initFromAcceptor(const TreeAcceptor& acc){
     for(rankedChar& c:acc.getAlphabet()){
         if(c.rank==0){
             stringstream stream;
-            stream << c.c;
+            if(cogMap.find(c.c)!=cogMap.end()){
+                stream << cogMap[c.c];
+            }else {
+                stream << c.c;
+            }
             addTerminal(stream.str());
         }
     }
     for(transition& t:acc.getTransitions()){
         vector<string> lhs;
-        if(t.statesSeq.size()>0) {
+        if(!t.statesSeq.empty()) {
             for (int state: t.statesSeq) {
                 stringstream stream;
                 stream << "N" << state;
@@ -102,7 +111,11 @@ void CFG::initFromAcceptor(const TreeAcceptor& acc){
             }
         }else{
             stringstream stream;
-            stream << t.c.c;
+            if(cogMap.find(t.c.c)!=cogMap.end()){
+                stream << cogMap[t.c.c];
+            }else {
+                stream << t.c.c;
+            }
             lhs.push_back(stream.str());
         }
         stringstream stream;

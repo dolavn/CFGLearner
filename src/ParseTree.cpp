@@ -3,7 +3,7 @@
 #include <iostream> //TODO: Delete
 #include <ParseTree.h>
 
-#define IS_NULL(A)  (A==nullptr)
+#define IS_NULL(A)  ((A)==nullptr)
 
 using namespace std;
 
@@ -48,7 +48,7 @@ ParseTree& ParseTree::operator=(const ParseTree& other){
 }
 
 ParseTree::ParseTree(ParseTree&& other) noexcept:empty(other.empty),data(other.data),size(other.size),isContext(other.isContext),
-subtrees(std::move(other.subtrees)),contextLoc(std::move(other.contextLoc)){
+contextLoc(std::move(other.contextLoc)),subtrees(std::move(other.subtrees)){
     other.size = 0;
 }
 
@@ -110,25 +110,18 @@ void ParseTree::clear(){
 }
 
 ParseTree* ParseTree::getSubtree(const vector<int>& loc){
-    stack<ParseTree*> stack;
-    stack.push(this);
-    int ind = 0;
-    vector<int> currLoc;
-    while(!stack.empty()){
-        ParseTree* currTree = stack.top();
-        stack.pop();
-        if(ind>=loc.size()){return currTree;}
-        if(loc[ind]>=currTree->subtrees.size()){
+    ParseTree* currTree = this;
+    for(auto& elem: loc){
+        if(elem>=(int)(currTree->subtrees.size())){
             throw std::invalid_argument("Index out of bounds");
         }
-        ParseTree* next = currTree->subtrees[loc[ind]];
+        ParseTree* next = currTree->subtrees[elem];
         if(!next){
             throw std::invalid_argument("Index out of bounds");
         }
-        currLoc.push_back(loc[ind++]);
-        stack.push(next);
+        currTree = next;
     }
-    throw std::invalid_argument("Index out of bounds");
+    return currTree;
 }
 
 ParseTree& ParseTree::operator[](const vector<int>& loc){
@@ -136,20 +129,18 @@ ParseTree& ParseTree::operator[](const vector<int>& loc){
 }
 
 const ParseTree& ParseTree::getNode(const vector<int>& loc) const{
-    stack<const ParseTree*> stack;
-    stack.push(this);
-    int ind = 0;
-    while(!stack.empty()){
-        const ParseTree& currTree = *stack.top();
-        stack.pop();
-        if(ind>=loc.size()){return currTree;}
-        ParseTree* next = currTree.subtrees[loc[ind++]];
+    const ParseTree* currTree = this;
+    for(auto& elem: loc){
+        if(elem>=(int)(currTree->subtrees.size())){
+            throw std::invalid_argument("Index out of bounds");
+        }
+        ParseTree* next = currTree->subtrees[elem];
         if(!next){
             throw std::invalid_argument("Index out of bounds");
         }
-        stack.push(next);
+        currTree = next;
     }
-    throw std::invalid_argument("Index out of bounds");
+    return *currTree;
 }
 
 vector<ParseTree*> ParseTree::getSubtrees() const{
@@ -184,7 +175,7 @@ std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(vector<int> loc) const{
             }else{
                 newTree = new ParseTree();
             }
-            while(currTree->subtrees.size()<i+1){currTree->subtrees.push_back(nullptr);}
+            while((int)(currTree->subtrees.size())<i+1){currTree->subtrees.push_back(nullptr);}
             currTree->subtrees[i] = newTree;
             vector<int> locCopy = curr_loc;
             locCopy.push_back(i);
@@ -231,7 +222,7 @@ ParseTree::stackPair ParseTree::incStack(stack<stackPair>& stack, stackPair& cur
     return stackPair(ansNode,ansLoc);
 }
 
-void ParseTree::setSubtree(const ParseTree & tree,int ind) {
+void ParseTree::setSubtree(const ParseTree & tree,unsigned int ind) {
     if(this->empty){
         throw std::invalid_argument("Can't add subtree to en empty tree");
     }
@@ -242,31 +233,7 @@ void ParseTree::setSubtree(const ParseTree & tree,int ind) {
     }
     subtrees[ind] = new ParseTree(tree);
 }
-/*
-void ParseTree::setRightSubtree(const ParseTree & right) {
-    if(this->empty){
-        throw std::invalid_argument("Can't add subtree to en empty tree");
-    }
-    while(subtrees.size()<2){subtrees.push_back(nullptr);}
-    if(hasRightSubtree()){
-        delete(subtrees[1]);
-        subtrees[1]=nullptr;
-    }
-    subtrees[1] = new ParseTree(right);
-}
 
-void ParseTree::setLeftSubtree(const ParseTree & left) {
-    if(this->empty){
-        throw std::invalid_argument("Can't add subtree to en empty tree");
-    }
-    if(subtrees.empty()){subtrees.push_back(nullptr);}
-    if(hasLeftSubtree()){
-        delete(subtrees[0]);
-        subtrees[0]=nullptr;
-    }
-    subtrees[0] = new ParseTree(left);
-}
-*/
 bool ParseTree::isLeaf() const{
     for(auto& tree: subtrees){
         if(tree){

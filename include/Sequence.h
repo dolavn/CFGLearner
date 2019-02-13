@@ -9,7 +9,7 @@ enum Strand { SENSE, ANTI_SENSE };
 
 class Sequence {
 public:
-	Sequence(std::vector<int> seq) :seq(std::move(seq)) {
+	explicit Sequence(std::vector<int> seq) :seq(std::move(seq)) {
 	}
 
 	Sequence(const Sequence& other) :seq(other.seq) {
@@ -19,8 +19,7 @@ public:
 
 	}
 
-	~Sequence() {
-	}
+	~Sequence()=default;
 
 	inline int& operator[](int ind) { return seq[ind]; }
 

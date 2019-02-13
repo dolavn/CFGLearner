@@ -148,10 +148,10 @@ PYBIND11_MODULE(CFGLearner, m) {
         stream << t.getMinFreq() << ">";
         return stream.str();
     });
-    m.def("learn",[](const Teacher& t) {
+    m.def("learn",[](const Teacher& t, std::unordered_map<int,string> map) {
         py::gil_scoped_release release;
         TreeAcceptor acc = learn(t);
-        CFG c(acc);
+        CFG c(acc,map);
         py::gil_scoped_acquire acquire;
         py::object nltk = py::module::import("nltk");
         py::object nltkCFG = nltk.attr("CFG");

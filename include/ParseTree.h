@@ -19,10 +19,6 @@ private:
     static stackPair incStack(std::stack<stackPair>&, stackPair&);
     ParseTree* getSubtree(const std::vector<int>&);
     std::vector<ParseTree*> subtrees;
-    /*
-    ParseTree* leftSubtree;
-    ParseTree* rightSubtree;
-     */
     struct stackElem{
         ParseTree* curr;
         const ParseTree* other;
@@ -38,7 +34,7 @@ public:
         int operator*() const;
         int* operator->() const;
         iterator& operator++();
-        iterator operator++(int){
+        const iterator operator++(int){
             iterator ans(*this);
             ++(*this);
             return ans;
@@ -55,7 +51,7 @@ public:
         bool hasNext();
         std::vector<int> operator*() const;
         indexIterator& operator++();
-        indexIterator operator++(int){
+        const indexIterator operator++(int){
             indexIterator ans(*this);
             ++(*this);
             return ans;
@@ -84,9 +80,9 @@ public:
     iterator getIterator();
     indexIterator getIndexIterator();
     indexIterator getLeafIterator();
-    void setPointer(ParseTree* ptr, int ind){while(subtrees.size()<=ind){subtrees.push_back(nullptr);}subtrees[ind]=ptr;}
-    void setSubtree(const ParseTree&, int ind);
-    bool hasSubtree(int ind) const{return subtrees.size()>=ind+1 && subtrees[ind]!=nullptr;}
+    void setPointer(ParseTree* ptr, unsigned int ind){while(subtrees.size()<=ind){subtrees.push_back(nullptr);}subtrees[ind]=ptr;}
+    void setSubtree(const ParseTree&, unsigned int ind);
+    bool hasSubtree(unsigned int ind) const{return subtrees.size()>=ind+1 && subtrees[ind]!=nullptr;}
     void setData(int data){this->data = data;this->empty=false;}
     bool isLeaf() const;
     inline bool getIsContext() const{return isContext;}

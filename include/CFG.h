@@ -43,13 +43,14 @@ class CFG{
 public:
     explicit CFG(std::string);
     explicit CFG(const TreeAcceptor&);
+    explicit CFG(const TreeAcceptor&, std::unordered_map<int, std::string>&);
     void addNonTerminal(std::string);
     void addTerminal(std::string);
     void addDerivation(std::string,std::vector<std::string>);
     std::string getRepr() const; //Returns a representation of this CFG, could be used to construct nltk cfg object.
 private:
     //Creates a context free grammar from a tree acceptor
-    void initFromAcceptor(const TreeAcceptor&);
+    void initFromAcceptor(const TreeAcceptor&, std::unordered_map<int, std::string>&);
     std::vector<nonTerminal> nonTerminals;
     std::vector<terminal> terminals;
     std::vector<derivation> derivations;
