@@ -37,7 +37,7 @@ void TreeAcceptor::addChar(rankedChar c){
     alphabet.insert(c);
 }
 
-void TreeAcceptor::addTransition(std::vector<int> states, rankedChar c, int targetState) {
+void TreeAcceptor::addTransition(const std::vector<int>& states, rankedChar c, int targetState) {
     if(c.rank!=(int)(states.size())){
         throw std::invalid_argument("Rank of character and number of states don't match!");
     }
@@ -45,6 +45,7 @@ void TreeAcceptor::addTransition(std::vector<int> states, rankedChar c, int targ
     transitionPairVec& v = transitions[states];
     for(auto& pair: v){
         if(pair.first==c){
+            pair.second = t;
             return;
         }
     }

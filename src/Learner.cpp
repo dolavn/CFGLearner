@@ -292,6 +292,9 @@ contextTreePair decompose(observationTable& s, ParseTree& t){
             break;
         }
     }
+    if(s.treeInS(t.getNode(splitInd))){
+        throw invalid_argument("Tree in split index shouldn't be in S!");
+    }
     return t.makeContext(splitInd);
 }
 
@@ -338,13 +341,14 @@ TreeAcceptor learn(const Teacher& teacher){
         }
         //cout << "counter example given:" << endl;
         //cout << *counterExample << endl;
+        //ans.printDescription();
         begin = clock();
         extend(table,counterExample,teacher);
         end = clock();
         double extendTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
-        cout << "syntTime:" << syntTime << endl;
-        cout << "equivTime:" << equivTime << endl;
-        cout << "extendTime:" << extendTime << endl;
+        //cout << "syntTime:" << syntTime << endl;
+        //cout << "equivTime:" << equivTime << endl;
+        //cout << "extendTime:" << extendTime << endl;
         delete(counterExample);
     }
     return ans;

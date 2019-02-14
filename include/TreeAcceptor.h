@@ -30,9 +30,9 @@ struct rankedChar{
 typedef std::vector<int> intVec;
 
 struct transition{
-    const intVec statesSeq;
-    const rankedChar c;
-    const int targetState;
+    intVec statesSeq;
+    rankedChar c;
+    int targetState;
 
     inline friend bool operator==(const transition& lhs, const transition& rhs){
         return lhs.statesSeq==rhs.statesSeq && lhs.c==rhs.c && lhs.targetState == rhs.targetState;
@@ -49,7 +49,7 @@ public:
     inline int getStatesNum() const{return statesNum;}
     bool isAccepting(int) const;
     int nextState(std::vector<int>, rankedChar) const; //TODO: make private
-    void addTransition(std::vector<int>,rankedChar,int);
+    void addTransition(const std::vector<int>&,rankedChar,int);
     bool run(const ParseTree&) const;
     void printDescription() const;
     std::vector<rankedChar> getAlphabet() const;
