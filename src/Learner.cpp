@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <iostream>
 #include <set>
-#include <ctime>
 
 using namespace std;
 
@@ -19,6 +18,7 @@ inline void vectorClear(vector<ParseTree*>& vec){
         }
     }
 }
+
 
 struct observationTable{
 private:
@@ -95,14 +95,16 @@ public:
             obs[tree].push_back(teacher.membership(*merged));
             delete (merged);
             if(getSObsInd(*tree)==-1){//Find if the new context creates a new state.
-                for(int ind: rNew){
+                auto itNew = rNew.begin();
+                while(itNew!=rNew.end()){
+                    int& ind = *itNew;
                     if(ind==(int)(it-r.begin())){
-                        stringstream stream;
-                        stream << "index:" << ind;
-                        throw invalid_argument(stream.str());
+                        rNew.erase(itNew);
+                        break;
                     }
+                    itNew++;
                 }
-                sNew.push_back(s.size());
+                sNew.push_back((int)(s.size()));
                 s.push_back(tree);
                 r.erase(it);
             }else{
@@ -241,34 +243,30 @@ void addTransition(observationTable& s, TreeAcceptor& acc, const ParseTree& tree
 }
 
 TreeAcceptor synthesize(observationTable& s, const Teacher& teacher, TreeAcceptor* acc){
-    TreeAcceptor temp(set<rankedChar>(),0);
-    if(!acc){
-        acc = &temp;
-    }
     set<rankedChar> alphabet = getAlphabet(s);
-    //TreeAcceptor ans(alphabet,(int)(s.getS().size()));
+    TreeAcceptor ans(alphabet,(int)(s.getS().size()));
+    TreeAcceptor temp(set<rankedChar>(),0);
+    if(!acc){acc=&temp;}
     for(auto tree: s.getSNew()){
         int state = acc->addState();
         acc->setAccepting(state, teacher.membership(*tree));
         for(auto it = tree->getIndexIterator();it.hasNext();++it){
             vector<int> ind = *it;
-            rankedChar c = getChar(*acc, (*tree)[ind]);
-            acc->addChar(c);
+            acc->addChar(getChar(*acc,(*tree)[ind]));
             addTransition(s,*acc,(*tree)[ind]);
         }
     }
     for(auto tree: s.getRNew()){
         for(auto it = tree->getIndexIterator();it.hasNext();++it){
             vector<int> ind = *it;
-            rankedChar c = getChar(*acc, (*tree)[ind]);
-            acc->addChar(c);
+            acc->addChar(getChar(*acc,(*tree)[ind]));
             addTransition(s,*acc,(*tree)[ind]);
         }
     }
     /*
-    for(auto it=s.getSNew().begin();it!=s.getS().end();it++){
+    for(auto it=s.getS().begin();it!=s.getS().end();it++){
         if(teacher.membership(**it)){
-            acc->setAccepting((int)(it-s.getS().begin()),true);
+            ans.setAccepting((int)(it-s.getS().begin()),true);
         }
     }
      */
@@ -305,6 +303,9 @@ void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
         int sInd = s.getSObsInd(*tree);
         const ParseTree& sTree = s.getTreeS(sInd);
         ParseTree* mergedTree = context->mergeContext(sTree);
+        if(*t==*mergedTree){
+            throw invalid_argument("Endless loop");
+        }
         if(teacher.membership(*t)==teacher.membership(*mergedTree)){
             extend(s, mergedTree, teacher);
             delete(mergedTree);
