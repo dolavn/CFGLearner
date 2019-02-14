@@ -174,6 +174,31 @@ public:
         }
         return false;
     }
+    void printTable(){
+        cout << "Contexts:" << endl;
+        for(auto it = c.begin();it!=c.end();it++){
+            ParseTree* tree = *it;
+            cout << (it-c.begin()) << " - " << *tree << endl;
+        }
+        cout << "Trees in S:" << endl;
+        for(auto tree: s) {
+            cout << *tree << endl;
+            vector<bool> obs = getObs(*tree);
+            for(bool o: obs){
+                if(o){cout << "1";}else{cout << "0";}
+            }
+            cout << endl;
+        }
+        cout << "Trees in R:" << endl;
+        for(auto tree: r){
+            cout << *tree << endl;
+            vector<bool> obs = getObs(*tree);
+            for(bool o: obs){
+                if(o){cout << "1";}else{cout << "0";}
+            }
+            cout << endl;
+        }
+    }
     inline const vector<ParseTree*>& getR(){return r;}
     inline const vector<ParseTree*>& getS(){return s;}
     inline const vector<ParseTree*> getRNew(){
@@ -263,13 +288,6 @@ TreeAcceptor synthesize(observationTable& s, const Teacher& teacher, TreeAccepto
             addTransition(s,*acc,(*tree)[ind]);
         }
     }
-    /*
-    for(auto it=s.getS().begin();it!=s.getS().end();it++){
-        if(teacher.membership(**it)){
-            ans.setAccepting((int)(it-s.getS().begin()),true);
-        }
-    }
-     */
     return *acc;
 }
 
@@ -293,6 +311,8 @@ contextTreePair decompose(observationTable& s, ParseTree& t){
         }
     }
     if(s.treeInS(t.getNode(splitInd))){
+        cout << t << endl;
+        s.printTable();
         throw invalid_argument("Tree in split index shouldn't be in S!");
     }
     return t.makeContext(splitInd);
@@ -346,9 +366,9 @@ TreeAcceptor learn(const Teacher& teacher){
         extend(table,counterExample,teacher);
         end = clock();
         double extendTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
-        //cout << "syntTime:" << syntTime << endl;
-        //cout << "equivTime:" << equivTime << endl;
-        //cout << "extendTime:" << extendTime << endl;
+        cout << "syntTime:" << syntTime << endl;
+        cout << "equivTime:" << equivTime << endl;
+        cout << "extendTime:" << extendTime << endl;
         delete(counterExample);
     }
     return ans;
