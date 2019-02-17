@@ -60,6 +60,10 @@ public:
         if(tree.getIsContext()){
             throw invalid_argument("Can't add a context to S");
         }
+        if(hasTree(tree)){
+            cout << tree << endl;
+            throw invalid_argument("Tree already exists");
+        }
         auto newTree = new ParseTree(tree);
         completeTree(newTree);
         bool isComplete = false;
@@ -311,18 +315,27 @@ contextTreePair decompose(observationTable& s, ParseTree& t){
         }
     }
     if(s.treeInS(t.getNode(splitInd))){
-        cout << t << endl;
-        s.printTable();
         throw invalid_argument("Tree in split index shouldn't be in S!");
     }
     return t.makeContext(splitInd);
 }
 
 void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
+    if(s.treeInS(*t)){
+        s.printTable();
+        sleep(1);
+        cout << *t << endl;
+        if(!teacher.membership(*t)){cout << "not ";}
+        cout << "in language" << endl;
+        throw invalid_argument("Counter example can't be a member of S!");
+    }
     contextTreePair pair = decompose(s,*t);
+    cout << "extending " << *t << endl;
     ParseTree* context = pair.first;
     ParseTree* tree = pair.second;
-    if(s.hasTree(*tree)){
+    cout << "context " << *context << endl;
+    cout << "tree " << *tree << endl;
+    if(s.hasTree(*tree)){ //Tree in R
         int sInd = s.getSObsInd(*tree);
         const ParseTree& sTree = s.getTreeS(sInd);
         ParseTree* mergedTree = context->mergeContext(sTree);
@@ -335,7 +348,7 @@ void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
         }else{
             delete(mergedTree);
             s.addContext(*context);
-            s.addTree(*tree);
+            //s.addTree(*tree);
         }
     }else{
         s.addTree(*tree);
@@ -359,8 +372,10 @@ TreeAcceptor learn(const Teacher& teacher){
         if(!counterExample){
             break;
         }
-        //cout << "counter example given:" << endl;
-        //cout << *counterExample << endl;
+        cout << "counter example given:" << endl;
+        cout << *counterExample << endl;
+        if(!ans.run(*counterExample)){cout << "not ";}
+        cout << "in language" << endl;
         //ans.printDescription();
         begin = clock();
         extend(table,counterExample,teacher);

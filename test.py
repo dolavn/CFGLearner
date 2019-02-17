@@ -50,9 +50,9 @@ beta_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in beta_list]
 file = open('output_alpha.txt')
 alpha_list = json.load(file)
 alpha_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in alpha_list]
-for tree, occ in alpha_list[:50]:
+for tree, occ in alpha_list[:100]:
     t.addPositiveExamples(tree, occ)
-for tree, occ in beta_list[:50]:
+for tree, occ in beta_list[:100]:
     t.addNegativeExamples(tree, occ)
 print('learning')
 print(len(alpha_list), len(beta_list))

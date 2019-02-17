@@ -3,7 +3,7 @@
 //
 
 #include <iostream> //TODO: delete
-
+#include <sstream>
 #include "TreeAcceptor.h"
 
 using namespace std;
@@ -142,13 +142,14 @@ void TreeAcceptor::printDescription() const{
     std::cout << "Transitions:" << std::endl;
     for(auto& t: transitions){
         for(auto& p: t.second){
-            string vec = "<";
+            stringstream stream;
+            stream << "<";
             for(unsigned int i=0;i<t.first.size();++i){
-                vec += char(t.first[i]+'0');
-                if(i<t.first.size()-1){vec += ",";}
+                stream << t.first[i];
+                if(i<t.first.size()-1){stream << ",";}
             }
-            vec += ">";
-            std::cout << "delta(" << vec << "," << p.second.c.c << ")=" << p.second.targetState << std::endl;
+            stream << ">";
+            std::cout << "delta(" << stream.str() << "," << p.second.c.c << ")=" << p.second.targetState << std::endl;
         }
     }
 }
