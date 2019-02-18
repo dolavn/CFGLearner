@@ -93,6 +93,7 @@ public:
             delete (merged);
         }
         auto it = r.begin();
+        int newState = -1;
         while(it!=r.end()) {
             ParseTree *tree = *it;
             ParseTree *merged = newContext->mergeContext(*tree);
@@ -100,7 +101,7 @@ public:
             delete (merged);
             if(getSObsInd(*tree)==-1){//Find if the new context creates a new state.
                 auto itNew = rNew.begin();
-                while(itNew!=rNew.end()){
+                while(itNew!=rNew.end()){ //Remove tree if from rNew list if it's there.
                     int& ind = *itNew;
                     if(ind==(int)(it-r.begin())){
                         rNew.erase(itNew);
@@ -109,12 +110,24 @@ public:
                     itNew++;
                 }
                 sNew.push_back((int)(s.size()));
+                if(newState==-1){newState = (int)s.size();}
                 s.push_back(tree);
-                r.erase(it);
+                r.erase(it); //Remove tree from r list.
             }else{
                 ++it;
             }
         }
+        if(newState==-1){return;} //No updates to transitions needed, since no new states were created
+        it = r.begin();
+        while(it!=r.end()) {
+            ParseTree *tree = *it;
+            //Checks if this tree now leads to a different state. If so, transitions need to be updated.
+            if(getSObsInd(*tree)>=newState){
+                rNew.push_back((int)(it-r.begin()));
+            }
+            ++it;
+        }
+
     }
     vector<bool> getObs(const ParseTree& tree){
         ParseTree* ptr = nullptr;
@@ -223,7 +236,7 @@ public:
     }
     inline const vector<ParseTree*>& getC(){return c;}
 };
-
+/*
 set<rankedChar> getAlphabet(observationTable& s){
     set<rankedChar> alphabet;
     for(auto t:s.getS()){
@@ -248,7 +261,7 @@ set<rankedChar> getAlphabet(observationTable& s){
     }
     return alphabet;
 }
-
+*/
 rankedChar getChar(TreeAcceptor& acc, const ParseTree& tree){
     int value = tree.getData();
     int rank = 0;
@@ -268,16 +281,21 @@ void addTransition(observationTable& s, TreeAcceptor& acc, const ParseTree& tree
     }
     int targetState = s.getSObsInd(tree);
     rankedChar c{value,(int)(states.size())};
+    /*cout << tree << endl;
+    cout << "adding transition ["; for(auto state: states){cout << state << ",";}
+    cout << "," << c.c << "] -> " << targetState << endl;*/
     acc.addTransition(states,c,targetState);
 }
 
 TreeAcceptor synthesize(observationTable& s, const Teacher& teacher, TreeAcceptor* acc){
-    set<rankedChar> alphabet = getAlphabet(s);
-    TreeAcceptor ans(alphabet,(int)(s.getS().size()));
+    //set<rankedChar> alphabet = getAlphabet(s);
+    //TreeAcceptor ans(alphabet,(int)(s.getS().size()));
     TreeAcceptor temp(set<rankedChar>(),0);
     if(!acc){acc=&temp;}
     for(auto tree: s.getSNew()){
         int state = acc->addState();
+        /*cout << "adding state" << state << endl;
+        cout << *tree << endl;*/
         acc->setAccepting(state, teacher.membership(*tree));
         for(auto it = tree->getIndexIterator();it.hasNext();++it){
             vector<int> ind = *it;
@@ -330,11 +348,11 @@ void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
         throw invalid_argument("Counter example can't be a member of S!");
     }
     contextTreePair pair = decompose(s,*t);
-    cout << "extending " << *t << endl;
+    //cout << "extending " << *t << endl;
     ParseTree* context = pair.first;
     ParseTree* tree = pair.second;
-    cout << "context " << *context << endl;
-    cout << "tree " << *tree << endl;
+    //cout << "context " << *context << endl;
+    //cout << "tree " << *tree << endl;
     if(s.hasTree(*tree)){ //Tree in R
         int sInd = s.getSObsInd(*tree);
         const ParseTree& sTree = s.getTreeS(sInd);
@@ -372,18 +390,21 @@ TreeAcceptor learn(const Teacher& teacher){
         if(!counterExample){
             break;
         }
+        /*
         cout << "counter example given:" << endl;
         cout << *counterExample << endl;
+        if(!teacher.membership(*counterExample)){cout << "not ";}
+        cout << "in the language" << endl;
         if(!ans.run(*counterExample)){cout << "not ";}
-        cout << "in language" << endl;
-        //ans.printDescription();
+        cout << "accepted by our tree automata" << endl;
+        ans.printDescription();*/
         begin = clock();
-        extend(table,counterExample,teacher);
+        extend(table, counterExample, teacher);
         end = clock();
         double extendTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
-        cout << "syntTime:" << syntTime << endl;
+        /*cout << "syntTime:" << syntTime << endl;
         cout << "equivTime:" << equivTime << endl;
-        cout << "extendTime:" << extendTime << endl;
+        cout << "extendTime:" << extendTime << endl;*/
         delete(counterExample);
     }
     return ans;
