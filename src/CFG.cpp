@@ -82,8 +82,22 @@ string CFG::getRepr() const{
 
 void CFG::initFromAcceptor(const TreeAcceptor& acc, unordered_map<int, string> &cogMap){
     addNonTerminal("S"); //start symbol
+    unordered_map<int, int> leafStates;
     for(int i=0;i<acc.getStatesNum();++i){
         stringstream stream;
+        int terminal = -1;
+        for(transition& t: acc.getTransitions()){
+            if(t.targetState==i && !t.statesSeq.empty()){
+                break;
+            }
+            if(t.targetState==i && t.statesSeq.empty()){
+                terminal = t.c.c;
+            }
+        }
+        if(terminal!=-1){
+            leafStates[i] = terminal;
+            continue;
+        }
         stream << "N" << i;
         addNonTerminal(stream.str());
         if(acc.isAccepting(i)){
@@ -106,17 +120,20 @@ void CFG::initFromAcceptor(const TreeAcceptor& acc, unordered_map<int, string> &
         if(!t.statesSeq.empty()) {
             for (int state: t.statesSeq) {
                 stringstream stream;
-                stream << "N" << state;
+                if(leafStates.find(state)!=leafStates.end()){
+                    int c = leafStates[state];
+                    if(cogMap.find(c)!=cogMap.end()){
+                        stream << cogMap[c];
+                    }else {
+                        stream << c;
+                    }
+                }else{
+                    stream << "N" << state;
+                }
                 lhs.push_back(stream.str());
             }
         }else{
-            stringstream stream;
-            if(cogMap.find(t.c.c)!=cogMap.end()){
-                stream << cogMap[t.c.c];
-            }else {
-                stream << t.c.c;
-            }
-            lhs.push_back(stream.str());
+            continue;
         }
         stringstream stream;
         stream << "N" << t.targetState;
