@@ -247,6 +247,35 @@ TEST(tree_test,equivalence_test){
     ASSERT_EQ(t8!=t9,false);
 }
 
+TEST(tree_test, difference_test){
+    ParseTree t(2);
+    ParseTree t2(2);
+    ASSERT_EQ(t-t2,0);
+    t2 = ParseTree(3);
+    t2.setWeight(5);
+    t.setWeight(2);
+    ASSERT_EQ(t-t2,7);
+}
+
+TEST(tree_test, advanced_difference_test){
+    ParseTree t(2);
+    ParseTree t2(2);
+    ParseTree left(1);
+    ParseTree center1(4);
+    ParseTree center2(5);
+    ParseTree right(6);
+    left.setWeight(5);
+    t.setWeight(4);
+    t2.setWeight(16);
+    center1.setWeight(4);
+    center2.setWeight(2);
+    right.setWeight(4);
+    t.setSubtree(left, 0); t2.setSubtree(left, 0);
+    t.setSubtree(center1, 1); t2.setSubtree(center2, 1);
+    t2.setSubtree(right, 2);
+    ASSERT_EQ(t-t2,10);
+}
+
 TEST(tree_test,hash_test){
     ParseTree t(2);
     ParseTree t2(2);

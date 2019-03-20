@@ -12,6 +12,7 @@ private:
     bool empty;
     int data;
     int size;
+    int weight;
     void copy(const ParseTree& other);
     void clear();
     bool isContext;
@@ -24,7 +25,7 @@ private:
         const ParseTree* other;
         std::vector<int> loc;
         stackElem(ParseTree* curr, const ParseTree* other, std::vector<int> loc):curr(curr),other(other),
-        loc(std::move(loc)){}
+                                                                                 loc(std::move(loc)){}
     };
 public:
     class iterator{
@@ -34,7 +35,7 @@ public:
         int operator*() const;
         int* operator->() const;
         iterator& operator++();
-        const iterator operator++(int){
+        iterator operator++(int){
             iterator ans(*this);
             ++(*this);
             return ans;
@@ -51,7 +52,7 @@ public:
         bool hasNext();
         std::vector<int> operator*() const;
         indexIterator& operator++();
-        const indexIterator operator++(int){
+        indexIterator operator++(int){
             indexIterator ans(*this);
             ++(*this);
             return ans;
@@ -73,6 +74,7 @@ public:
     ParseTree& operator=(ParseTree&&) noexcept;
     ParseTree& operator[](const std::vector<int>&);
     friend bool operator==(const ParseTree&, const ParseTree&);
+    friend int operator-(const ParseTree&, const ParseTree&);
     inline friend bool operator!=(const ParseTree& lhs, const ParseTree& rhs){return !(lhs==rhs);}
     friend std::ostream& operator<<(std::ostream&,const ParseTree&);
     const ParseTree& getNode(const std::vector<int>&) const;
@@ -85,6 +87,8 @@ public:
     bool hasSubtree(unsigned int ind) const{return subtrees.size()>=ind+1 && subtrees[ind]!=nullptr;}
     void setData(int data){this->data = data;this->empty=false;}
     bool isLeaf() const;
+    int getWeight() const;
+    void setWeight(int);
     inline bool getIsContext() const{return isContext;}
     inline int getChildrenNum() const{return (int)(subtrees.size());}
     inline bool isEmpty() const{return empty;}

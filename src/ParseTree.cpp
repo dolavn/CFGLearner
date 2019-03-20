@@ -3,35 +3,35 @@
 #include <iostream> //TODO: Delete
 #include <ParseTree.h>
 
-#define IS_NULL(A)  ((A)==nullptr)
+#define IS_NULL(A)  (A==nullptr)
 
 using namespace std;
 
 
-ParseTree::ParseTree():empty(true),data(-1),size(0),isContext(false),contextLoc(),
-subtrees(){}
+ParseTree::ParseTree():empty(true),data(0),size(0),weight(0),isContext(false),contextLoc(),
+                       subtrees(){}
 
-ParseTree::ParseTree(bool context,vector<int> contextLoc):empty(true),data(-1),size(0),isContext(context),
-contextLoc(std::move(contextLoc)),subtrees(){
+ParseTree::ParseTree(bool context,vector<int> contextLoc):empty(true),data(0),size(0),weight(0),isContext(context),
+                                                          contextLoc(std::move(contextLoc)),subtrees(){
     if(!context){contextLoc = vector<int>();}
 }
 
-ParseTree::ParseTree(int data):empty(false),data(data),size(1),isContext(false),contextLoc(),subtrees(){}
+ParseTree::ParseTree(int data):empty(false),data(data),size(1),weight(0),isContext(false),contextLoc(),subtrees(){}
 
-ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data),size(1),isContext(false),contextLoc(),
-subtrees(v.size()){
+ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data),size(1),weight(0),
+                                                    isContext(false),contextLoc(),subtrees(v.size()){
     for(unsigned int i=0;i<v.size();++i){
         subtrees[i] = new ParseTree(v[i]);
     }
 }
 
-ParseTree::ParseTree(int data, bool context, vector<int> contextLoc):empty(false),data(data),size(1),
-isContext(context),contextLoc(std::move(contextLoc)),subtrees(){
+ParseTree::ParseTree(int data, bool context, vector<int> contextLoc):empty(false),data(data),size(1),weight(0),
+                                                                     isContext(context),contextLoc(std::move(contextLoc)),subtrees(){
     if(!context){contextLoc=vector<int>();}
 }
 
-ParseTree::ParseTree(const ParseTree& other):empty(other.empty),data(other.data),size(other.size),
-isContext(other.isContext),contextLoc(other.contextLoc),subtrees(){
+ParseTree::ParseTree(const ParseTree& other):empty(other.empty),data(other.data),size(other.size),weight(other.weight),
+                                             isContext(other.isContext),contextLoc(other.contextLoc),subtrees(){
     copy(other);
 }
 
@@ -40,17 +40,17 @@ ParseTree& ParseTree::operator=(const ParseTree& other){
         return *this;
     }
     clear();
-    empty = other.empty;
-    data = other.data;
     size = other.size;
+    weight = other.weight;
     isContext = other.isContext;
     contextLoc = other.contextLoc;
     copy(other);
     return *this;
 }
 
-ParseTree::ParseTree(ParseTree&& other) noexcept:empty(other.empty),data(other.data),size(other.size),isContext(other.isContext),
-contextLoc(std::move(other.contextLoc)),subtrees(std::move(other.subtrees)){
+ParseTree::ParseTree(ParseTree&& other) noexcept:empty(other.empty),data(other.data),
+                                                 size(other.size),weight(other.weight),isContext(other.isContext),contextLoc(std::move(other.contextLoc)),
+                                                 subtrees(std::move(other.subtrees)){
     other.size = 0;
 }
 
@@ -59,11 +59,11 @@ ParseTree& ParseTree::operator=(ParseTree&& other) noexcept{
         return *this;
     }
     clear();
-    empty = other.empty;
-    data = other.data;
     subtrees = std::move(other.subtrees);
     isContext = other.isContext;
     size = other.size;
+    weight = other.weight;
+    data = other.data;
     return *this;
 }
 
@@ -92,7 +92,7 @@ void ParseTree::copy(const ParseTree& other){
         callStack.pop();
         ParseTree* currTree = currPair.first;
         const ParseTree* otherTree = currPair.second;
-        currTree->setData(otherTree->data);
+        currTree->data = otherTree->data;
         currTree->subtrees = vector<ParseTree*>(otherTree->subtrees.size());
         for(auto i=(int)(otherTree->subtrees.size()-1);i>=0;--i){
             if(!otherTree->subtrees[i]){continue;}
@@ -168,7 +168,6 @@ std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(vector<int> loc) const{
             continue;
         }
         currTree->data = otherTree->data;
-        currTree->setData(otherTree->data);
         for(auto i=(int)(otherTree->subtrees.size()-1);i>=0;--i){
             if(!otherTree->subtrees[i]){continue;}
             bool isContext = isPrefix(curr_loc,loc) && loc.size()>curr_loc.size() && loc[curr_loc.size()]==i;
@@ -247,12 +246,20 @@ bool ParseTree::isLeaf() const{
     return true;
 }
 
+int ParseTree::getWeight() const{
+    return weight;
+}
+
+void ParseTree::setWeight(int weight){
+    this->weight = weight;
+}
+
 ParseTree ParseTree::getSkeleton() const{
-     ParseTree ans(*this);
-     for(auto it=ans.getIndexIterator();it.hasNext();++it){
-         (ans)[*it].setData(-1);
-     }
-     return ans;
+    ParseTree ans(*this);
+    for(auto it=ans.getIndexIterator();it.hasNext();++it){
+        (ans)[*it].setData(-1);
+    }
+    return ans;
 }
 
 ParseTree::iterator::iterator(ParseTree& tree):stack(),currNode(&tree),currLoc(){
@@ -341,6 +348,31 @@ bool operator==(const ParseTree& lhs, const ParseTree& rhs){
         }
     }
     return true;
+}
+
+int operator-(const ParseTree& lhs, const ParseTree& rhs){
+    if(lhs.data!=rhs.data){return lhs.weight+rhs.weight;}
+    int diff = 0;
+    unsigned int i=0;
+    const ParseTree& bigger = lhs.subtrees.size()>rhs.subtrees.size()?lhs:rhs;
+    for(;i<min(lhs.subtrees.size(),rhs.subtrees.size());i++){
+        if(!IS_NULL(lhs.subtrees[i]) && !IS_NULL(rhs.subtrees[i])){
+            diff = diff + (*lhs.subtrees[i]-*rhs.subtrees[i]);
+            continue;
+        }
+        if(!IS_NULL(lhs.subtrees[i])){
+            diff = diff + lhs.subtrees[i]->getWeight();
+            continue;
+        }
+        if(!IS_NULL(rhs.subtrees[i])){
+            diff = diff + rhs.subtrees[i]->getWeight();
+            continue;
+        }
+    }
+    for(;i<max(lhs.subtrees.size(),rhs.subtrees.size());i++){
+        diff = diff + bigger.subtrees[i]->getWeight();
+    }
+    return diff;
 }
 
 ostream& operator<<(ostream& output, const ParseTree& tree){
