@@ -16,6 +16,7 @@ SET (SRCS src/ParseTree.cpp
           src/CFG.cpp
           src/PythonModule.cpp
           src/FrequencyTeacher.cpp
+          src/DifferenceTeacher.cpp
           )
 
 

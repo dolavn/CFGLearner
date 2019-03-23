@@ -26,10 +26,8 @@ static bool checkType(py::object& obj){
 }
 
 ParseTree* parseTree(std::string& str){
-    //cout << "before " << str << endl;
     str = str.substr(1,str.size()-2);
     str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
-    //cout << "after " << str << endl;
     vector<int> seq;
     for(unsigned int i=0;i<str.size();i++){
         char c = str[i];
@@ -59,19 +57,6 @@ ParseTree* parseTree(std::string& str){
         }
         ParseTree* curr = s.top();
         if(seq[i]==BRACKET_OPEN){
-            /*
-            if(curr->hasLeftSubtree() && curr->hasRightSubtree()){ //already has two sons
-                goto error;
-            }
-            if(!curr->hasLeftSubtree()){
-                auto left = new ParseTree(0);
-                curr->setLeftPointer(left);
-                s.push(left);
-            }else{
-                auto right = new ParseTree(0);
-                curr->setRightPointer(right);
-                s.push(right);
-            }*/
             auto tree = new ParseTree(0);
             curr->setPointer(tree,curr->getChildrenNum());
             s.push(tree);

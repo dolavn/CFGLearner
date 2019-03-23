@@ -37,7 +37,7 @@ public:
     SimpleTeacher& operator=(const SimpleTeacher&);
     SimpleTeacher(SimpleTeacher&&) noexcept;
     SimpleTeacher& operator=(SimpleTeacher&&) noexcept;
-    ~SimpleTeacher() override;
+    virtual ~SimpleTeacher() override;
 
     void addPositiveExample(const ParseTree&);
     void addNegativeExample(const ParseTree&);
@@ -47,12 +47,13 @@ public:
     bool membership(const ParseTree&) const override;
     ParseTree* equivalence(const TreeAcceptor&) const override;
     Teacher* clone() override;
-private:
-    void copy(const SimpleTeacher&);
-    void clear();
+protected:
     bool hasExample(const ParseTree&);
     std::vector<ParseTree*> positiveExamples;
     std::vector<ParseTree*> negativeExamples;
+private:
+    void copy(const SimpleTeacher&);
+    void clear();
 };
 
 
@@ -90,7 +91,7 @@ public:
     FrequencyTeacher& operator=(const FrequencyTeacher&);
     FrequencyTeacher(FrequencyTeacher&&) noexcept;
     FrequencyTeacher& operator=(FrequencyTeacher&&) noexcept;
-    ~FrequencyTeacher() override;
+    virtual ~FrequencyTeacher() override;
 
     void addPositiveExample(const ParseTree&);
     void addNegativeExample(const ParseTree&);
@@ -111,6 +112,25 @@ private:
     int minCount;
     float minFreq;
     std::unordered_map<TreePointer,std::pair<int, int>,TreeHasher> map;
+};
+
+class DifferenceTeacher: public SimpleTeacher{
+public:
+    DifferenceTeacher();
+    DifferenceTeacher(int);
+    DifferenceTeacher(const DifferenceTeacher&);
+    DifferenceTeacher& operator=(const DifferenceTeacher&);
+    DifferenceTeacher(DifferenceTeacher&&);
+    DifferenceTeacher& operator=(DifferenceTeacher&&);
+    virtual ~DifferenceTeacher() override;
+
+    int getMaxDiff() const{return maxDiff;};
+
+    bool membership(const ParseTree&) const override;
+    ParseTree* equivalence(const TreeAcceptor&) const override;
+    Teacher* clone() override;
+private:
+    int maxDiff;
 };
 
 

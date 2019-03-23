@@ -397,7 +397,8 @@ TreeAcceptor learn(const Teacher& teacher){
         cout << "in the language" << endl;
         if(!ans.run(*counterExample)){cout << "not ";}
         cout << "accepted by our tree automata" << endl;
-        ans.printDescription();*/
+        ans.printDescription();
+        */
         begin = clock();
         extend(table, counterExample, teacher);
         end = clock();
