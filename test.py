@@ -40,7 +40,24 @@ for i in range(T_NUM):
 c = learn(t2)
 print(c)
 """
-t = FrequencyTeacher(1, 0.9)
+t = FrequencyTeacher(1, 0.95)
+mla = open('output_mla_manual2.txt')
+mla_list = json.load(mla)
+d = mla_list['cogs_dict']['reverse_dict']
+d = {int(key): d[key] for key in d}
+mla_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in mla_list['trees']]
+i = 0
+for tree, occ in mla_list:
+    i = i + 1
+    t.addPositiveExamples(tree, occ)
+
+
+print('learning')
+print(len(mla_list))
+c = learn(t, d)
+print(c)
+exit()
+t = FrequencyTeacher(45, 0.9)
 fileDict = open('dict.txt')
 d = json.load(fileDict)
 d = {int(key): d[key] for key in d}
@@ -50,10 +67,15 @@ beta_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in beta_list]
 file = open('output_alpha.txt')
 alpha_list = json.load(file)
 alpha_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in alpha_list]
-for tree, occ in alpha_list[:100]:
+file = open('output_ins.txt')
+ins_list = json.load(file)
+ins_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in ins_list]
+
+for tree, occ in alpha_list:
     t.addPositiveExamples(tree, occ)
-for tree, occ in beta_list[:100]:
+for tree, occ in beta_list:
     t.addNegativeExamples(tree, occ)
+
 print('learning')
 print(len(alpha_list), len(beta_list))
 c = learn(t, d)
