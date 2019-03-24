@@ -247,6 +247,59 @@ TEST(tree_test,equivalence_test){
     ASSERT_EQ(t8!=t9,false);
 }
 
+TEST(tree_test, topology_test){
+    ParseTree t(2);
+    ASSERT_EQ(t.sameTopology(t.getSkeleton()),true);
+    ParseTree t2(2);
+    ParseTree t4(2,{t,t2});
+    ASSERT_EQ(t4.sameTopology(t4.getSkeleton()),true);
+    ASSERT_EQ(t4.sameTopology(t),false);
+}
+
+TEST(tree_test, advanced_topology_test){
+    ParseTree t(2);
+    ParseTree t2(4);
+    ParseTree* curr = &t;
+    ParseTree* curr2 = &t2;
+    for(int i=0;i<100;++i){
+        curr->setSubtree(ParseTree(2),0);
+        curr->setSubtree(ParseTree(2),1);
+        curr2->setSubtree(ParseTree(3),0);
+        curr2->setSubtree(ParseTree(4),1);
+        ParseTree* next = curr->getSubtrees()[1];
+        ASSERT_EQ(t.sameTopology(t.getSkeleton()),true);
+        ASSERT_EQ(t.sameTopology(t2),true);
+        ASSERT_EQ(t.sameTopology(*next),false);
+        curr = curr->getSubtrees()[0];
+        curr2 = curr2->getSubtrees()[0];
+    }
+}
+
+TEST(tree_test, apply_weights_test){
+    ParseTree t(0);
+    ParseTree t2(4);
+    ParseTree* curr = &t;
+    ParseTree* curr2 = &t2;
+    for(int i=0;i<100;++i){
+        curr->setSubtree(ParseTree(0),0);
+        curr->setSubtree(ParseTree(0),1);
+        curr2->setSubtree(ParseTree(3),0);
+        curr2->setSubtree(ParseTree(4),1);
+        curr = curr->getSubtrees()[0];
+        curr2 = curr2->getSubtrees()[0];
+    }
+    t.applyWeights(t2);
+    for(auto it=t.getIndexIterator();it.hasNext();++it){
+        ASSERT_EQ(t[*it].getWeight(),t2[*it].getData());
+    }
+    try{
+        t.applyWeights(t2[{0}]);
+        ASSERT_EQ(true,false);
+    }catch(std::invalid_argument& e){
+        ASSERT_EQ(e.what(),std::string("Weights tree must have the same topology as this tree!"));
+    }
+}
+
 TEST(tree_test, difference_test){
     ParseTree t(2);
     ParseTree t2(2);

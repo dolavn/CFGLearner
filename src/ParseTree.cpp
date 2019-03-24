@@ -254,6 +254,35 @@ void ParseTree::setWeight(int weight){
     this->weight = weight;
 }
 
+void ParseTree::applyWeights(const ParseTree& weightsTree){
+    if(!this->sameTopology(weightsTree)){
+        throw std::invalid_argument("Weights tree must have the same topology as this tree!");
+    }
+    weight = weightsTree.getData();
+    for(int i=0;i<subtrees.size();i++){
+        if(!subtrees[i]){continue;}
+        subtrees[i]->applyWeights(*weightsTree.getSubtrees()[i]);
+    }
+}
+
+bool ParseTree::sameTopology(const ParseTree& other){
+    if(subtrees.size()!=other.subtrees.size()){
+        return false;
+    }
+    for(int i=0;i<subtrees.size();i++){
+        if((subtrees[i]==nullptr) != (other.subtrees[i]==nullptr)){
+            return false;
+        }
+        if(subtrees[i]==nullptr){
+            continue;
+        }
+        if(!subtrees[i]->sameTopology(*other.subtrees[i])){
+            return false;
+        }
+    }
+    return true;
+}
+
 ParseTree ParseTree::getSkeleton() const{
     ParseTree ans(*this);
     for(auto it=ans.getIndexIterator();it.hasNext();++it){

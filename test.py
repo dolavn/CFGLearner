@@ -1,10 +1,16 @@
-from CFGLearner import SimpleTeacher, FrequencyTeacher, Teacher, learn
+from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn
 from nltk import Tree, CFG
 # from nltk.parse import generate
 import matplotlib as plt
 import json
 plt.use('Agg')
 from nltk.draw import TreeView
+
+d = DifferenceTeacher()
+a1 = Tree(0, [Tree(1, []), Tree(2, [])])
+a2 = Tree(10, [Tree(2, []), Tree(1, [Tree(1, []), Tree(2, [])])])
+d.addPositiveExample(a1, a2)
+exit()
 """
 a1 = Tree(0, [Tree(1, []), Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(2, [])])])
 a2 = Tree(0, [Tree(1, []), Tree(2, [])])
