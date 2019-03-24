@@ -83,27 +83,6 @@ string CFG::getRepr() const{
 void CFG::initFromAcceptor(const TreeAcceptor& acc, unordered_map<int, string> &cogMap){
     addNonTerminal("S"); //start symbol
     unordered_map<int, int> leafStates;
-    for(int i=0;i<acc.getStatesNum();++i){
-        stringstream stream;
-        int terminal = -1;
-        for(transition& t: acc.getTransitions()){
-            if(t.targetState==i && !t.statesSeq.empty()){
-                break;
-            }
-            if(t.targetState==i && t.statesSeq.empty()){
-                terminal = t.c.c;
-            }
-        }
-        if(terminal!=-1){
-            leafStates[i] = terminal;
-            continue;
-        }
-        stream << "N" << i;
-        addNonTerminal(stream.str());
-        if(acc.isAccepting(i)){
-            addDerivation("S",{stream.str()});
-        }
-    }
     for(rankedChar& c:acc.getAlphabet()){
         if(c.rank==0){
             stringstream stream;
@@ -115,21 +94,35 @@ void CFG::initFromAcceptor(const TreeAcceptor& acc, unordered_map<int, string> &
             addTerminal(stream.str());
         }
     }
+    for(int i=0;i<acc.getStatesNum();++i){
+        stringstream stream;
+        vector<int> currTerminals;
+        for(transition& t: acc.getTransitions()){
+            if(t.targetState==i && t.statesSeq.empty()){
+                currTerminals.push_back(t.c.c);
+            }
+        }
+        stream << "N" << i;
+        addNonTerminal(stream.str());
+        for(int terminal: currTerminals){
+            stringstream stream2;
+            if(cogMap.find(terminal)!=cogMap.end()){
+                stream2 << cogMap[terminal];
+            }else {
+                stream2 << terminal;
+            }
+            addDerivation(stream.str(), {stream2.str()});
+        }
+        if(acc.isAccepting(i)){
+            addDerivation("S",{stream.str()});
+        }
+    }
     for(transition& t:acc.getTransitions()){
         vector<string> lhs;
         if(!t.statesSeq.empty()) {
             for (int state: t.statesSeq) {
                 stringstream stream;
-                if(leafStates.find(state)!=leafStates.end()){
-                    int c = leafStates[state];
-                    if(cogMap.find(c)!=cogMap.end()){
-                        stream << cogMap[c];
-                    }else {
-                        stream << c;
-                    }
-                }else{
-                    stream << "N" << state;
-                }
+                stream << "N" << state;
                 lhs.push_back(stream.str());
             }
         }else{

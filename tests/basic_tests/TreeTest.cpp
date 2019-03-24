@@ -6,6 +6,8 @@
 #include "../../include/ParseTree.h"
 #include <iostream>
 #include <vector>
+#include <stdlib.h>
+#include <time.h>
 
 using namespace std;
 
@@ -276,15 +278,17 @@ TEST(tree_test, advanced_topology_test){
 }
 
 TEST(tree_test, apply_weights_test){
+    srand(time(NULL));
+    int w = rand()%10+1;
     ParseTree t(0);
-    ParseTree t2(4);
+    ParseTree t2(w);
     ParseTree* curr = &t;
     ParseTree* curr2 = &t2;
     for(int i=0;i<100;++i){
         curr->setSubtree(ParseTree(0),0);
         curr->setSubtree(ParseTree(0),1);
-        curr2->setSubtree(ParseTree(3),0);
-        curr2->setSubtree(ParseTree(4),1);
+        curr2->setSubtree(ParseTree(rand()%10+1),0);
+        curr2->setSubtree(ParseTree(rand()%10+1),1);
         curr = curr->getSubtrees()[0];
         curr2 = curr2->getSubtrees()[0];
     }
