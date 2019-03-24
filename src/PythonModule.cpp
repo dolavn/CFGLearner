@@ -151,6 +151,35 @@ PYBIND11_MODULE(CFGLearner, m) {
         stream << t.getMinFreq() << ">";
         return stream.str();
     });
+    py::class_<DifferenceTeacher> differenceTeacher(m, "DifferenceTeacher",teacher);
+    differenceTeacher.def(py::init<int>(),py::arg("maxDiff")=0);
+    differenceTeacher.def("addPositiveExample",[](DifferenceTeacher& t,py::object nltkTree, py::object weightsTree){
+        if(!checkType(nltkTree) || !checkType(weightsTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        string weightsStr = py::str(weightsTree);
+        ParseTree* tree = parseTree(str);
+        ParseTree* weightParseTree = parseTree(weightsStr);
+        tree->applyWeights(*weightParseTree);
+        t.addPositiveExample(*tree);
+        delete(tree);
+        delete(weightParseTree);
+    });
+
+    differenceTeacher.def("addNegativeExample",[](DifferenceTeacher& t,py::object nltkTree, py::object weightsTree){
+        if(!checkType(nltkTree) || !checkType(weightsTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        string weightsStr = py::str(weightsTree);
+        ParseTree* tree = parseTree(str);
+        ParseTree* weightParseTree = parseTree(weightsStr);
+        tree->applyWeights(*weightParseTree);
+        t.addNegativeExample(*tree);
+        delete(tree);
+        delete(weightParseTree);
+    });
     m.def("learn",[](const Teacher& t, std::unordered_map<int,string> map) {
         py::gil_scoped_release release;
         TreeAcceptor acc = learn(t);

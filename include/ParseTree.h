@@ -89,6 +89,8 @@ public:
     bool isLeaf() const;
     int getWeight() const;
     void setWeight(int);
+    void applyWeights(const ParseTree&);
+    bool sameTopology(const ParseTree&);
     inline bool getIsContext() const{return isContext;}
     inline int getChildrenNum() const{return (int)(subtrees.size());}
     inline bool isEmpty() const{return empty;}
