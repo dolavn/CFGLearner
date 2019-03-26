@@ -6,10 +6,12 @@ import json
 plt.use('Agg')
 from nltk.draw import TreeView
 
-d = DifferenceTeacher()
+d = DifferenceTeacher(5)
 a1 = Tree(0, [Tree(1, []), Tree(2, [])])
-a2 = Tree(10, [Tree(2, []), Tree(1, [Tree(1, []), Tree(2, [])])])
+a2 = Tree(5, [Tree(2, []), Tree(2, [])])
 d.addPositiveExample(a1, a2)
+c = learn(d, {})
+print(c)
 exit()
 """
 a1 = Tree(0, [Tree(1, []), Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(2, [])])])
