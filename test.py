@@ -6,11 +6,22 @@ import json
 plt.use('Agg')
 from nltk.draw import TreeView
 
-d = DifferenceTeacher(5)
-a1 = Tree(0, [Tree(1, []), Tree(2, [])])
-a2 = Tree(5, [Tree(2, []), Tree(2, [])])
-d.addPositiveExample(a1, a2)
-c = learn(d, {})
+
+def update_weights(tree):
+    for t in tree.treepositions():
+        tree[t].set_label(int(tree[t].label())+5)
+
+
+d = DifferenceTeacher(1)
+mla = open('output_mla_manual2.txt')
+mla_list = json.load(mla)
+di = mla_list['cogs_dict']['reverse_dict']
+di = {int(key): di[key] for key in di}
+mla_list = [(Tree.fromstring(tup[0]), Tree.fromstring(tup[1])) for tup in mla_list['trees']]
+for tree, weights in mla_list:
+    update_weights(weights)
+    d.addPositiveExample(tree, weights)
+c = learn(d, di)
 print(c)
 exit()
 """
