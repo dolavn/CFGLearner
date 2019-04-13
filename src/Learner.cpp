@@ -4,6 +4,8 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <set>
 
 using namespace std;
@@ -216,6 +218,41 @@ public:
             cout << endl;
         }
     }
+    std::string getTableLatex(){
+        stringstream stream;
+        stream << "\\begin{tabular}{ l |";
+        for(unsigned int i=0;i<c.size();++i){
+            stream << " l |";
+        }
+        stream << " }" << endl;
+        for(unsigned int i=0;i<c.size();++i){
+            //stream << "& $c_{" << i << "}$";
+            stream <<  "& " << c[i]->getLatexTree();
+        }
+        stream << "\\\\ \\hline" << endl;
+        for(unsigned int i=0;i<s.size();i++){
+            auto tree = s[i];
+            vector<bool> obs = getObs(*tree);
+            //stream << "$s_{" << i << "}$";
+            stream << s[i]->getLatexTree();
+            for(bool b: obs){
+                stream << "& " << (b?"1":"0");
+            }
+            stream << "\\\\ \\hline" << endl;
+        }
+        for(unsigned int i=0;i<r.size();i++){
+            auto tree = r[i];
+            vector<bool> obs = getObs(*tree);
+            //stream << "$r_{" << i << "}$";
+            stream << r[i]->getLatexTree();
+            for(bool b: obs){
+                stream << "& " << (b?"1":"0");
+            }
+            stream << "\\\\ \\hline" << endl;
+        }
+        stream << "\\end{tabular}" << endl;
+        return stream.str();
+    }
     inline const vector<ParseTree*>& getR(){return r;}
     inline const vector<ParseTree*>& getS(){return s;}
     inline const vector<ParseTree*> getRNew(){
@@ -377,6 +414,8 @@ void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
 
 TreeAcceptor learn(const Teacher& teacher){
     observationTable table(teacher);
+    ofstream myfile;
+    myfile.open("example");
     TreeAcceptor ans(set<rankedChar>{});
     for(;;){
         clock_t begin = clock();
@@ -390,6 +429,14 @@ TreeAcceptor learn(const Teacher& teacher){
         if(!counterExample){
             break;
         }
+        myfile << "Current table:\\\\" << endl;
+        myfile << "\\begin{center}" << endl;
+        myfile << table.getTableLatex() << endl;
+        myfile << "\\end{center}" << endl;
+        myfile << "Counter example given:\\\\" << endl;
+        myfile << "\\begin{center}" << endl;
+        myfile << counterExample->getLatexTree() << endl;
+        myfile << "\\end{center}" << endl;
         /*
         cout << "counter example given:" << endl;
         cout << *counterExample << endl;
@@ -408,6 +455,7 @@ TreeAcceptor learn(const Teacher& teacher){
         cout << "extendTime:" << extendTime << endl;*/
         delete(counterExample);
     }
+    myfile.close();
     return ans;
 }
 

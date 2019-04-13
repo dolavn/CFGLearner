@@ -333,6 +333,44 @@ TEST(tree_test, advanced_difference_test){
     ASSERT_EQ(t-t2,10);
 }
 
+TEST(tree_test, advanced_difference_test2){
+    ParseTree t(0), w(5);
+    t.setSubtree(ParseTree(1), 0);
+    w.setSubtree(ParseTree(1), 0);
+    t.setSubtree(ParseTree(0, {ParseTree(1), ParseTree(2)}), 1);
+    w.setSubtree(ParseTree(4, {ParseTree(2), ParseTree(2)}), 1);
+    t.applyWeights(w);
+    ParseTree t2(0), w2(5);
+    t2.setSubtree(ParseTree(0, {ParseTree(2), ParseTree(2)}), 0);
+    w2.setSubtree(ParseTree(1, {ParseTree(1), ParseTree(1)}), 0);
+    t2.setSubtree(ParseTree(0, {ParseTree(1), ParseTree(2)}), 1);
+    w2.setSubtree(ParseTree(4, {ParseTree(2), ParseTree(2)}), 1);
+    t2.applyWeights(w2);
+    ParseTree tTest(0), wTest(5);
+    tTest.setSubtree(ParseTree(0, {ParseTree(1), ParseTree(1)}), 0);
+    wTest.setSubtree(ParseTree(1, {ParseTree(1), ParseTree(1)}), 0);
+    tTest.setSubtree(ParseTree(0, {ParseTree(1), ParseTree(2)}), 1);
+    wTest.setSubtree(ParseTree(4, {ParseTree(2), ParseTree(2)}), 1);
+    tTest.applyWeights(wTest);
+    ParseTree tTest2(0), wTest2(5);
+    tTest2.setSubtree(ParseTree(0, {ParseTree(2), ParseTree(2)}), 0);
+    wTest2.setSubtree(ParseTree(1, {ParseTree(1), ParseTree(1)}), 0);
+    tTest2.setSubtree(ParseTree(0, {ParseTree(2), ParseTree(2)}), 1);
+    wTest2.setSubtree(ParseTree(4, {ParseTree(2), ParseTree(2)}), 1);
+    tTest2.applyWeights(wTest2);
+}
+
+
+TEST(tree_test,latex_tree_test){
+    ParseTree t(2);
+    ASSERT_EQ(t.getLatexTree(), std::string("\\Tree [.2 ]"));
+    t.setSubtree(ParseTree(0), 0);
+    t.setSubtree(ParseTree(1), 1);
+    ASSERT_EQ(t.getLatexTree(), std::string("\\Tree [.2 0 1 ]"));
+    t.setSubtree(ParseTree(0, {ParseTree(1), ParseTree(2)}), 0);
+    ASSERT_EQ(t.getLatexTree(), std::string("\\Tree [.2 [.0 1 2 ] 1 ]"));
+}
+
 TEST(tree_test,hash_test){
     ParseTree t(2);
     ParseTree t2(2);

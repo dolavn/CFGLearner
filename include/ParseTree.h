@@ -20,6 +20,7 @@ private:
     static stackPair incStack(std::stack<stackPair>&, stackPair&);
     ParseTree* getSubtree(const std::vector<int>&);
     std::vector<ParseTree*> subtrees;
+    std::string latexTreeRecursive() const;
     struct stackElem{
         ParseTree* curr;
         const ParseTree* other;
@@ -96,6 +97,7 @@ public:
     inline bool isEmpty() const{return empty;}
     int getData() const{return this->data;}
     std::size_t getHash() const;
+    std::string getLatexTree() const;
     std::vector<int> getContextLoc() const{return this->contextLoc;}
     std::pair<ParseTree*,ParseTree*> makeContext(std::vector<int>) const;
     ParseTree* mergeContext(const ParseTree&) const;

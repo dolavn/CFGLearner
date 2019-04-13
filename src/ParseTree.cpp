@@ -1,6 +1,7 @@
 #include "ParseTree.h"
 #include <stdexcept>
 #include <iostream> //TODO: Delete
+#include <sstream>
 #include <ParseTree.h>
 
 #define IS_NULL(A)  (A==nullptr)
@@ -289,6 +290,39 @@ ParseTree ParseTree::getSkeleton() const{
         (ans)[*it].setData(-1);
     }
     return ans;
+}
+
+std::string ParseTree::latexTreeRecursive() const{
+    stringstream stream;
+    for(unsigned int i=0;i<subtrees.size();++i){
+        auto t = subtrees[i];
+        if(t->subtrees.size()==0){
+            if(t->data==-1){
+                stream << "$\\square$";
+            }else {
+                stream << t->data;
+            }
+        }else{
+            stream << t->latexTreeRecursive();
+        }
+        if(i<subtrees.size()-1) {
+            stream << " ";
+        }
+    }
+    stringstream labelStream;
+    if(this->data==-1){
+        labelStream << "$\\square$";
+    }else {
+        labelStream << this->data;
+    }
+    if(stream.str().size()>0){
+        labelStream << " ";
+    }
+    return "[." + labelStream.str() + stream.str() + " ]";
+}
+
+std::string ParseTree::getLatexTree() const{
+    return "\\Tree " + this->latexTreeRecursive();
 }
 
 ParseTree::iterator::iterator(ParseTree& tree):stack(),currNode(&tree),currLoc(){
