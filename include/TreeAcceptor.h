@@ -52,6 +52,7 @@ public:
     void addTransition(const std::vector<int>&,rankedChar,int);
     bool run(const ParseTree&) const;
     void printDescription() const;
+    std::string getLatexDescription() const;
     std::vector<rankedChar> getAlphabet() const;
     std::vector<transition> getTransitions() const;
 

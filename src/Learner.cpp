@@ -273,32 +273,9 @@ public:
     }
     inline const vector<ParseTree*>& getC(){return c;}
 };
-/*
-set<rankedChar> getAlphabet(observationTable& s){
-    set<rankedChar> alphabet;
-    for(auto t:s.getS()){
-        for(auto it=t->getIndexIterator();it.hasNext();++it){
-            int value = (*t)[*it].getData();
-            int rank = 0;
-            for(int i=0;i<(*t)[*it].getChildrenNum();i++){
-                if((*t)[*it].hasSubtree(i)){rank++;}
-            }
-            alphabet.insert({value,rank});
-        }
-    }
-    for(auto t:s.getR()){
-        for(auto it=t->getIndexIterator();it.hasNext();++it){
-            int value = (*t)[*it].getData();
-            int rank = 0;
-            for(int i=0;i<(*t)[*it].getChildrenNum();i++){
-                if((*t)[*it].hasSubtree(i)){rank++;}
-            }
-            alphabet.insert({value,rank});
-        }
-    }
-    return alphabet;
-}
-*/
+
+ofstream* currStream;
+
 rankedChar getChar(TreeAcceptor& acc, const ParseTree& tree){
     int value = tree.getData();
     int rank = 0;
@@ -378,18 +355,24 @@ contextTreePair decompose(observationTable& s, ParseTree& t){
 void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
     if(s.treeInS(*t)){
         s.printTable();
-        sleep(1);
         cout << *t << endl;
         if(!teacher.membership(*t)){cout << "not ";}
         cout << "in language" << endl;
         throw invalid_argument("Counter example can't be a member of S!");
     }
+    ofstream& myfile = *currStream;
     contextTreePair pair = decompose(s,*t);
-    //cout << "extending " << *t << endl;
     ParseTree* context = pair.first;
     ParseTree* tree = pair.second;
-    //cout << "context " << *context << endl;
-    //cout << "tree " << *tree << endl;
+    myfile << "\\textbf{Decomposed}\\\\" << endl;
+    myfile << "Context:\\\\" << endl;
+    myfile << "\\begin{center}" << endl;
+    myfile << context->getLatexTree() << endl;
+    myfile << "\\end{center}" << endl;
+    myfile << "Tree:\\\\" << endl;
+    myfile << "\\begin{center}" << endl;
+    myfile << tree->getLatexTree() << endl;
+    myfile << "\\end{center}" << endl;
     if(s.hasTree(*tree)){ //Tree in R
         int sInd = s.getSObsInd(*tree);
         const ParseTree& sTree = s.getTreeS(sInd);
@@ -403,7 +386,6 @@ void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
         }else{
             delete(mergedTree);
             s.addContext(*context);
-            //s.addTree(*tree);
         }
     }else{
         s.addTree(*tree);
@@ -416,6 +398,7 @@ TreeAcceptor learn(const Teacher& teacher){
     observationTable table(teacher);
     ofstream myfile;
     myfile.open("example");
+    currStream = &myfile;
     TreeAcceptor ans(set<rankedChar>{});
     for(;;){
         clock_t begin = clock();
@@ -455,6 +438,10 @@ TreeAcceptor learn(const Teacher& teacher){
         cout << "extendTime:" << extendTime << endl;*/
         delete(counterExample);
     }
+    myfile << "Final table:\\\\" << endl;
+    myfile << "\\begin{center}" << endl;
+    myfile << table.getTableLatex() << endl;
+    myfile << "\\end{center}" << endl;
     myfile.close();
     return ans;
 }

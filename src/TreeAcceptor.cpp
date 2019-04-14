@@ -133,6 +133,30 @@ vector<transition> TreeAcceptor::getTransitions() const{
     return ans;
 }
 
+std::string TreeAcceptor::getLatexDescription() const{
+    stringstream stream;
+    stream << "$Q=\\{";
+    for(int i=0;i<statesNum;++i){
+        stream << "q_{" << i << "}";
+        if(i<statesNum-1){
+            stream << ",";
+        }
+    }
+    stream << "\\}$\\\\" << endl;
+    stream << "$A=\\{";
+    bool first=true;
+    for(int state: acceptingStates){
+        if(!first){
+            stream << ",";
+        }else{
+            first=false;
+        }
+        stream << "q_{" << state << "}";
+    }
+    stream << "\\}$\\\\" << endl;
+    return stream.str();
+}
+
 void TreeAcceptor::printDescription() const{
     std::cout << "States num : " << statesNum << std::endl;
     for(int i=0;i<statesNum;++i) {
