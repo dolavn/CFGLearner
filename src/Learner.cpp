@@ -360,19 +360,21 @@ void extend(observationTable& s, ParseTree* t, const Teacher& teacher){
         cout << "in language" << endl;
         throw invalid_argument("Counter example can't be a member of S!");
     }
-    ofstream& myfile = *currStream;
     contextTreePair pair = decompose(s,*t);
     ParseTree* context = pair.first;
     ParseTree* tree = pair.second;
-    myfile << "\\textbf{Decomposed}\\\\" << endl;
-    myfile << "Context:\\\\" << endl;
-    myfile << "\\begin{center}" << endl;
-    myfile << context->getLatexTree() << endl;
-    myfile << "\\end{center}" << endl;
-    myfile << "Tree:\\\\" << endl;
-    myfile << "\\begin{center}" << endl;
-    myfile << tree->getLatexTree() << endl;
-    myfile << "\\end{center}" << endl;
+    if(currStream) {
+        ofstream &myfile = *currStream;
+        myfile << "\\textbf{Decomposed}\\\\" << endl;
+        myfile << "Context:\\\\" << endl;
+        myfile << "\\begin{center}" << endl;
+        myfile << context->getLatexTree() << endl;
+        myfile << "\\end{center}" << endl;
+        myfile << "Tree:\\\\" << endl;
+        myfile << "\\begin{center}" << endl;
+        myfile << tree->getLatexTree() << endl;
+        myfile << "\\end{center}" << endl;
+    }
     if(s.hasTree(*tree)){ //Tree in R
         int sInd = s.getSObsInd(*tree);
         const ParseTree& sTree = s.getTreeS(sInd);
@@ -430,7 +432,11 @@ TreeAcceptor learn(const Teacher& teacher){
         ans.printDescription();
         */
         begin = clock();
-        extend(table, counterExample, teacher);
+        while(teacher.membership(*counterExample)!=ans.run(*counterExample)) {
+            myfile << "Extending\\\\" << endl;
+            extend(table, counterExample, teacher);
+            ans = synthesize(table,teacher,&ans);
+        }
         end = clock();
         double extendTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
         /*cout << "syntTime:" << syntTime << endl;

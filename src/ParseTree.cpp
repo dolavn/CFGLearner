@@ -94,6 +94,7 @@ void ParseTree::copy(const ParseTree& other){
         ParseTree* currTree = currPair.first;
         const ParseTree* otherTree = currPair.second;
         currTree->data = otherTree->data;
+        currTree->weight = otherTree->weight;
         currTree->subtrees = vector<ParseTree*>(otherTree->subtrees.size());
         for(auto i=(int)(otherTree->subtrees.size()-1);i>=0;--i){
             if(!otherTree->subtrees[i]){continue;}
@@ -439,7 +440,7 @@ int operator-(const ParseTree& lhs, const ParseTree& rhs){
 }
 
 ostream& operator<<(ostream& output, const ParseTree& tree){
-    output << "(" << tree.data;
+    output << "( [" << tree.data << "," << tree.weight << "]";
     for(auto& subtree: tree.subtrees){
         if(subtree){
             output << " " << *subtree;
