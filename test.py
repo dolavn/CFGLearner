@@ -1,18 +1,90 @@
 from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn
 from nltk import Tree, CFG
+from itertools import product
+from TreeGenerator import generate_trees
 # from nltk.parse import generate
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import json
-plt.use('Agg')
-from nltk.draw import TreeView
+import numpy as np
+#plt.use('Agg')
+from nltk.draw.util import CanvasFrame
+from nltk.draw import TreeWidget
+from nltk.parse.generate import generate
 
 
 def update_weights(tree):
     for t in tree.treepositions():
-        tree[t].set_label(int(tree[t].label())+5)
+        tree[t].set_label(int(tree[t].label())+1)
 
 
-d = DifferenceTeacher(1)
+NUM_TO_KEEP = 5
+s = [1, 2, 3, 4, 5]
+s2 = [3, 4, 5, 1, 2]
+s3 = [1, 2, 3, 4]
+s4 = [3, 4, 5]
+s5 = [1, 2, 3]
+kx = []
+ky = []
+min = []
+curr_sol = []
+max_len = 5
+for t1, t2, t3, t4, t5 in product(generate_trees(s, max_len=max_len), generate_trees(s2, max_len=max_len),
+                                  generate_trees(s3, max_len=max_len), generate_trees(s4, max_len=max_len),
+                                  generate_trees(s5, max_len=max_len)):
+    s = SimpleTeacher()
+    s.addPositiveExample(t1)
+    s.addPositiveExample(t2)
+    s.addPositiveExample(t3)
+    s.addPositiveExample(t4)
+    s.addPositiveExample(t5)
+    c = learn(s, {})
+    t = set()
+    for p in c.productions():
+        t.add(p.lhs())
+    nt = len(t)
+    p = len(c.productions())
+    kx.append(nt)
+    ky.append(p)
+    if len(min) < NUM_TO_KEEP:
+        min.append(p)
+        curr_sol.append((c, (t1, t2, t3, t4, t5)))
+    if any([m <= p for m in min]):
+        for i, m in enumerate(min):
+            if p <= m:
+                curr_sol[i] = (c, (t1, t2, t3, t4, t5))
+                min[i] = p
+                break
+print(min[0])
+print(curr_sol[0])
+for ind, sol in enumerate(curr_sol):
+    in_row = 4
+    len_one = 140
+    height = 200
+    i = 0
+    cf = CanvasFrame()
+    for t in sol[1]:
+        tc = TreeWidget(cf.canvas(), t)
+        x, y = (i % in_row)*len_one, int(i / in_row)*height
+        print(x, y)
+        cf.add_widget(tc, x, y)
+        i = i + 1
+    cf.print_to_file('trees' + str(ind) + '.ps')
+    cf.destroy()
+exit()
+a1 = Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(0, [Tree(3, []), Tree(4, [])])])
+a2 = Tree(0, [Tree(0, [Tree(3, []), Tree(4, [])]), Tree(0, [Tree(1, []), Tree(2, [])])])
+w1 = Tree(4, [Tree(2, [Tree(10, []), Tree(10, [])]), Tree(2, [Tree(10, []), Tree(10, [])])])
+w2 = Tree(4, [Tree(2, [Tree(10, []), Tree(10, [])]), Tree(2, [Tree(10, []), Tree(10, [])])])
+
+d = DifferenceTeacher(2)
+d.addPositiveExample(a1, w1)
+d.addPositiveExample(a2, w2)
+di = {}
+c = learn(d, di)
+print(c)
+for sentence in generate(c, n=10):
+    print(' '.join(sentence))
+exit()
 mla = open('output_mla_manual2.txt')
 mla_list = json.load(mla)
 di = mla_list['cogs_dict']['reverse_dict']

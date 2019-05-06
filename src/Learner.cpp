@@ -234,9 +234,9 @@ public:
             auto tree = s[i];
             vector<bool> obs = getObs(*tree);
             //stream << "$s_{" << i << "}$";
-            stream << s[i]->getLatexTree();
+            stream << "\\color{blue}" << s[i]->getLatexTree();
             for(bool b: obs){
-                stream << "& " << (b?"1":"0");
+                stream << "&" << (b?"1":"0");
             }
             stream << "\\\\ \\hline" << endl;
         }
@@ -414,10 +414,6 @@ TreeAcceptor learn(const Teacher& teacher){
         if(!counterExample){
             break;
         }
-        myfile << "Current table:\\\\" << endl;
-        myfile << "\\begin{center}" << endl;
-        myfile << table.getTableLatex() << endl;
-        myfile << "\\end{center}" << endl;
         myfile << "Counter example given:\\\\" << endl;
         myfile << "\\begin{center}" << endl;
         myfile << counterExample->getLatexTree() << endl;
@@ -433,9 +429,13 @@ TreeAcceptor learn(const Teacher& teacher){
         */
         begin = clock();
         while(teacher.membership(*counterExample)!=ans.run(*counterExample)) {
+            myfile << "Current table:\\\\" << endl;
+            myfile << "\\begin{center}" << endl;
+            myfile << table.getTableLatex() << endl;
+            myfile << "\\end{center}" << endl;
             myfile << "Extending\\\\" << endl;
             extend(table, counterExample, teacher);
-            ans = synthesize(table,teacher,&ans);
+            ans = synthesize(table, teacher, &ans);
         }
         end = clock();
         double extendTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
