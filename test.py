@@ -17,6 +17,14 @@ def update_weights(tree):
         tree[t].set_label(int(tree[t].label())+1)
 
 
+def count_inner_nodes(tree):
+    count = 0
+    for t in tree.treepositions():
+        if isinstance(tree[t], Tree) and len(tree[t]) > 0:
+            count = count + 1
+    return count
+
+
 NUM_TO_KEEP = 5
 s = [1, 2, 3, 4, 5]
 s2 = [3, 4, 5, 1, 2]
@@ -27,35 +35,41 @@ kx = []
 ky = []
 min = []
 curr_sol = []
-max_len = 5
+max_len = -1
+terminals = set()
+for c in s+s2+s3+s4+s5:
+    terminals.add(c)
+t = len(terminals)
 for t1, t2, t3, t4, t5 in product(generate_trees(s, max_len=max_len), generate_trees(s2, max_len=max_len),
                                   generate_trees(s3, max_len=max_len), generate_trees(s4, max_len=max_len),
                                   generate_trees(s5, max_len=max_len)):
+    trees = [t1, t2, t3, t4, t5]
     s = SimpleTeacher()
-    s.addPositiveExample(t1)
-    s.addPositiveExample(t2)
-    s.addPositiveExample(t3)
-    s.addPositiveExample(t4)
-    s.addPositiveExample(t5)
+    total_nodes = sum([count_inner_nodes(t) for t in trees])
+    for tree in trees:
+        s.addPositiveExample(tree)
     c = learn(s, {})
-    t = set()
+    nt_set = set()
     for p in c.productions():
-        t.add(p.lhs())
-    nt = len(t)
-    p = len(c.productions())
+        nt_set.add(p.lhs())
+    nt = len(nt_set)
+    p = float(total_nodes)/float(nt-1-t)
     kx.append(nt)
     ky.append(p)
     if len(min) < NUM_TO_KEEP:
         min.append(p)
-        curr_sol.append((c, (t1, t2, t3, t4, t5)))
-    if any([m <= p for m in min]):
+        curr_sol.append((c, tuple(trees)))
+    if any([p >= m for m in min]):
         for i, m in enumerate(min):
-            if p <= m:
-                curr_sol[i] = (c, (t1, t2, t3, t4, t5))
+            if p >= m:
+                curr_sol[i] = (c, tuple(trees))
                 min[i] = p
                 break
-print(min[0])
+
+print(min)
 print(curr_sol[0])
+plt.scatter(kx, ky)
+plt.show()
 for ind, sol in enumerate(curr_sol):
     in_row = 4
     len_one = 140
