@@ -120,16 +120,21 @@ public:
     DifferenceTeacher(int);
     DifferenceTeacher(const DifferenceTeacher&);
     DifferenceTeacher& operator=(const DifferenceTeacher&);
-    DifferenceTeacher(DifferenceTeacher&&);
+    DifferenceTeacher(DifferenceTeacher&&) noexcept;
     DifferenceTeacher& operator=(DifferenceTeacher&&);
     virtual ~DifferenceTeacher() override;
 
     int getMaxDiff() const{return maxDiff;};
-
+    void addPositiveExample(const ParseTree&);
+    void addNegativeExample(const ParseTree&);
     bool membership(const ParseTree&) const override;
     ParseTree* equivalence(const TreeAcceptor&) const override;
     Teacher* clone() override;
 private:
+    void clearCache();
+    void copyCache(const DifferenceTeacher&);
+    mutable std::vector<ParseTree*> positiveCache;
+    mutable std::vector<ParseTree*> negativeCache;
     int maxDiff;
 };
 
