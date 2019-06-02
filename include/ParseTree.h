@@ -99,7 +99,7 @@ public:
     std::size_t getHash() const;
     std::string getLatexTree() const;
     std::vector<int> getContextLoc() const{return this->contextLoc;}
-    std::vector<ParseTree*> getInOrderPtrList();
+    std::vector<const ParseTree*> getInOrderPtrList() const;
     std::pair<ParseTree*,ParseTree*> makeContext(std::vector<int>) const;
     ParseTree* mergeContext(const ParseTree&) const;
     ParseTree getSkeleton() const;

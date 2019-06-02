@@ -314,6 +314,57 @@ TEST(tree_test, difference_test){
     ASSERT_EQ(t-t2,7);
 }
 
+
+TEST(tree_test, pointer_list_test){
+    ParseTree t(1);
+    ParseTree t2(2);
+    ParseTree t3(3);
+    t.setPointer(&t2, 0);
+    t.setPointer(&t3, 1);
+    vector<const ParseTree*> v = t.getInOrderPtrList();
+    ASSERT_EQ(3, v.size());
+    ASSERT_EQ(&t2, v[0]);
+    ASSERT_EQ(&t3, v[1]);
+    ASSERT_EQ(&t, v[2]);
+    t.setPointer(nullptr, 0);
+    t.setPointer(nullptr, 1);
+}
+
+vector<ParseTree*> createPtrVec(int numNodes){
+    vector<ParseTree*> ans;
+    if(numNodes==0){
+        return ans;
+    }
+    int lNum = numNodes%2==0?(numNodes)/2:(numNodes-1)/2;
+    int rNum = numNodes%2==0?lNum-1:lNum;
+    vector<ParseTree*> lVec = createPtrVec(lNum);
+    vector<ParseTree*> rVec = createPtrVec(rNum);
+    auto root = new ParseTree(1);
+    if(!lVec.empty()){root->setPointer(lVec[lVec.size()-1], 0);}
+    if(!rVec.empty()){root->setPointer(rVec[rVec.size()-1], 1);}
+    for(auto ptr: lVec){
+        ans.push_back(ptr);
+    }
+    for(auto ptr: rVec){
+        ans.push_back(ptr);
+    }
+    ans.push_back(root);
+}
+
+
+TEST(tree_test, pointer_list_test_advanced){
+    for(int nodesNum=1; nodesNum<100; nodesNum++) {
+        vector<ParseTree*> ptrVec = createPtrVec(nodesNum);
+        ParseTree *tree = ptrVec[nodesNum - 1];
+        vector<const ParseTree*> v = tree->getInOrderPtrList();
+        for (unsigned int i = 0; i < nodesNum; ++i) {
+            ASSERT_EQ(ptrVec[i], v[i]);
+        }
+        delete (tree);
+    }
+}
+
+
 TEST(tree_test, advanced_difference_test){
     ParseTree t(2);
     ParseTree t2(2);

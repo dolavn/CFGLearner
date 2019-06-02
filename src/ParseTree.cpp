@@ -460,20 +460,19 @@ bool ParseTree::isPrefix(const vector<int>& v1, const vector<int>& v2){
 }
 
 
-vector<ParseTree*> ParseTree::getInOrderPtrList(){
-    vector<ParseTree*> ans;
-    unordered_map<ParseTree*, bool> seenMap;
-    stack<ParseTree*> stack;
+vector<const ParseTree*> ParseTree::getInOrderPtrList() const{
+    vector<const ParseTree*> ans;
+    unordered_map<const ParseTree*, bool> seenMap;
+    stack<const ParseTree*> stack;
     stack.push(this);
     seenMap[this] = false;
     while(!stack.empty()){
-        ParseTree* top = stack.top();
+        const ParseTree* top = stack.top();
         if(seenMap[top]){
             stack.pop();
             ans.push_back(top);
         }else{
             seenMap[top] = true;
-            cout << top->subtrees.size() << endl;
             for(long i=top->subtrees.size()-1;i>=0;i--){
                 if(top->subtrees[i]) {
                     stack.push(top->subtrees[i]);

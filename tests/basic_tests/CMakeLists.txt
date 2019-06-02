@@ -8,7 +8,8 @@ add_executable(runBasicTests
                 LearnerTest.cpp
                 CFGTest.cpp
                 FrequencyTeacherTest.cpp
-                DifferenceTeacherTest.cpp)
+                DifferenceTeacherTest.cpp
+                TreeComparatorTest.cpp)
 
 target_link_libraries(runBasicTests gtest gtest_main)
 target_link_libraries(runBasicTests mainProg)
