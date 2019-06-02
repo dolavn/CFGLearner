@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <iostream> //TODO: Delete
 #include <sstream>
+#include <unordered_map>
 #include <ParseTree.h>
 
 #define IS_NULL(A)  (A==nullptr)
@@ -456,4 +457,29 @@ bool ParseTree::isPrefix(const vector<int>& v1, const vector<int>& v2){
         if(v1[i]!=v2[i]){return false;}
     }
     return true;
+}
+
+
+vector<ParseTree*> ParseTree::getInOrderPtrList(){
+    vector<ParseTree*> ans;
+    unordered_map<ParseTree*, bool> seenMap;
+    stack<ParseTree*> stack;
+    stack.push(this);
+    seenMap[this] = false;
+    while(!stack.empty()){
+        ParseTree* top = stack.top();
+        if(seenMap[top]){
+            stack.pop();
+            ans.push_back(top);
+        }else{
+            seenMap[top] = true;
+            cout << top->subtrees.size() << endl;
+            for(long i=top->subtrees.size()-1;i>=0;i--){
+                if(top->subtrees[i]) {
+                    stack.push(top->subtrees[i]);
+                }
+            }
+        }
+    }
+    return ans;
 }
