@@ -13,7 +13,7 @@ typedef std::vector<int> intVec;
 struct scoresMap{
 public:
     scoresMap():map(){}
-    scoresMap(std::unordered_map<intPair, int, pair_hash> map):map(map){}
+    //scoresMap(std::unordered_map<intPair, int, pair_hash> map):map(map){}
     int& operator[](intPair);
 private:
 
@@ -23,13 +23,17 @@ private:
 class TreeComparator{
 public:
     TreeComparator(scoresMap, int);
+    TreeComparator(int, int, int);
     TreeComparator(std::unordered_map<intPair, int, pair_hash>, int);
     int compare(const ParseTree&, const ParseTree&);
 private:
     typedef std::unordered_map<const ParseTree*, int> treeToIndMap;
     typedef std::vector<std::vector<int>> alignmentTable;
+    int getScore(int, int);
     int alignInnerNodes(const ParseTree&, const ParseTree&, treeToIndMap&, treeToIndMap&, alignmentTable&);
     int indelScore;
+    int innerNode;
+    int replaceScore;
     scoresMap scores;
 };
 

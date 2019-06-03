@@ -185,7 +185,7 @@ PYBIND11_MODULE(CFGLearner, m) {
         delete(weightParseTree);
     });
     py::class_<TreeComparator> treeComparator(m, "TreeComparator");
-    treeComparator.def(py::init<std::unordered_map<std::pair<int, int>, int, pair_hash>, int>());
+    treeComparator.def(py::init<int, int, int>());
     differenceTeacher.def("setTreeComparator", [](DifferenceTeacher& t, TreeComparator& c){
         t.setTreeComparator(c);
     });

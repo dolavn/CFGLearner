@@ -12,20 +12,21 @@ int& scoresMap::operator[](intPair p){
     return map[p];
 }
 
-TreeComparator::TreeComparator(scoresMap scores, int indelScore):scores(std::move(scores)),indelScore(indelScore){
+TreeComparator::TreeComparator(scoresMap scores, int indelScore):scores(std::move(scores)),indelScore(indelScore),
+innerNode(-1),replaceScore(-1){
 
 }
 
-TreeComparator::TreeComparator(std::unordered_map<intPair, int, pair_hash> map, int indelScore):scores(map), indelScore(indelScore) {
+TreeComparator::TreeComparator(int innerNode, int replaceScore, int indelScore):scores(),indelScore(indelScore),innerNode(innerNode),
+replaceScore(replaceScore){
 
 }
-
 
 int TreeComparator::alignInnerNodes(const ParseTree& t1, const ParseTree& t2,
         treeToIndMap& m1, treeToIndMap& m2, alignmentTable& bigTable){
     unsigned long lengths[] = {t1.getSubtrees().size()+1, t2.getSubtrees().size()+1};
     alignmentTable table(lengths[0], vector<int>(lengths[1]));
-    table[0][0] = scores[{t1.getData(), t2.getData()}];
+    table[0][0] = getScore(t1.getData(), t2.getData());
     for(int i=0;i<lengths[0];++i){
         for(int j=i>0?0:1;j<lengths[1];++j){
             int currMin = numeric_limits<int>::max();
@@ -69,7 +70,7 @@ int TreeComparator::compare(const ParseTree& t1, const ParseTree& t2){
             if(subtree1->isLeaf() && subtree2->isLeaf()){
                 //cout << subtree1->getData() << " , " << subtree1->isLeaf() << endl;
                 //cout << subtree2->getData() << " , " << subtree2->isLeaf() << endl;
-                table[i][j] = scores[{subtree1->getData(), subtree2->getData()}];
+                table[i][j] = getScore(subtree1->getData(), subtree2->getData());
             }else{
                 table[i][j] = alignInnerNodes(*subtree1, *subtree2, v1PtrToIndMapping, v2PtrToIndMapping,
                         table);
@@ -78,4 +79,19 @@ int TreeComparator::compare(const ParseTree& t1, const ParseTree& t2){
         }
     }
     return table[v1.size()-1][v2.size()-1];
+}
+
+
+int TreeComparator::getScore(int a, int b){
+    if(innerNode==-1){
+        return scores[{a,b}];
+    }else{
+        if(a==b){
+            return 0;
+        }
+        if(a==innerNode || b==innerNode){
+            return numeric_limits<int>::max();
+        }
+        return 1;
+    }
 }
