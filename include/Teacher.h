@@ -11,6 +11,7 @@
 
 class ParseTree;
 class TreeAcceptor;
+class TreeComparator;
 
 /*
  * A class representing the oracle used in the L* algorithm by the learner.
@@ -123,7 +124,7 @@ public:
     DifferenceTeacher(DifferenceTeacher&&) noexcept;
     DifferenceTeacher& operator=(DifferenceTeacher&&);
     virtual ~DifferenceTeacher() override;
-
+    void setTreeComparator(TreeComparator&);
     int getMaxDiff() const{return maxDiff;};
     void addPositiveExample(const ParseTree&);
     void addNegativeExample(const ParseTree&);
@@ -136,6 +137,7 @@ private:
     mutable std::vector<ParseTree*> positiveCache;
     mutable std::vector<ParseTree*> negativeCache;
     int maxDiff;
+    std::function<int(const ParseTree&, const ParseTree&)> cmpFunc;
 };
 
 

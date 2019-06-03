@@ -1,20 +1,27 @@
 #include "Teacher.h"
 #include "ParseTree.h"
 #include "TreeAcceptor.h"
+#include "TreeComparator.h"
 #include <limits>
 
 #define DEFAULT_DIFF 0
 
-DifferenceTeacher::DifferenceTeacher():SimpleTeacher(),maxDiff(DEFAULT_DIFF){
+using namespace std;
+
+function<int(const ParseTree&, const ParseTree&)> defaultFunc = [](const ParseTree& t1, const ParseTree& t2){
+    return t1-t2;
+};
+
+DifferenceTeacher::DifferenceTeacher():SimpleTeacher(),maxDiff(DEFAULT_DIFF),cmpFunc(defaultFunc){
 
 }
 
-DifferenceTeacher::DifferenceTeacher(int maxDiff):SimpleTeacher(),maxDiff(maxDiff){
+DifferenceTeacher::DifferenceTeacher(int maxDiff):SimpleTeacher(),maxDiff(maxDiff),cmpFunc(defaultFunc){
 
 }
 
 DifferenceTeacher::DifferenceTeacher(const DifferenceTeacher& other):SimpleTeacher(other),
-maxDiff(other.maxDiff){
+maxDiff(other.maxDiff), cmpFunc(defaultFunc){
     copyCache(other);
 }
 
@@ -24,6 +31,7 @@ DifferenceTeacher& DifferenceTeacher::operator=(const DifferenceTeacher& other){
     }
     SimpleTeacher::operator=(other);
     maxDiff = other.maxDiff;
+    cmpFunc = other.cmpFunc;
     clearCache();
     copyCache(other);
     return *this;
@@ -31,7 +39,7 @@ DifferenceTeacher& DifferenceTeacher::operator=(const DifferenceTeacher& other){
 
 DifferenceTeacher::DifferenceTeacher(DifferenceTeacher&& other) noexcept:SimpleTeacher(std::move(other)),
 positiveCache(std::move(other.positiveCache)),negativeCache(std::move(other.negativeCache)),
-maxDiff(other.maxDiff){
+maxDiff(other.maxDiff),cmpFunc(other.cmpFunc){
 
 }
 
@@ -44,6 +52,7 @@ DifferenceTeacher& DifferenceTeacher::operator=(DifferenceTeacher&& other){
     positiveCache = std::move(other.positiveCache);
     negativeCache = std::move(other.negativeCache);
     maxDiff = other.maxDiff;
+    cmpFunc = other.cmpFunc;
     return *this;
 }
 
@@ -65,12 +74,12 @@ bool DifferenceTeacher::membership(const ParseTree& tree) const{
         }
     }
     for(ParseTree* ptr: positiveExamples){
-        int diff = *ptr-tree;
+        int diff = cmpFunc(*ptr, tree);
         if(diff<minPos){minPos=diff;exp=ptr;}
     }
     int minNeg = std::numeric_limits<int>::max();
     for(ParseTree* ptr: negativeExamples){
-        int diff = *ptr-tree;
+        int diff = cmpFunc(*ptr, tree);
         if(diff<minPos){minNeg=diff;}
     }
     //std::cout << "minPos:" << minPos << std::endl;
@@ -118,6 +127,12 @@ void DifferenceTeacher::addPositiveExample(const ParseTree& tree){
 void DifferenceTeacher::addNegativeExample(const ParseTree& tree){
     clearCache();
     SimpleTeacher::addNegativeExample(tree);
+}
+
+void DifferenceTeacher::setTreeComparator(TreeComparator& cmp){
+    cmpFunc = [&cmp](const ParseTree& t1, const ParseTree& t2){
+        return cmp.compare(t1, t2);
+    };
 }
 
 

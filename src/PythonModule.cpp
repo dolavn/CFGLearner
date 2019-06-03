@@ -4,6 +4,8 @@
 #include "Learner.h"
 #include "TreeAcceptor.h"
 #include "CFG.h"
+#include "TreeComparator.h"
+#include "Definitions.h"
 #include <algorithm>
 #include <vector>
 #include <stack>
@@ -18,6 +20,8 @@ namespace py = pybind11;
 #define IS_DIGIT(A) ((A)>='0' && (A)<='9')
 
 using namespace std;
+
+typedef vector<int> intVec;
 
 static bool checkType(py::object& obj){
     py::object nltk = py::module::import("nltk");
@@ -179,6 +183,11 @@ PYBIND11_MODULE(CFGLearner, m) {
         t.addNegativeExample(*tree);
         delete(tree);
         delete(weightParseTree);
+    });
+    py::class_<TreeComparator> treeComparator(m, "TreeComparator");
+    treeComparator.def(py::init<std::unordered_map<std::pair<int, int>, int, pair_hash>, int>());
+    differenceTeacher.def("setTreeComparator", [](DifferenceTeacher& t, TreeComparator& c){
+        t.setTreeComparator(c);
     });
     m.def("learn",[](const Teacher& t, std::unordered_map<int,string> map) {
         py::gil_scoped_release release;

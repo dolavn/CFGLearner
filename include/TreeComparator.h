@@ -4,30 +4,32 @@
 #include <unordered_map>
 #include <vector>
 #include <boost/functional/hash.hpp>
+#include "Definitions.h"
 
 class ParseTree;
 
 
+typedef std::vector<int> intVec;
 struct scoresMap{
 public:
-    int& operator[](std::vector<int>);
+    scoresMap():map(){}
+    scoresMap(std::unordered_map<intPair, int, pair_hash> map):map(map){}
+    int& operator[](intPair);
 private:
-    template <typename Container>
-    struct container_hash {
-        std::size_t operator()(Container const& c) const {
-            return boost::hash_range(c.begin(), c.end());
-        }
-    };
-    typedef std::vector<int> intVec;
-    std::unordered_map<intVec, int, container_hash<intVec>> map;
+
+    std::unordered_map<intPair, int, pair_hash> map;
 };
 
 class TreeComparator{
 public:
-    TreeComparator(scoresMap);
-
+    TreeComparator(scoresMap, int);
+    TreeComparator(std::unordered_map<intPair, int, pair_hash>, int);
     int compare(const ParseTree&, const ParseTree&);
 private:
+    typedef std::unordered_map<const ParseTree*, int> treeToIndMap;
+    typedef std::vector<std::vector<int>> alignmentTable;
+    int alignInnerNodes(const ParseTree&, const ParseTree&, treeToIndMap&, treeToIndMap&, alignmentTable&);
+    int indelScore;
     scoresMap scores;
 };
 
