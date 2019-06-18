@@ -24,7 +24,7 @@ class TreeComparator{
 public:
     TreeComparator(scoresMap, int);
     TreeComparator(int, int, int);
-    TreeComparator(std::unordered_map<intPair, int, pair_hash>, int);
+//    TreeComparator(std::unordered_map<intPair, int, pair_hash>, int);
     int compare(const ParseTree&, const ParseTree&);
 private:
     typedef std::unordered_map<const ParseTree*, int> treeToIndMap;
@@ -36,5 +36,7 @@ private:
     int replaceScore;
     scoresMap scores;
 };
+
+int safeAdd(int, int);
 
 #endif //CFGLEARNER_TREECOMPARATOR_H

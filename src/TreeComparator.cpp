@@ -24,25 +24,29 @@ replaceScore(replaceScore){
 
 int TreeComparator::alignInnerNodes(const ParseTree& t1, const ParseTree& t2,
         treeToIndMap& m1, treeToIndMap& m2, alignmentTable& bigTable){
+    //cout << "filling inner table" << endl;
     unsigned long lengths[] = {t1.getSubtrees().size()+1, t2.getSubtrees().size()+1};
     alignmentTable table(lengths[0], vector<int>(lengths[1]));
     table[0][0] = getScore(t1.getData(), t2.getData());
     for(int i=0;i<lengths[0];++i){
         for(int j=i>0?0:1;j<lengths[1];++j){
             int currMin = numeric_limits<int>::max();
+            //cout << "currMin: " << currMin << endl;
             if(i>0){
-                currMin = MIN(currMin, table[i-1][j]+indelScore);
+                currMin = MIN(currMin, safeAdd(table[i-1][j],indelScore));
             }
             if(j>0){
-                currMin = MIN(currMin, table[i][j-1]+indelScore);
+                currMin = MIN(currMin, safeAdd(table[i][j-1],indelScore));
             }
+            //cout << "currMin2: " << currMin << endl;
             if(i>0 && j>0){
                 const ParseTree* subtree1 = t1.getSubtrees()[i-1];
                 const ParseTree* subtree2 = t2.getSubtrees()[j-1];
                 int replace = bigTable[m1[subtree1]][m2[subtree2]];
-                currMin = MIN(currMin, table[i-1][j-1]+replace);
+                currMin = MIN(currMin, safeAdd(table[i-1][j-1],replace));
             }
             table[i][j] = currMin;
+            //cout << "[" << i << "," << j << "]=" << table[i][j] << endl;
         }
     }
     return table[lengths[0]-1][lengths[1]-1];
@@ -57,6 +61,10 @@ unordered_map<const ParseTree*, int> createMapping(vector<const ParseTree*> v){
 }
 
 int TreeComparator::compare(const ParseTree& t1, const ParseTree& t2){
+    //cout << "comparing" << endl;
+    //cout << "t1 " << t1 << endl;
+    //cout << "t2 " << t2 << endl;
+    //cout << "innerNode:" << innerNode << " indelScore:" << indelScore << " replace:" << replaceScore << endl;
     vector<const ParseTree*> v1 = t1.getInOrderPtrList();
     vector<const ParseTree*> v2 = t2.getInOrderPtrList();
     treeToIndMap v1PtrToIndMapping = createMapping(v1);
@@ -75,9 +83,12 @@ int TreeComparator::compare(const ParseTree& t1, const ParseTree& t2){
                 table[i][j] = alignInnerNodes(*subtree1, *subtree2, v1PtrToIndMapping, v2PtrToIndMapping,
                         table);
             }
+            //cout << "[" << i << "," << j << "]=" << table[i][j] << endl;
             //cout << "------------" << endl;
         }
     }
+    int score = table[v1.size()-1][v2.size()-1];
+    //cout << "score:" << score << endl;
     return table[v1.size()-1][v2.size()-1];
 }
 
@@ -94,4 +105,15 @@ int TreeComparator::getScore(int a, int b){
         }
         return 1;
     }
+}
+
+
+int safeAdd(int a, int b){
+    if(b>0 && a>numeric_limits<int>::max()-b){
+        return numeric_limits<int>::max();
+    }
+    if(b<0 && a<numeric_limits<int>::min()-b){
+        return numeric_limits<int>::min();
+    }
+    return a+b;
 }

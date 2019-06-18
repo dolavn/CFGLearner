@@ -186,6 +186,19 @@ PYBIND11_MODULE(CFGLearner, m) {
     });
     py::class_<TreeComparator> treeComparator(m, "TreeComparator");
     treeComparator.def(py::init<int, int, int>());
+    treeComparator.def("compare", [](TreeComparator& c, py::object nltkTree1, py::object nltkTree2){
+        if(!checkType(nltkTree1) || !checkType(nltkTree2)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str1 = py::str(nltkTree1);
+        string str2 = py::str(nltkTree2);
+        ParseTree* tree1 = parseTree(str1);
+        ParseTree* tree2 = parseTree(str2);
+        int score = c.compare(*tree1, *tree2);
+        delete(tree1);
+        delete(tree2);
+        return score;
+    });
     differenceTeacher.def("setTreeComparator", [](DifferenceTeacher& t, TreeComparator& c){
         t.setTreeComparator(c);
     });

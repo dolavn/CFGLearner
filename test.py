@@ -1,10 +1,11 @@
-from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn
+from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator
 from nltk import Tree, CFG
 from itertools import product
 from TreeGenerator import generate_trees
 # from nltk.parse import generate
 import matplotlib.pyplot as plt
 import json
+import tkinter as tk
 import numpy as np
 #plt.use('Agg')
 from nltk.draw.util import CanvasFrame
@@ -25,90 +26,122 @@ def count_inner_nodes(tree):
     return count
 
 
-NUM_TO_KEEP = 5
-s = [1, 2, 3, 4, 5]
-s2 = [3, 4, 5, 1, 2]
-s3 = [1, 2, 3, 4]
-s4 = [3, 4, 5]
-s5 = [1, 2, 3]
-kx = []
-ky = []
-min = []
-curr_sol = []
-max_len = -1
-terminals = set()
-for c in s+s2+s3+s4+s5:
-    terminals.add(c)
-t = len(terminals)
-for t1, t2, t3, t4, t5 in product(generate_trees(s, max_len=max_len), generate_trees(s2, max_len=max_len),
-                                  generate_trees(s3, max_len=max_len), generate_trees(s4, max_len=max_len),
-                                  generate_trees(s5, max_len=max_len)):
-    trees = [t1, t2, t3, t4, t5]
-    s = SimpleTeacher()
-    total_nodes = sum([count_inner_nodes(t) for t in trees])
+def get_alphabet_len(trees):
+    t_set = set()
     for tree in trees:
-        s.addPositiveExample(tree)
-    c = learn(s, {})
+        for t in tree.treepositions():
+            if isinstance(tree[t], Tree) and len(tree[t]) == 0:
+                t_set.add(tree[t].label())
+    return len(t_set)
+
+
+def measure_generalization(trees, grammar):
+    total_nodes = sum([count_inner_nodes(t) for t in trees])
+    t = get_alphabet_len(trees)
     nt_set = set()
-    for p in c.productions():
+    for p in grammar.productions():
         nt_set.add(p.lhs())
     nt = len(nt_set)
-    p = float(total_nodes)/float(nt-1-t)
-    kx.append(nt)
-    ky.append(p)
-    if len(min) < NUM_TO_KEEP:
-        min.append(p)
-        curr_sol.append((c, tuple(trees)))
-    if any([p >= m for m in min]):
-        for i, m in enumerate(min):
-            if p >= m:
-                curr_sol[i] = (c, tuple(trees))
-                min[i] = p
-                break
+    p = float(total_nodes)/float(nt)
+    return p, nt
 
-print(min)
-print(curr_sol[0])
-plt.scatter(kx, ky)
-plt.show()
-for ind, sol in enumerate(curr_sol):
-    in_row = 4
-    len_one = 140
-    height = 200
-    i = 0
-    cf = CanvasFrame()
-    for t in sol[1]:
-        tc = TreeWidget(cf.canvas(), t)
-        x, y = (i % in_row)*len_one, int(i / in_row)*height
-        print(x, y)
-        cf.add_widget(tc, x, y)
-        i = i + 1
-    cf.print_to_file('trees' + str(ind) + '.ps')
-    cf.destroy()
-exit()
-a1 = Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(0, [Tree(3, []), Tree(4, [])])])
-a2 = Tree(0, [Tree(0, [Tree(3, []), Tree(4, [])]), Tree(0, [Tree(1, []), Tree(2, [])])])
-w1 = Tree(4, [Tree(2, [Tree(10, []), Tree(10, [])]), Tree(2, [Tree(10, []), Tree(10, [])])])
-w2 = Tree(4, [Tree(2, [Tree(10, []), Tree(10, [])]), Tree(2, [Tree(10, []), Tree(10, [])])])
 
-d = DifferenceTeacher(2)
-d.addPositiveExample(a1, w1)
-d.addPositiveExample(a2, w2)
-di = {}
-c = learn(d, di)
-print(c)
-for sentence in generate(c, n=10):
-    print(' '.join(sentence))
-exit()
+def generate_all_trees():
+    NUM_TO_KEEP = 10
+    s1 = [1, 2, 3, 4, 5]
+    s2 = [3, 4, 5, 1, 2]
+    s3 = [1, 2, 3, 4]
+    s4 = [3, 4, 5]
+    s5 = [1, 2]
+    kx = []
+    ky = []
+    min = []
+    strings = [s1, s2, s4, s5]
+    strings = [s for s in strings]
+    curr_sol = []
+    max_len = -1
+    terminals = set()
+    for c in sum(strings, []):
+        terminals.add(c)
+    t = len(terminals)
+    for t1, t2, t3, t4 in product(*[generate_trees(s, max_len=max_len) for s in strings]):
+        trees = [t1, t2, t3, t4]
+        s = SimpleTeacher()
+        total_nodes = sum([count_inner_nodes(t) for t in trees])
+        for tree in trees:
+            s.addPositiveExample(tree)
+        c = learn(s, {})
+        """
+        nt_set = set()
+        for p in c.productions():
+            nt_set.add(p.lhs())
+        nt = len(nt_set)
+        p = float(total_nodes)/float(nt-1-t)
+        """
+        p, nt = measure_generalization(trees, c)
+        kx.append(nt)
+        ky.append(p)
+        if len(min) < NUM_TO_KEEP:
+            min.append(p)
+            curr_sol.append((c, tuple(trees)))
+        if any([p >= m for m in min]):
+            for i, m in enumerate(min):
+                if p >= m:
+                    curr_sol[i] = (c, tuple(trees))
+                    min[i] = p
+                    break
+    print(sum(min)/len(min))
+    print(curr_sol[0])
+    plt.scatter(kx, ky)
+    plt.show()
+    for ind, sol in enumerate(curr_sol):
+        print('p')
+        in_row = 4
+        len_one = 140
+        height = 200
+        i = 0
+        cf = CanvasFrame()
+        for t in sol[1]:
+            tc = TreeWidget(cf.canvas(), t)
+            x, y = (i % in_row)*len_one, int(i / in_row)*height
+            print(x, y)
+            cf.add_widget(tc, x, y)
+            i = i + 1
+        cf.print_to_file('trees' + str(ind) + '.ps')
+        cf.destroy()
+
+
+"""
+cmp = TreeComparator(0, 1, 2)
 mla = open('output_mla_manual2.txt')
 mla_list = json.load(mla)
-di = mla_list['cogs_dict']['reverse_dict']
-di = {int(key): di[key] for key in di}
 mla_list = [(Tree.fromstring(tup[0]), Tree.fromstring(tup[1])) for tup in mla_list['trees']]
-for tree, weights in mla_list:
-    update_weights(weights)
-    d.addPositiveExample(tree, weights)
-c = learn(d, di)
-print(c)
+for (t1, _), (t2, _) in product(mla_list[-1:], mla_list[-1:]):
+    print(t1, t2)
+    s = cmp.compare(t1, t2)
+    print(s)
+exit()
+"""
+g = []
+x = range(10)
+for param in x:
+    d = DifferenceTeacher(param)
+    cmp = TreeComparator(0, 1, 2)
+    d.setTreeComparator(cmp)
+    mla = open('output_mla_manual2.txt')
+    mla_list = json.load(mla)
+    di = mla_list['cogs_dict']['reverse_dict']
+    di = {int(key): di[key] for key in di}
+    mla_list = [(Tree.fromstring(tup[0]), Tree.fromstring(tup[1])) for tup in mla_list['trees']]
+    for tree, weights in mla_list:
+        update_weights(weights)
+        d.addPositiveExample(tree, weights)
+    c = learn(d, di)
+    p, nt = measure_generalization([tup[0] for tup in mla_list], c)
+    g.append(p)
+    print("param: {0}, generalization: {1}, nt: {2}".format(param, p, nt))
+plt.plot(x, g)
+plt.show()
 exit()
 """
 a1 = Tree(0, [Tree(1, []), Tree(0, [Tree(0, [Tree(1, []), Tree(2, [])]), Tree(2, [])])])
