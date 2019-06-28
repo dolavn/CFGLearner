@@ -11,6 +11,7 @@ import numpy as np
 from nltk.draw.util import CanvasFrame
 from nltk.draw import TreeWidget
 from nltk.parse.generate import generate
+import tkinter
 
 
 def update_weights(tree):
@@ -126,7 +127,7 @@ g = []
 x = range(10)
 for param in x:
     d = DifferenceTeacher(param)
-    cmp = TreeComparator(0, 1, 2)
+    cmp = TreeComparator(0, 20, 20)
     d.setTreeComparator(cmp)
     mla = open('output_mla_manual2.txt')
     mla_list = json.load(mla)
@@ -139,6 +140,8 @@ for param in x:
     c = learn(d, di)
     p, nt = measure_generalization([tup[0] for tup in mla_list], c)
     g.append(p)
+    if param == 2 or param == 8:
+        print(c)
     print("param: {0}, generalization: {1}, nt: {2}".format(param, p, nt))
 plt.plot(x, g)
 plt.show()
