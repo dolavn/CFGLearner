@@ -18,6 +18,8 @@ SET (SRCS src/ParseTree.cpp
           src/FrequencyTeacher.cpp
           src/DifferenceTeacher.cpp
           src/TreeComparator.cpp
+          src/MultiLinearMap.cpp
+          src/IndexArray.cpp
           )
 
 
