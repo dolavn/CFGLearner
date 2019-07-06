@@ -16,20 +16,26 @@ void printVec(const floatVec& vec){ //TODO: Delete
     cout << "]" << endl;
 }
 
-MultiLinearMap::MultiLinearMap(int d, int p):d(d),p(p){
+MultiLinearMap::MultiLinearMap():dim(1),paramNum(0){
+    initParams();
+}
+
+MultiLinearMap::MultiLinearMap(int dim, int paramNum):dim(dim),paramNum(paramNum){
     initParams();
 }
 
 
 floatVec MultiLinearMap::operator()(const vector<floatVec>& input) {
-    floatVec y(d);
-    intVec maxLengths(p+1, d);
+    if(!testInput(input)){
+        throw std::invalid_argument("Invalid input dimensions");
+    }
+    floatVec y(dim);
+    intVec maxLengths(paramNum+1, dim);
     IndexArray ind(maxLengths);
     for(;!ind.getOverflow();++ind){
         int i = ind[0];
-        float param = params[convertInd(ind)];
         float toAdd = params[convertInd(ind)];
-        for(int j=1;j<p+1;++j){
+        for(int j=1;j<paramNum+1;++j){
             toAdd = toAdd * input[j-1][ind[j]];
         }
         y[i] = y[i] + toAdd;
@@ -54,7 +60,7 @@ float MultiLinearMap::getParam(const intVec& location){
 int MultiLinearMap::convertInd(const IndexArray& index){
     int ind = 0;
     int currFactor = 1;
-    for (int i = p; i >= 0; i--) {
+    for (int i = paramNum; i >= 0; i--) {
         ind = ind + currFactor*index.get(i);
         currFactor = currFactor*index.getMax(i);
     }
@@ -64,17 +70,17 @@ int MultiLinearMap::convertInd(const IndexArray& index){
 int MultiLinearMap::convertInd(const intVec& index){
     int ind = 0;
     int currFactor = 1;
-    for (int i = p; i >= 0; i--) {
+    for (int i = paramNum; i >= 0; i--) {
         ind = ind + currFactor*index[i];
-        currFactor = currFactor*d;
+        currFactor = currFactor*dim;
     }
     return ind;
 }
 
 
 void MultiLinearMap::initParams(){
-    params = floatVec((unsigned long)(pow(d, p+1)));
-    intVec maxLengths(p+1, d);
+    params = floatVec((unsigned long)(pow(dim, paramNum+1)));
+    intVec maxLengths(paramNum+1, dim);
     IndexArray ind(maxLengths);
     for(;!ind.getOverflow();++ind){
         params[convertInd(ind)] = 0;
@@ -83,11 +89,23 @@ void MultiLinearMap::initParams(){
 
 
 bool MultiLinearMap::testLocation(const intVec& ind){
-    if(ind.size()!=p+1){
+    if(ind.size()!=paramNum+1){
         return false;
     }
-    for(int i=0;i<p+1;++i){
-        if(ind[i]>=d){
+    for(int i=0;i<paramNum+1;++i){
+        if(ind[i]>=dim){
+            return false;
+        }
+    }
+    return true;
+}
+
+bool MultiLinearMap::testInput(const vector<floatVec>& input){
+    if(input.size()!=paramNum){
+        return false;
+    }
+    for(int i=0;i<paramNum;++i){
+        if(input[i].size()!=dim){
             return false;
         }
     }

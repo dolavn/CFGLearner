@@ -15,18 +15,22 @@ class IndexArray;
 
 class MultiLinearMap{
 public:
+    MultiLinearMap();
     MultiLinearMap(int, int);
     floatVec operator()(const std::vector<floatVec>&);
 
     void setParam(float, const intVec&);
+    inline int getVDim() const{return dim;};
+    inline int getParamNum() const{return paramNum;};
     float getParam(const intVec&);
 private:
     void initParams();
     bool testLocation(const intVec&);
+    bool testInput(const std::vector<floatVec>&);
     int convertInd(const IndexArray&);
     int convertInd(const intVec&);
 
-    int d,p;
+    int dim,paramNum;
     floatVec params;
 };
 

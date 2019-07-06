@@ -11,7 +11,8 @@ add_executable(runBasicTests
                 DifferenceTeacherTest.cpp
                 TreeComparatorTest.cpp
                 IndexArrayTest.cpp
-                MultiLinearMapTest.cpp)
+                MultiLinearMapTest.cpp
+                MultiplicityTreeAcceptorTest.cpp)
 
 target_link_libraries(runBasicTests gtest gtest_main)
 target_link_libraries(runBasicTests mainProg)

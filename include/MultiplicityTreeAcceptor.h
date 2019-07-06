@@ -6,12 +6,35 @@
 #define CFGLEARNER_MULTIPLICITYTREEACCEPTOR_H
 
 #include "TreeAcceptor.h"
+#include "MultiLinearMap.h"
+
 
 class MultiplicityTreeAcceptor{
 public:
-    explicit MultiplicityTreeAcceptor(std::set<rankedChar>); //Empty constructor
-private:
+    MultiplicityTreeAcceptor(std::set<rankedChar>&, int); //Empty constructor
 
+    void addTransition(const MultiLinearMap&, const rankedChar&);
+    void setLambda(const floatVec&);
+
+    float run(const ParseTree&);
+private:
+    struct ranked_char_hash {
+        std::size_t operator()(const rankedChar& c) const {
+            std::vector<int> v({c.c, c.rank});
+            return boost::hash_range(v.begin(), v.end());
+        }
+    };
+    template <typename Container>
+    struct container_hash {
+        std::size_t operator()(Container const& c) const {
+            return boost::hash_range(c.begin(), c.end());
+        }
+    };
+    bool testMap(const MultiLinearMap&, const rankedChar&);
+    std::set<rankedChar> alphabet;
+    int dim;
+    std::unordered_map<rankedChar, MultiLinearMap, ranked_char_hash> transitions;
+    floatVec lambda;
 };
 
 #endif //CFGLEARNER_MULTIPLICITYTREEACCEPTOR_H

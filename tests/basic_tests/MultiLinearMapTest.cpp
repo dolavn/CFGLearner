@@ -7,6 +7,21 @@
 
 using namespace std;
 
+TEST(multi_linear_map_test,const_2d_check){
+    MultiLinearMap m(2, 0);
+    for(int i=0;i<100;++i) {
+        auto iFloat = (float)(i);
+        m.setParam(iFloat, intVec({0}));
+        for (int j = 0; j < 100; ++j) {
+            auto jFloat = (float)(j);
+            m.setParam(jFloat, intVec({1}));
+            floatVec currConst = floatVec({iFloat, jFloat});
+            ASSERT_EQ(currConst, m({}));
+        }
+    }
+}
+
+
 TEST(multi_linear_map_test,basic_check){
     MultiLinearMap m(1, 1);
     for(int i=0;i<100;++i){
@@ -90,4 +105,11 @@ TEST(multi_linear_map_test,2d_two_vecs){
 TEST(multi_linear_map_test,exception_test){
     MultiLinearMap m(1, 1);
     ASSERT_THROW(m.setParam(1.0, intVec({1, 1})), invalid_argument);
+    ASSERT_THROW(m.setParam(1.0, intVec({0, 1, 1})), invalid_argument);
+    m = MultiLinearMap(2,2);
+    ASSERT_NO_THROW(m.setParam(1.0, intVec({0, 1, 1})));
+    ASSERT_THROW(m({{}}), invalid_argument);
+    ASSERT_THROW(m({{1.0f, 1.0f}}), invalid_argument);
+    ASSERT_THROW(m({{1.0f, 1.0f}, {1.0f}}), invalid_argument);
+    ASSERT_NO_THROW(m({{1.0f, 1.0f}, {1.0f, 1.0f}}));
 }
