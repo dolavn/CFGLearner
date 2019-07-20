@@ -21,6 +21,7 @@ SET (SRCS src/ParseTree.cpp
           src/MultiLinearMap.cpp
           src/IndexArray.cpp
           src/MultiplicityTreeAcceptor.cpp
+          src/SimpleMultiplicityTeacher.cpp
           )
 
 

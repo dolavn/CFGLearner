@@ -7,11 +7,13 @@
 
 #include <vector>
 #include "TreeAcceptor.h"
+#include "MultiplicityTreeAcceptor.h"
 
 class Teacher;
+class MultiplicityTeacher;
 
 TreeAcceptor learn(const Teacher&);
-
+MultiplicityTreeAcceptor learn(const MultiplicityTeacher&);
 
 //Methods for testing here.
 //TODO: delete
