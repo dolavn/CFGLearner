@@ -6,6 +6,7 @@
 #include "CFG.h"
 #include "TreeComparator.h"
 #include "Definitions.h"
+#include "Matrix.h"
 #include <algorithm>
 #include <vector>
 #include <stack>
