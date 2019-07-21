@@ -4,7 +4,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 14)
 
 find_package(PythonLibs REQUIRED)
-
+link_libraries(${PYTHON_LIBRARIES})
 add_subdirectory(tests)
 
 SET (SRCS src/ParseTree.cpp
@@ -29,6 +29,7 @@ SET (SRCS src/ParseTree.cpp
           )
 
 
+include_directories(${PYTHON_INCLUDE_DIRS})
 add_library(mainProg
         ${SRCS})
 include_directories(include venv/include/site/python3.6/ /users/studs/bsc/2016/dolavn/CFGLearner/venv/include/site/python3.6 ${PYTHON_INCLUDE_DIRS})
