@@ -11,6 +11,7 @@
 #include <stack>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
@@ -22,6 +23,37 @@ namespace py = pybind11;
 using namespace std;
 
 typedef vector<int> intVec;
+
+
+static py::object test_mat(){
+    ssize_t ndim = 2;
+    std::vector<ssize_t> shape = {2, 2};
+    std::vector<double> result = {1.2, 2.5, 1.4, 3.2};
+    std::vector<ssize_t> strides = { sizeof(double), sizeof(double)*2 };
+    auto tmp = py::array(py::buffer_info(
+            result.data(),                           /* data as contiguous array  */
+            sizeof(double),                          /* size of one scalar        */
+            py::format_descriptor<double>::format(), /* data type                 */
+            ndim,                                    /* number of dimensions      */
+            shape,                                   /* shape of the matrix       */
+            strides                                  /* strides for each axis     */
+    ));
+    ssize_t ndim2 = 1;
+    std::vector<ssize_t> shape2 = {2};
+    std::vector<double> result2 = {1, 0};
+    std::vector<ssize_t> strides2 = { sizeof(double)};
+    auto tmp2 = py::array(py::buffer_info(
+            result2.data(),                           /* data as contiguous array  */
+            sizeof(double),                          /* size of one scalar        */
+            py::format_descriptor<double>::format(), /* data type                 */
+            ndim2,                                    /* number of dimensions      */
+            shape2,                                   /* shape of the matrix       */
+            strides2                                  /* strides for each axis     */
+    ));
+    py::object np = py::module::import("numpy");
+    py::object dot = np.attr("dot");
+    return dot(tmp, tmp2);
+}
 
 static bool checkType(py::object& obj){
     py::object nltk = py::module::import("nltk");
@@ -211,6 +243,9 @@ PYBIND11_MODULE(CFGLearner, m) {
         py::object nltkCFG = nltk.attr("CFG");
         py::object nltkCFGFromString = nltkCFG.attr("fromstring");
         return nltkCFGFromString(c.getRepr());
+    });
+    m.def("test_np",[]() {
+        return test_mat();
     });
     m.doc() = "A module used to learn context free grammars from structural data.";
 }

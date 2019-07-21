@@ -68,9 +68,9 @@ private:
 
 class HankelMatrix: public BaseTable{
 public:
-    explicit HankelMatrix(MultiplicityTeacher& teacher);
+    explicit HankelMatrix(const MultiplicityTeacher& teacher);
 private:
-    MultiplicityTeacher& teacher;
+    const MultiplicityTeacher& teacher;
     std::unordered_map<ParseTree*,std::vector<double>> obs;
     void completeTree(ParseTree* tree);
     void completeContext(ParseTree*);

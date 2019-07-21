@@ -1,4 +1,4 @@
-from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator
+from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, test_np
 from nltk import Tree, CFG
 from itertools import product
 from TreeGenerator import generate_trees
@@ -13,7 +13,9 @@ from nltk.draw import TreeWidget
 from nltk.parse.generate import generate
 import tkinter
 
-
+a = test_np()
+print(a)
+exit()
 def update_weights(tree):
     for t in tree.treepositions():
         tree[t].set_label(int(tree[t].label())+1)

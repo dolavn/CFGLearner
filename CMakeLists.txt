@@ -3,6 +3,7 @@ project(CFGLearner)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 14)
 
+FIND_PACKAGE( pybind11 REQUIRED )
 find_package(PythonLibs REQUIRED)
 
 add_subdirectory(tests)
@@ -23,6 +24,9 @@ SET (SRCS src/ParseTree.cpp
           src/MultiplicityTreeAcceptor.cpp
           src/SimpleMultiplicityTeacher.cpp
           src/ObservationTable.cpp
+          src/HankelMatrix.cpp
+          src/Matrix.cpp
+          src/VectorNumpy.cpp
           )
 
 
