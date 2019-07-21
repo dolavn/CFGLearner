@@ -22,6 +22,7 @@ SET (SRCS src/ParseTree.cpp
           src/IndexArray.cpp
           src/MultiplicityTreeAcceptor.cpp
           src/SimpleMultiplicityTeacher.cpp
+          src/ObservationTable.cpp
           )
 
 
