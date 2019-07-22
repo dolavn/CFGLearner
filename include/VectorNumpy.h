@@ -9,15 +9,22 @@
 
 typedef long int ssize_t;
 
+namespace pybind11{
+    class object;
+}
+
 class VectorNumpy{
 public:
     explicit VectorNumpy(ssize_t);
-    explicit VectorNumpy(std::vector<double>);
+    explicit VectorNumpy(const std::vector<double>&);
 
     inline double& operator[](ssize_t ind){return data[ind];}
+    pybind11::object getNpArr() const;
+    void fillDataFromNpVec(pybind11::object&);
 private:
     ssize_t size;
     std::vector<double> data;
+
 };
 
 #endif //CFGLEARNER_VECTORNUMPY_H

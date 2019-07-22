@@ -12,9 +12,8 @@ from nltk.draw.util import CanvasFrame
 from nltk.draw import TreeWidget
 from nltk.parse.generate import generate
 import tkinter
-
-a = test_np()
-print(a)
+import sys
+print(sys.path)
 exit()
 def update_weights(tree):
     for t in tree.treepositions():

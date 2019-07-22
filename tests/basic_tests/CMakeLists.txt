@@ -19,6 +19,7 @@ add_executable(runBasicTests
                 MatrixTest.cpp)
 
 
+include_directories(include venv/include/site/python3.6/ /users/studs/bsc/2016/dolavn/CFGLearner/venv/include/site/python3.6 ${PYTHON_INCLUDE_DIRS})
 include_directories(${PYTHON_INCLUDE_DIRS})
 target_link_libraries(runBasicTests ${PYTHON_LIBRARIES})
 target_link_libraries(runBasicTests gtest gtest_main)
