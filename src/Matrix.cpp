@@ -3,8 +3,11 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <iostream>
+#include <armadillo>
 
 using namespace std;
+using namespace arma;
 namespace py = pybind11;
 
 
@@ -16,7 +19,17 @@ data(shape1, VectorNumpy(shape2)){
     fillData(data);
 }
 
+Matrix::Matrix(const vector<VectorNumpy>& vec):shape({0, 0}), data(){
+    if(!checkVec(vec)){
+        throw std::invalid_argument("Dimensions of input vector are incorrect");
+    }
+    shape[0] = vec.size();
+    shape[1] = vec[0].getSize();
+    data = vec;
+}
+
 VectorNumpy& Matrix::operator[](ssize_t ind){
+
     return data[ind];
 }
 
@@ -36,11 +49,20 @@ Matrix Matrix::getInverse(){
     py::object np = py::module::import("numpy");
     py::object linalg = np.attr("linalg");
     py::object inv = linalg.attr("inv");
-    py::object np_vec = (*this)[0].getNpArr();
     py::object mat = get_np_matrix();
     py::object inverse = inv(mat);
     ans.fillDataFromNpMat(inverse);
     return ans;
+}
+
+int Matrix::getRank(){
+    py::object np = py::module::import("numpy");
+    py::object linalg = np.attr("linalg");
+    py::object matrix_rank = linalg.attr("matrix_rank");
+    py::object mat = get_np_matrix();
+    py::object rank = matrix_rank(mat);
+    py::int_ ranki = rank;
+    return ranki;
 }
 
 py::object Matrix::get_np_matrix(){
@@ -84,5 +106,18 @@ void Matrix::fillDataFromNpMat(py::object& mat){
             p++;
         }
     }
+}
+
+bool Matrix::checkVec(const vector<VectorNumpy>& vec){
+    if(vec.empty()){
+        return false;
+    }
+    ssize_t size = vec[0].getSize();
+    for(auto& v: vec){
+        if(v.getSize()!=size){
+            return false;
+        }
+    }
+    return true;
 }
 

@@ -13,6 +13,7 @@ private:
     int data;
     int size;
     int weight;
+    double prob;
     void copy(const ParseTree& other);
     void clear();
     bool isContext;
@@ -90,6 +91,8 @@ public:
     bool isLeaf() const;
     int getWeight() const;
     void setWeight(int);
+    double getProb() const;
+    void setProb(double);
     void applyWeights(const ParseTree&);
     bool sameTopology(const ParseTree&);
     inline bool getIsContext() const{return isContext;}

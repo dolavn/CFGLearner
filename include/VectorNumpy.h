@@ -19,8 +19,10 @@ public:
     explicit VectorNumpy(const std::vector<double>&);
 
     inline double& operator[](ssize_t ind){return data[ind];}
+    inline double getValue(ssize_t ind) const{return data[ind];}
     pybind11::object getNpArr() const;
     void fillDataFromNpVec(pybind11::object&);
+    inline ssize_t getSize() const{return size;}
 private:
     ssize_t size;
     std::vector<double> data;

@@ -18,14 +18,17 @@ class Matrix{
 public:
     Matrix(ssize_t,ssize_t);
     Matrix(ssize_t, ssize_t, const std::vector<double>&);
+    explicit Matrix(const std::vector<VectorNumpy>&);
 
     VectorNumpy operator*(const VectorNumpy&);
     VectorNumpy& operator[](ssize_t ind);
     Matrix getInverse();
+    int getRank();
 private:
     std::vector<ssize_t> shape;
     std::vector<VectorNumpy> data;
     pybind11::object get_np_matrix();
+    bool checkVec(const std::vector<VectorNumpy>&);
     void fillDataFromNpMat(pybind11::object&);
     void fillData(const std::vector<double>&);
 };

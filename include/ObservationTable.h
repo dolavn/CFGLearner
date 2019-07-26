@@ -24,6 +24,9 @@ public:
     void addContext(const ParseTree&);
     bool hasTree(const ParseTree&);
     bool treeInS(const ParseTree& tree);
+    inline const std::vector<ParseTree*>& getR(){return r;}
+    inline const std::vector<ParseTree*>& getS(){return s;}
+    inline const std::vector<ParseTree*>& getC(){return c;}
 protected:
     virtual void completeTree(ParseTree*)=0;
     virtual void completeContext(ParseTree*)=0;
@@ -51,9 +54,6 @@ public:
     const ParseTree& getTreeS(int ind) const;
     void printTable();
     std::string getTableLatex();
-    inline const std::vector<ParseTree*>& getR(){return r;}
-    inline const std::vector<ParseTree*>& getS(){return s;}
-    inline const std::vector<ParseTree*>& getC(){return c;}
     const std::vector<ParseTree*> getRNew();
     const std::vector<ParseTree*> getSNew();
 
@@ -68,11 +68,15 @@ private:
 
 class HankelMatrix: public BaseTable{
 public:
-    explicit HankelMatrix(const MultiplicityTeacher& teacher);
+    explicit HankelMatrix(const MultiplicityTeacher&);
+    HankelMatrix(const HankelMatrix&)=delete;
+    HankelMatrix& operator=(const HankelMatrix&)=delete;
+    HankelMatrix(HankelMatrix&&)=delete;
+    HankelMatrix& operator=(HankelMatrix&&)=delete;
 private:
     const MultiplicityTeacher& teacher;
     std::unordered_map<ParseTree*,std::vector<double>> obs;
-    void completeTree(ParseTree* tree);
+    void completeTree(ParseTree*);
     void completeContext(ParseTree*);
     bool checkTableComplete(ParseTree*);
     void checkTableCompleteContext(ParseTree*);

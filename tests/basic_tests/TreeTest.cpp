@@ -14,6 +14,8 @@ using namespace std;
 TEST(tree_test,basic_check){
     ParseTree t(2);
     ParseTree t2(3);
+    t.setProb(0.2);
+    ASSERT_EQ(t.getProb(), 0.2);
     t2.setSubtree(ParseTree(2),0);
     t2.setSubtree(ParseTree(3),1);
     ParseTree t3(4);
@@ -91,49 +93,73 @@ TEST(tree_test,leaf_iterator){
 }
 
 TEST(tree_test,copy_constructor){
+    double probs[] = {0.2, 0.5};
     ParseTree t(2);
+    t.setProb(probs[0]);
     ParseTree t2(3);
+    t2.setProb(probs[1]);
     t.setSubtree(t2,1);
     ParseTree t3(t);
-    int p = 2;
-    for(auto it=t3.getIterator();it.hasNext();++it){
-        ASSERT_EQ(*it,p++);
+    int n = 2;
+    double* p = probs;
+    for(auto it=t3.getIndexIterator();it.hasNext();++it){
+        ASSERT_EQ(t3[*it].getData(),n++);
+        ASSERT_EQ(t3[*it].getProb(),*p);
+        p++;
     }
 }
 
 
 TEST(tree_test,assignment_operator){
+    double probs[] = {0.2, 0.5};
     ParseTree t(2);
+    t.setProb(probs[0]);
     ParseTree t2(3);
+    t2.setProb(probs[1]);
     t.setSubtree(t2,1);
     ParseTree t3(t2);
     t3 = t;
-    int p = 2;
-    for(auto it=t3.getIterator();it.hasNext();++it){
-        ASSERT_EQ(*it,p++);
+    int n = 2;
+    double* p = probs;
+    for(auto it=t3.getIndexIterator();it.hasNext();++it){
+        ASSERT_EQ(t3[*it].getData(),n++);
+        ASSERT_EQ(t3[*it].getProb(),*p);
+        p++;
     }
 }
 
 TEST(tree_test,move_constructor){
+    double probs[] = {0.2, 0.5};
     ParseTree t(2);
+    t.setProb(probs[0]);
     ParseTree t2(3);
+    t2.setProb(probs[1]);
     t.setSubtree(t2,1);
     ParseTree t3(std::move(t));
-    int p = 2;
-    for(auto it=t3.getIterator();it.hasNext();++it){
-        ASSERT_EQ(*it,p++);
+    int n = 2;
+    double* p = probs;
+    for(auto it=t3.getIndexIterator();it.hasNext();++it){
+        ASSERT_EQ(t3[*it].getData(),n++);
+        ASSERT_EQ(t3[*it].getProb(),*p);
+        p++;
     }
 }
 
 TEST(tree_test,move_assignment){
+    double probs[] = {0.2, 0.5};
     ParseTree t(2);
+    t.setProb(probs[0]);
     ParseTree t2(3);
+    t2.setProb(probs[1]);
     t.setSubtree(t2,1);
     ParseTree t3(t2);
     t3 = std::move(t);
-    int p = 2;
-    for(auto it=t3.getIterator();it.hasNext();++it){
-        ASSERT_EQ(*it,p++);
+    int n = 2;
+    double* p = probs;
+    for(auto it=t3.getIndexIterator();it.hasNext();++it){
+        ASSERT_EQ(t3[*it].getData(),n++);
+        ASSERT_EQ(t3[*it].getProb(),*p);
+        p++;
     }
 }
 

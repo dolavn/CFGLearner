@@ -32,7 +32,7 @@ void MultiplicityTreeAcceptor::setLambda(const floatVec& v){
     lambda = v;
 }
 
-float MultiplicityTreeAcceptor::run(const ParseTree& tree){
+float MultiplicityTreeAcceptor::run(const ParseTree& tree) const{
     ParseTree runTree = tree.getSkeleton();
     stack<vector<int>> stack;
     unordered_map<vector<int>,floatVec, MultiplicityTreeAcceptor::container_hash<vector<int>>> vecMap;
@@ -57,7 +57,9 @@ float MultiplicityTreeAcceptor::run(const ParseTree& tree){
         if(transitions.find(c) == transitions.end()){ //no transition
             return 0;
         }
-        MultiLinearMap m = transitions[c];
+        auto it = transitions.find(c);
+        MultiLinearMap m;
+        m = it->second;
         vecMap[nodeInd] = m(params);
         if(nodeInd.empty()){break;}
         vector<int> fatherInd = vector<int>(nodeInd.begin(),nodeInd.begin()+nodeInd.size()-1);

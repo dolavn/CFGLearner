@@ -10,30 +10,33 @@
 using namespace std;
 
 
-ParseTree::ParseTree():empty(true),data(0),size(0),weight(0),isContext(false),contextLoc(),
+ParseTree::ParseTree():empty(true),data(0),size(0),weight(0),prob(0),isContext(false),contextLoc(),
                        subtrees(){}
 
-ParseTree::ParseTree(bool context,vector<int> contextLoc):empty(true),data(0),size(0),weight(0),isContext(context),
-                                                          contextLoc(std::move(contextLoc)),subtrees(){
+ParseTree::ParseTree(bool context,vector<int> contextLoc):empty(true),data(0),size(0),weight(0),prob(0),
+isContext(context),contextLoc(std::move(contextLoc)),subtrees(){
     if(!context){contextLoc = vector<int>();}
 }
 
-ParseTree::ParseTree(int data):empty(false),data(data),size(1),weight(0),isContext(false),contextLoc(),subtrees(){}
+ParseTree::ParseTree(int data):empty(false),data(data),size(1),weight(0),
+prob(0),isContext(false),contextLoc(),subtrees(){}
 
-ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data),size(1),weight(0),
+ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data),size(1),weight(0),prob(0),
                                                     isContext(false),contextLoc(),subtrees(v.size()){
     for(unsigned int i=0;i<v.size();++i){
         subtrees[i] = new ParseTree(v[i]);
     }
 }
 
-ParseTree::ParseTree(int data, bool context, vector<int> contextLoc):empty(false),data(data),size(1),weight(0),
-                                                                     isContext(context),contextLoc(std::move(contextLoc)),subtrees(){
+ParseTree::ParseTree(int data, bool context, vector<int> contextLoc):empty(false),data(data),size(1),weight(0),prob(0),
+                                                                     isContext(context),
+                                                                     contextLoc(std::move(contextLoc)),subtrees(){
     if(!context){contextLoc=vector<int>();}
 }
 
 ParseTree::ParseTree(const ParseTree& other):empty(other.empty),data(other.data),size(other.size),weight(other.weight),
-                                             isContext(other.isContext),contextLoc(other.contextLoc),subtrees(){
+                                             prob(other.prob),isContext(other.isContext),contextLoc(other.contextLoc),
+                                             subtrees(){
     copy(other);
 }
 
@@ -44,6 +47,7 @@ ParseTree& ParseTree::operator=(const ParseTree& other){
     clear();
     size = other.size;
     weight = other.weight;
+    prob = other.prob;
     isContext = other.isContext;
     contextLoc = other.contextLoc;
     copy(other);
@@ -51,7 +55,8 @@ ParseTree& ParseTree::operator=(const ParseTree& other){
 }
 
 ParseTree::ParseTree(ParseTree&& other) noexcept:empty(other.empty),data(other.data),
-                                                 size(other.size),weight(other.weight),isContext(other.isContext),contextLoc(std::move(other.contextLoc)),
+                                                 size(other.size),weight(other.weight),prob(other.prob),
+                                                 isContext(other.isContext),contextLoc(std::move(other.contextLoc)),
                                                  subtrees(std::move(other.subtrees)){
     other.size = 0;
 }
@@ -65,6 +70,7 @@ ParseTree& ParseTree::operator=(ParseTree&& other) noexcept{
     isContext = other.isContext;
     size = other.size;
     weight = other.weight;
+    prob = other.prob;
     data = other.data;
     return *this;
 }
@@ -96,6 +102,7 @@ void ParseTree::copy(const ParseTree& other){
         const ParseTree* otherTree = currPair.second;
         currTree->data = otherTree->data;
         currTree->weight = otherTree->weight;
+        currTree->prob = otherTree->prob;
         currTree->subtrees = vector<ParseTree*>(otherTree->subtrees.size());
         for(auto i=(int)(otherTree->subtrees.size()-1);i>=0;--i){
             if(!otherTree->subtrees[i]){continue;}
@@ -255,6 +262,14 @@ int ParseTree::getWeight() const{
 
 void ParseTree::setWeight(int weight){
     this->weight = weight;
+}
+
+double ParseTree::getProb() const{
+    return prob;
+}
+
+void ParseTree::setProb(double prob){
+    this->prob = prob;
 }
 
 void ParseTree::applyWeights(const ParseTree& weightsTree){

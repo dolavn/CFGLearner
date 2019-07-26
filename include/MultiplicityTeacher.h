@@ -11,7 +11,6 @@ class ParseTree;
 class MultiplicityTreeAcceptor;
 
 typedef std::pair<ParseTree,double> example;
-typedef std::pair<ParseTree,ParseTree> taggedTree;
 
 class MultiplicityTeacher{
 public:
@@ -21,15 +20,16 @@ public:
 
 class SimpleMultiplicityTeacher: public MultiplicityTeacher{
 public:
-    explicit SimpleMultiplicityTeacher(double);
+    explicit SimpleMultiplicityTeacher(double, double);
 
-    void addExample(taggedTree);
+    void addExample(const ParseTree&);
 
     virtual double membership(const ParseTree&);
     virtual example* equivalence(const MultiplicityTreeAcceptor&);
 private:
     double epsilon;
-    std::vector<taggedTree> trees;
+    double defaultValue;
+    std::vector<ParseTree*> trees;
 };
 
 #endif //CFGLEARNER_MULTIPLICITYTEACHER_H

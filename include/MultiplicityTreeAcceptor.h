@@ -16,7 +16,7 @@ public:
     void addTransition(const MultiLinearMap&, const rankedChar&);
     void setLambda(const floatVec&);
 
-    float run(const ParseTree&);
+    float run(const ParseTree&) const;
 private:
     struct ranked_char_hash {
         std::size_t operator()(const rankedChar& c) const {
