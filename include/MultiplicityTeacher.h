@@ -10,23 +10,34 @@
 class ParseTree;
 class MultiplicityTreeAcceptor;
 
-typedef std::pair<ParseTree,double> example;
 
 class MultiplicityTeacher{
 public:
-    virtual double membership(const ParseTree&)=0;
-    virtual example* equivalence(const MultiplicityTreeAcceptor&)=0;
+    virtual double membership(const ParseTree&) const=0;
+    virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const=0;
+    virtual double getDefaultValue() const=0;
 };
 
 class SimpleMultiplicityTeacher: public MultiplicityTeacher{
 public:
     explicit SimpleMultiplicityTeacher(double, double);
+    SimpleMultiplicityTeacher(const SimpleMultiplicityTeacher&);
+    SimpleMultiplicityTeacher& operator=(const SimpleMultiplicityTeacher&);
+    SimpleMultiplicityTeacher(SimpleMultiplicityTeacher&&);
+    SimpleMultiplicityTeacher& operator=(SimpleMultiplicityTeacher&&);
+    virtual ~SimpleMultiplicityTeacher();
 
     void addExample(const ParseTree&);
 
-    virtual double membership(const ParseTree&);
-    virtual example* equivalence(const MultiplicityTreeAcceptor&);
+    inline double getDefaultValue() const{return defaultValue;}
+
+    virtual double membership(const ParseTree&) const;
+    virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
+
+
 private:
+    void clear();
+    void copy(const SimpleMultiplicityTeacher&);
     double epsilon;
     double defaultValue;
     std::vector<ParseTree*> trees;

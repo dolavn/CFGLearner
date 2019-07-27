@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <armadillo>
 
 class Teacher;
 class MultiplicityTeacher;
@@ -66,6 +67,7 @@ private:
     void checkTableCompleteContext(ParseTree*);
 };
 
+
 class HankelMatrix: public BaseTable{
 public:
     explicit HankelMatrix(const MultiplicityTeacher&);
@@ -73,8 +75,11 @@ public:
     HankelMatrix& operator=(const HankelMatrix&)=delete;
     HankelMatrix(HankelMatrix&&)=delete;
     HankelMatrix& operator=(HankelMatrix&&)=delete;
+
+    std::vector<double> getObs(const ParseTree&) const;
 private:
     const MultiplicityTeacher& teacher;
+    std::vector<arma::Row<double>> base;
     std::unordered_map<ParseTree*,std::vector<double>> obs;
     void completeTree(ParseTree*);
     void completeContext(ParseTree*);

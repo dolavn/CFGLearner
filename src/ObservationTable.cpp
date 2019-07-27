@@ -78,6 +78,7 @@ BaseTable::~BaseTable(){
     vectorClear(r);
     vectorClear(c);
 }
+
 ObservationTable::ObservationTable(const Teacher& teacher):BaseTable(),teacher(teacher),obs(){}
 
 

@@ -16,6 +16,8 @@ add_executable(runBasicTests
                 IndexArrayTest.cpp
                 MultiLinearMapTest.cpp
                 MultiplicityTreeAcceptorTest.cpp
+                MultiplicityTeacherTest.cpp
+                HankelMatrixTest.cpp
                 MatrixTest.cpp)
 
 
