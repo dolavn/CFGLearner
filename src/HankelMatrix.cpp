@@ -97,6 +97,7 @@ void HankelMatrix::completeContextR(ParseTree* context){
         fillMatLastRow(sMat, tree);
         if(arma::rank(sMat)==s.size()+1){ //The vector is now linearly independent from s.
             s.push_back(tree);
+            sMat = getSMatrix();
             r.erase(it);
         }else{
             it++;
