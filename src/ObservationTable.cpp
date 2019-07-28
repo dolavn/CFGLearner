@@ -36,8 +36,8 @@ void BaseTable::addContext(const ParseTree& context){
     }
     auto newContext = new ParseTree(context);
     c.push_back(newContext);
-    completeContext(newContext);
-    checkTableCompleteContext(newContext);
+    completeContextS(newContext);
+    completeContextR(newContext);
 }
 
 
@@ -219,7 +219,7 @@ void ObservationTable::completeTree(ParseTree* tree){
     }
 }
 
-void ObservationTable::completeContext(ParseTree* context){
+void ObservationTable::completeContextS(ParseTree* context){
     for (auto tree: s) {
         ParseTree *merged = context->mergeContext(*tree);
         obs[tree].push_back(teacher.membership(*merged));
@@ -236,7 +236,7 @@ bool ObservationTable::checkTableComplete(ParseTree* newTree){
     return false;
 }
 
-void ObservationTable::checkTableCompleteContext(ParseTree* newContext){
+void ObservationTable::completeContextR(ParseTree* newContext){
     auto it = r.begin();
     int newState = -1;
     while(it!=r.end()) {

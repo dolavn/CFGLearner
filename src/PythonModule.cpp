@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <vector>
 #include <stack>
+#include <armadillo>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -26,34 +27,12 @@ using namespace std;
 typedef vector<int> intVec;
 
 
-static py::object test_mat(){
-    ssize_t ndim = 2;
-    std::vector<ssize_t> shape = {2, 2};
-    std::vector<double> result = {1.2, 2.5, 1.4, 3.2};
-    std::vector<ssize_t> strides = { sizeof(double), sizeof(double)*2 };
-    auto tmp = py::array(py::buffer_info(
-            result.data(),                           /* data as contiguous array  */
-            sizeof(double),                          /* size of one scalar        */
-            py::format_descriptor<double>::format(), /* data type                 */
-            ndim,                                    /* number of dimensions      */
-            shape,                                   /* shape of the matrix       */
-            strides                                  /* strides for each axis     */
-    ));
-    ssize_t ndim2 = 1;
-    std::vector<ssize_t> shape2 = {2};
-    std::vector<double> result2 = {1, 0};
-    std::vector<ssize_t> strides2 = { sizeof(double)};
-    auto tmp2 = py::array(py::buffer_info(
-            result2.data(),                           /* data as contiguous array  */
-            sizeof(double),                          /* size of one scalar        */
-            py::format_descriptor<double>::format(), /* data type                 */
-            ndim2,                                    /* number of dimensions      */
-            shape2,                                   /* shape of the matrix       */
-            strides2                                  /* strides for each axis     */
-    ));
-    py::object np = py::module::import("numpy");
-    py::object dot = np.attr("dot");
-    return dot(tmp, tmp2);
+static int test_mat(){
+    arma::mat testMat(2, 2);
+    testMat(0, 0) = 1; testMat(0, 1) = 0;
+    testMat(1, 0) = 1; testMat(1, 1) = 2;
+    int rank = arma::rank(testMat);
+    return rank;
 }
 
 static bool checkType(py::object& obj){
@@ -245,7 +224,7 @@ PYBIND11_MODULE(CFGLearner, m) {
         py::object nltkCFGFromString = nltkCFG.attr("fromstring");
         return nltkCFGFromString(c.getRepr());
     });
-    m.def("test_np",[]() {
+    m.def("test_arma",[]() {
         return test_mat();
     });
     m.doc() = "A module used to learn context free grammars from structural data.";

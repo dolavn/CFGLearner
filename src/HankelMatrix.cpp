@@ -23,7 +23,7 @@ void HankelMatrix::completeTree(ParseTree* tree){
     }
 }
 
-void HankelMatrix::completeContext(ParseTree* context){
+void HankelMatrix::completeContextS(ParseTree* context){
     for (auto tree: s) {
         ParseTree *merged = context->mergeContext(*tree);
         obs[tree].push_back(teacher.membership(*merged));
@@ -32,19 +32,25 @@ void HankelMatrix::completeContext(ParseTree* context){
 }
 
 bool HankelMatrix::checkTableComplete(ParseTree* tree){
-    mat sMat(s.size()+1, c.size());
-    for(auto it=s.begin();it!=s.end();it++){
-        vector<double>& observation = obs[*it];
-        for(int i=0;i<c.size();++i){
-            sMat[it-s.begin(),i] = observation[i];
+    mat sMat = getSMatrix();
+    fillMatLastRow(sMat, tree);
+    /*
+    cout << sMat << endl;
+    //printf("s size:%d\n", s.size());
+    for(auto tree: s){
+        //cout << *tree << endl;
+        vector<double>& obsi = obs[tree];
+        printf("[");
+        for(int i=0;i<obsi.size();++i){
+            printf("%lf", obsi[i]);
+            if(i<obsi.size()-1) {
+                printf(",");
+            }
         }
+        printf("]\n");
     }
-    vector<double>& observation = obs[tree];
-    for(int i=0;i<c.size();++i){
-        sMat[s.size(),i] = observation[i];
-    }
-    //cout << sMat << endl;
-    //printf("rank:%ld\t s.size()=%ld\n",arma::rank(sMat), s.size());
+    */
+    //printf("rank:%ld\t s.size()=%ld\n", arma::rank(sMat), s.size());
     return arma::rank(sMat)!=s.size()+1;
 }
 
@@ -80,6 +86,38 @@ vector<double> HankelMatrix::getObs(const ParseTree& tree) const{
     }
 }
 
-void HankelMatrix::checkTableCompleteContext(ParseTree* newContext){
+void HankelMatrix::completeContextR(ParseTree* context){
+    mat sMat = getSMatrix();
+    auto it = r.begin();
+    while(it!=r.end()){
+        auto tree = *it;
+        ParseTree *merged = context->mergeContext(*tree);
+        obs[tree].push_back(teacher.membership(*merged));
+        delete (merged);
+        fillMatLastRow(sMat, tree);
+        if(arma::rank(sMat)==s.size()+1){ //The vector is now linearly independent from s.
+            s.push_back(tree);
+            r.erase(it);
+        }else{
+            it++;
+        }
+    }
+}
 
+mat HankelMatrix::getSMatrix(){
+    mat sMat(s.size()+1, c.size());
+    for(auto it=s.begin();it!=s.end();it++){
+        vector<double>& observation = obs[*it];
+        for(unsigned int i=0;i<c.size();++i){
+            sMat((const uword)(it-s.begin()),i) = observation[i];
+        }
+    }
+    return sMat;
+}
+
+void HankelMatrix::fillMatLastRow(mat& sMat, ParseTree* tree){
+    vector<double>& observation = obs[tree];
+    for(unsigned int i=0;i<c.size();++i){
+        sMat(s.size(),i) = observation[i];
+    }
 }

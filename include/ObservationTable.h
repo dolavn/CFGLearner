@@ -30,9 +30,9 @@ public:
     inline const std::vector<ParseTree*>& getC(){return c;}
 protected:
     virtual void completeTree(ParseTree*)=0;
-    virtual void completeContext(ParseTree*)=0;
+    virtual void completeContextS(ParseTree*)=0;
+    virtual void completeContextR(ParseTree*)=0;
     virtual bool checkTableComplete(ParseTree*)=0;
-    virtual void checkTableCompleteContext(ParseTree*)=0;
     std::vector<ParseTree*> s;
     std::vector<int> sNew;
     std::vector<ParseTree*> r;
@@ -62,9 +62,9 @@ private:
     const Teacher& teacher;
     std::unordered_map<ParseTree*,std::vector<bool>> obs;
     void completeTree(ParseTree* tree);
-    void completeContext(ParseTree*);
+    void completeContextS(ParseTree*);
+    void completeContextR(ParseTree*);
     bool checkTableComplete(ParseTree*);
-    void checkTableCompleteContext(ParseTree*);
 };
 
 
@@ -81,9 +81,11 @@ private:
     const MultiplicityTeacher& teacher;
     std::vector<arma::Row<double>> base;
     std::unordered_map<ParseTree*,std::vector<double>> obs;
+    arma::mat getSMatrix();
+    void fillMatLastRow(arma::mat&, ParseTree*);
     void completeTree(ParseTree*);
-    void completeContext(ParseTree*);
+    void completeContextS(ParseTree*);
+    void completeContextR(ParseTree*);
     bool checkTableComplete(ParseTree*);
-    void checkTableCompleteContext(ParseTree*);
 };
 #endif //CFGLEARNER_OBSERVATIONTABLE_H
