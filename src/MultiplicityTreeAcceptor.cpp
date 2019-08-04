@@ -16,7 +16,7 @@ void printVec(const vector<T>& vec){ //TODO: Delete
 }
 
 
-MultiplicityTreeAcceptor::MultiplicityTreeAcceptor(set<rankedChar>& alphabet, int dim):
+MultiplicityTreeAcceptor::MultiplicityTreeAcceptor(const set<rankedChar>& alphabet, int dim):
 alphabet(alphabet),dim(dim),transitions(),lambda(){
 
 }

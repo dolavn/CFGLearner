@@ -53,8 +53,9 @@ SimpleMultiplicityTeacher getMultiplicityTeacher(){
 }
 
 TEST(hankel_matrix_test,basic_check){
+    set<rankedChar> alphabet = getAlphabet();
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
-    HankelMatrix h(teacher);
+    HankelMatrix h(teacher, alphabet);
     ParseTree leaf(0);
     ParseTree t(1, {ParseTree(0), ParseTree(0)});
     ParseTree t2(1, {t, t});
@@ -96,7 +97,8 @@ TEST(hankel_matrix_test,basic_check){
 
 TEST(hankel_matrix_test,context_check){
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
-    HankelMatrix h(teacher);
+    set<rankedChar> alphabet = getAlphabet();
+    HankelMatrix h(teacher, alphabet);
     ParseTree leaf(0);
     ParseTree t(1, {leaf, leaf});
     ParseTree t2(1, {t, t});
@@ -129,4 +131,79 @@ TEST(hankel_matrix_test,context_check){
     ASSERT_TRUE(*s[0]==leaf);
     ASSERT_TRUE(*s[1]==t);
     ASSERT_TRUE(*r[0]==t2);
+}
+
+TEST(hankel_matrix_test,suffixIterator){
+    set<rankedChar> alphabet = getAlphabet();
+    SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
+    HankelMatrix h(teacher, alphabet);
+    ParseTree leaf(0);
+    ParseTree t(1, {ParseTree(0), ParseTree(0)});
+    ParseTree t2(1, {t, t});
+    pair<ParseTree*, ParseTree*> pair1 = t.makeContext({});
+    pair<ParseTree*, ParseTree*> pair2 = t.makeContext({0});
+    ParseTree* emptyContext = pair1.first;
+    ParseTree* secondContext = pair2.first;
+    h.addContext(*emptyContext);
+    h.addContext(*secondContext);
+    delete(pair1.first);
+    delete(pair1.second);
+    pair1 = {nullptr, nullptr};
+    delete(pair2.first);
+    delete(pair2.second);
+    pair2 = {nullptr, nullptr};
+    h.addTree(leaf);
+    h.addTree(t);
+    h.addTree(t2);
+    h.getAcceptor();
+    auto it = h.getSuffixIterator();
+    vector<ParseTree*> s = h.getS();
+    vector<ParseTree*> trees;
+    vector<rankedChar> nodes = {a, b};
+    for(auto c: nodes){
+        for(int i=0;i<s.size();++i){
+            for(int j=0;j<s.size();++j){
+                auto t = new ParseTree(c.c);
+                t->setSubtree(*s[i], 0);
+                t->setSubtree(*s[j], 1);
+                trees.push_back(t);
+            }
+        }
+    }
+    int i=0;
+    while(it.hasNext()){
+        ASSERT_EQ(*(it++), *trees[i++]);
+
+    }
+    for(auto& tree: trees){
+        if(tree){
+            delete(tree);
+            tree = nullptr;
+        }
+    }
+}
+
+TEST(hankel_matrix_test,acceptor_test){
+    set<rankedChar> alphabet = getAlphabet();
+    SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
+    HankelMatrix h(teacher, alphabet);
+    ParseTree leaf(0);
+    ParseTree t(1, {ParseTree(0), ParseTree(0)});
+    ParseTree t2(1, {t, t});
+    pair<ParseTree*, ParseTree*> pair1 = t.makeContext({});
+    pair<ParseTree*, ParseTree*> pair2 = t.makeContext({0});
+    ParseTree* emptyContext = pair1.first;
+    ParseTree* secondContext = pair2.first;
+    h.addContext(*emptyContext);
+    h.addContext(*secondContext);
+    delete(pair1.first);
+    delete(pair1.second);
+    pair1 = {nullptr, nullptr};
+    delete(pair2.first);
+    delete(pair2.second);
+    pair2 = {nullptr, nullptr};
+    h.addTree(leaf);
+    h.addTree(t);
+    h.addTree(t2);
+    h.getAcceptor();
 }

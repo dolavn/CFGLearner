@@ -11,7 +11,7 @@
 
 class MultiplicityTreeAcceptor{
 public:
-    MultiplicityTreeAcceptor(std::set<rankedChar>&, int); //Empty constructor
+    MultiplicityTreeAcceptor(const std::set<rankedChar>&, int); //Empty constructor
 
     void addTransition(const MultiLinearMap&, const rankedChar&);
     void setLambda(const floatVec&);

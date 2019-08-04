@@ -7,7 +7,10 @@
 
 #include <vector>
 #include <unordered_map>
+#include <set>
 #include <armadillo>
+#include "IndexArray.h"
+#include "TreeAcceptor.h"
 
 class Teacher;
 class MultiplicityTeacher;
@@ -67,21 +70,47 @@ private:
     bool checkTableComplete(ParseTree*);
 };
 
+class MultiplicityTreeAcceptor;
 
 class HankelMatrix: public BaseTable{
 public:
-    explicit HankelMatrix(const MultiplicityTeacher&);
+    explicit HankelMatrix(const MultiplicityTeacher&, const std::set<rankedChar>&);
     HankelMatrix(const HankelMatrix&)=delete;
     HankelMatrix& operator=(const HankelMatrix&)=delete;
     HankelMatrix(HankelMatrix&&)=delete;
     HankelMatrix& operator=(HankelMatrix&&)=delete;
 
     std::vector<double> getObs(const ParseTree&) const;
+    MultiplicityTreeAcceptor getAcceptor() const;
+
+    class suffixIterator{
+    public:
+        suffixIterator(HankelMatrix&);
+        bool hasNext();
+        ParseTree operator*() const;
+        suffixIterator& operator++();
+        suffixIterator operator++(int){
+            suffixIterator ans(*this);
+            ++(*this);
+            return ans;
+        }
+    private:
+        void incChar();
+        HankelMatrix& mat;
+        std::vector<rankedChar> alphabet;
+        int currChar;
+        IndexArray arr;
+    };
+
+    suffixIterator getSuffixIterator();
 private:
     const MultiplicityTeacher& teacher;
+    std::set<rankedChar> alphabet;
     std::vector<arma::Row<double>> base;
+    arma::mat sInv;
     std::unordered_map<ParseTree*,std::vector<double>> obs;
-    arma::mat getSMatrix();
+    arma::mat getSMatrix(bool);
+    void updateSInv();
     void fillMatLastRow(arma::mat&, ParseTree*);
     void completeTree(ParseTree*);
     void completeContextS(ParseTree*);
