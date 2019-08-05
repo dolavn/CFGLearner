@@ -41,7 +41,7 @@ void BaseTable::addContext(const ParseTree& context){
 }
 
 
-bool BaseTable::hasTree(const ParseTree& tree){
+bool BaseTable::hasTree(const ParseTree& tree) const{
     for(auto t: s){
         if(*t==tree){
             return true;
@@ -54,6 +54,29 @@ bool BaseTable::hasTree(const ParseTree& tree){
     }
     return false;
 }
+
+int BaseTable::getIndInS(const ParseTree& tree) const{
+    for(auto it=s.begin();it!=s.end();++it){
+        if(**it==tree){
+            return it-s.begin();
+        }
+    }
+    return -1;
+}
+
+int BaseTable::getIndInR(const ParseTree& tree) const{
+    for(auto it=s.begin();it!=s.end();++it){
+        if(**it==tree){
+            return it-s.begin();
+        }
+    }
+    return -1;
+}
+
+const ParseTree& BaseTable::getTreeS(int ind) const{
+    return *s[ind];
+}
+
 
 bool BaseTable::treeInS(const ParseTree& tree){
     for(auto t: s){
@@ -120,10 +143,6 @@ int ObservationTable::getSObsInd(const ParseTree& tree){
         }
     }
     return -1;
-}
-
-const ParseTree& ObservationTable::getTreeS(int ind) const{
-    return *s[ind];
 }
 
 void ObservationTable::printTable() {

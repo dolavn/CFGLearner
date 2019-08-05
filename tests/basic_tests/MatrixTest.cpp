@@ -1,9 +1,6 @@
 #include "gtest/gtest.h"
 #include "../../include/Matrix.h"
-/*#include <pybind11/embed.h>*/
 #include <armadillo>
-
-/*namespace py = pybind11;*/
 
 using namespace std;
 

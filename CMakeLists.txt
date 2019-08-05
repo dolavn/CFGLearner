@@ -28,9 +28,7 @@ SET (SRCS src/ParseTree.cpp
           src/SimpleMultiplicityTeacher.cpp
           src/ObservationTable.cpp
           src/HankelMatrix.cpp
-          src/Matrix.cpp
-          src/VectorNumpy.cpp
-          )
+        )
 
 
 add_library(mainProg

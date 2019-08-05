@@ -205,5 +205,6 @@ TEST(hankel_matrix_test,acceptor_test){
     h.addTree(leaf);
     h.addTree(t);
     h.addTree(t2);
+    h.closeTable();
     h.getAcceptor();
 }

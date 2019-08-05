@@ -3,12 +3,13 @@
 #include "MultiplicityTeacher.h"
 #include "MultiplicityTreeAcceptor.h"
 #include <armadillo>
+#include <algorithm>
 
 using namespace std;
 using namespace arma;
 
 HankelMatrix::HankelMatrix(const MultiplicityTeacher& teacher, const set<rankedChar>& alphabet):teacher(teacher), obs(),
-alphabet(alphabet), sInv(){
+alphabet(alphabet){
 
 }
 
@@ -100,7 +101,6 @@ void HankelMatrix::completeContextR(ParseTree* context){
         if(arma::rank(sMat)==s.size()+1){ //The vector is now linearly independent from s.
             s.push_back(tree);
             sMat = getSMatrix(true);
-            updateSInv();
             r.erase(it);
         }else{
             it++;
@@ -108,10 +108,10 @@ void HankelMatrix::completeContextR(ParseTree* context){
     }
 }
 
-mat HankelMatrix::getSMatrix(bool extraSpace){
+mat HankelMatrix::getSMatrix(bool extraSpace) const{
     mat sMat(s.size()+(extraSpace?1:0), c.size());
     for(auto it=s.begin();it!=s.end();it++){
-        vector<double>& observation = obs[*it];
+        vector<double> observation = obs.find(*it)->second;
         for(unsigned int i=0;i<c.size();++i){
             sMat((const uword)(it-s.begin()),i) = observation[i];
         }
@@ -127,15 +127,105 @@ void HankelMatrix::fillMatLastRow(mat& sMat, ParseTree* tree){
 }
 
 MultiplicityTreeAcceptor HankelMatrix::getAcceptor() const{
-    return MultiplicityTreeAcceptor(alphabet, base.size());
+    if(!checkClosed()){
+        throw std::invalid_argument("Table must be closed");
+    }
+    vector<MultiLinearMap> maps;
+    vector<rankedChar> alphabetVec = getAlphabetVec();
+    for(auto c: alphabetVec){
+        maps.emplace_back(MultiLinearMap((int)(s.size()), c.rank));
+    }
+    arma::mat sInv = getSInv();
+    MultiplicityTreeAcceptor acc(alphabet, base.size());
+    for(auto currTree: s){
+        rankedChar c = {currTree->getData(), (int)(currTree->getSubtrees().size())};
+        int charInd = (int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+        if(charInd>=alphabetVec.size()){
+            throw std::invalid_argument("Character not in alphabet");
+        }
+        updateTransition(maps[charInd], *currTree, alphabetVec, sInv);
+    }
+    for(auto currTree: r){
+        rankedChar c = {currTree->getData(), (int)(currTree->getSubtrees().size())};
+        int charInd = (int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+        if(charInd>=alphabetVec.size()){
+            throw std::invalid_argument("Character not in alphabet");
+        }
+        updateTransition(maps[charInd], *currTree, alphabetVec, sInv);
+    }
+    return acc;
 }
 
-void HankelMatrix::updateSInv(){
+void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const vector<rankedChar>& alphabetVec,
+        const arma::mat& sInv) const{
+    vector<int> sIndices;
+    for(auto subtree: t.getSubtrees()){
+        int subtreeInd = getIndInS(*subtree);
+        if(subtreeInd<0){
+            throw std::invalid_argument("Subtree not in S");
+        }
+        sIndices.push_back(subtreeInd);
+    }
+    rankedChar c = {t.getData(), (int)(sIndices.size())};
+    int charInd = (int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+    if(charInd>=alphabetVec.size()){
+        throw std::invalid_argument("Character not in alphabet");
+    }
+    arma::rowvec v = getObsVec(t);
+    arma::rowvec params = v*sInv;
+    vector<int> mapParams;
+    mapParams.push_back(-1);
+    mapParams.insert(mapParams.end(), sIndices.begin(), sIndices.end());
+    for(int i=0;i<v.size();++i){
+        mapParams[0] = i;
+        m.setParam(params(i), mapParams);
+    }
+}
+
+void HankelMatrix::closeTable(){
+    auto it = getSuffixIterator();
+    while(it.hasNext()){
+        auto currTree = *it++;
+        if(!hasTree(currTree)){
+            addTree(currTree);
+        }
+    }
+}
+
+bool HankelMatrix::checkClosed() const{
+    auto it = getSuffixIterator();
+    while(it.hasNext()){
+        auto currTree = *it++;
+        if(!hasTree(currTree)){
+            return false;
+        }
+    }
+    return true;
+}
+
+arma::mat HankelMatrix::getSInv() const{
     mat sMat = getSMatrix(false);
-    sInv = arma::inv(sMat);
+    return arma::inv(sMat);
 }
 
-HankelMatrix::suffixIterator::suffixIterator(HankelMatrix& mat):mat(mat),alphabet(),
+arma::rowvec HankelMatrix::getObsVec(const ParseTree& tree) const{
+    vector<double> vec = getObs(tree);
+    arma::rowvec ans(vec.size());
+    for(unsigned int i=0;i<vec.size();++i){
+        ans(i) = vec[i];
+    }
+    return ans;
+}
+
+vector<rankedChar> HankelMatrix::getAlphabetVec() const{
+    vector<rankedChar> alphabetVec;
+    for(auto c: alphabet){
+        alphabetVec.push_back(c);
+    }
+    return alphabetVec;
+}
+
+HankelMatrix::suffixIterator::suffixIterator(const HankelMatrix& mat):mat(mat),alphabet(),
 currChar(-1),arr(){
     for(auto c: mat.alphabet){
         alphabet.push_back(c);
@@ -179,6 +269,6 @@ void HankelMatrix::suffixIterator::incChar(){
     }
 }
 
-HankelMatrix::suffixIterator HankelMatrix::getSuffixIterator(){
+HankelMatrix::suffixIterator HankelMatrix::getSuffixIterator() const{
     return suffixIterator(*this);
 }

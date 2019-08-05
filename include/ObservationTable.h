@@ -26,8 +26,9 @@ public:
     virtual ~BaseTable();
     void addTree(const ParseTree&);
     void addContext(const ParseTree&);
-    bool hasTree(const ParseTree&);
+    bool hasTree(const ParseTree&) const;
     bool treeInS(const ParseTree& tree);
+    const ParseTree& getTreeS(int ind) const;
     inline const std::vector<ParseTree*>& getR(){return r;}
     inline const std::vector<ParseTree*>& getS(){return s;}
     inline const std::vector<ParseTree*>& getC(){return c;}
@@ -36,6 +37,8 @@ protected:
     virtual void completeContextS(ParseTree*)=0;
     virtual void completeContextR(ParseTree*)=0;
     virtual bool checkTableComplete(ParseTree*)=0;
+    int getIndInS(const ParseTree&) const;
+    int getIndInR(const ParseTree&) const;
     std::vector<ParseTree*> s;
     std::vector<int> sNew;
     std::vector<ParseTree*> r;
@@ -55,7 +58,6 @@ public:
     virtual ~ObservationTable()=default;
     std::vector<bool> getObs(const ParseTree& tree);
     int getSObsInd(const ParseTree& tree);
-    const ParseTree& getTreeS(int ind) const;
     void printTable();
     std::string getTableLatex();
     const std::vector<ParseTree*> getRNew();
@@ -71,6 +73,7 @@ private:
 };
 
 class MultiplicityTreeAcceptor;
+class MultiLinearMap;
 
 class HankelMatrix: public BaseTable{
 public:
@@ -82,10 +85,12 @@ public:
 
     std::vector<double> getObs(const ParseTree&) const;
     MultiplicityTreeAcceptor getAcceptor() const;
+    void closeTable();
+    bool checkClosed() const;
 
     class suffixIterator{
     public:
-        suffixIterator(HankelMatrix&);
+        suffixIterator(const HankelMatrix&);
         bool hasNext();
         ParseTree operator*() const;
         suffixIterator& operator++();
@@ -96,25 +101,27 @@ public:
         }
     private:
         void incChar();
-        HankelMatrix& mat;
+        const HankelMatrix& mat;
         std::vector<rankedChar> alphabet;
         int currChar;
         IndexArray arr;
     };
 
-    suffixIterator getSuffixIterator();
+    suffixIterator getSuffixIterator() const;
 private:
     const MultiplicityTeacher& teacher;
     std::set<rankedChar> alphabet;
     std::vector<arma::Row<double>> base;
-    arma::mat sInv;
     std::unordered_map<ParseTree*,std::vector<double>> obs;
-    arma::mat getSMatrix(bool);
-    void updateSInv();
+    arma::mat getSMatrix(bool) const;
+    arma::rowvec getObsVec(const ParseTree&) const;
+    arma::mat getSInv() const;
     void fillMatLastRow(arma::mat&, ParseTree*);
     void completeTree(ParseTree*);
+    void updateTransition(MultiLinearMap&, const ParseTree&, const std::vector<rankedChar>&, const arma::mat&) const;
     void completeContextS(ParseTree*);
     void completeContextR(ParseTree*);
     bool checkTableComplete(ParseTree*);
+    std::vector<rankedChar> getAlphabetVec() const;
 };
 #endif //CFGLEARNER_OBSERVATIONTABLE_H
