@@ -153,6 +153,15 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptor() const{
         }
         updateTransition(maps[charInd], *currTree, alphabetVec, sInv);
     }
+    for(int i=0;i<alphabetVec.size();++i){
+        acc.addTransition(maps[i], alphabetVec[i]);
+    }
+    vector<float> lambdaVec;
+    for(auto treeS: s){
+        vector<double> obs = getObs(*treeS);
+        lambdaVec.push_back((float)(obs[0]));
+    }
+    acc.setLambda(lambdaVec);
     return acc;
 }
 
@@ -182,6 +191,7 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
     }
 }
 
+//TODO: Should be implemented with a teacher, to ask membership query on each tree.
 void HankelMatrix::closeTable(){
     auto it = getSuffixIterator();
     while(it.hasNext()){

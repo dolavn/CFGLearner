@@ -206,5 +206,8 @@ TEST(hankel_matrix_test,acceptor_test){
     h.addTree(t);
     h.addTree(t2);
     h.closeTable();
-    h.getAcceptor();
+    MultiplicityTreeAcceptor acc = h.getAcceptor();
+    ASSERT_EQ(acc.run(leaf), 1);
+    ASSERT_EQ(acc.run(t), 2);
+    ASSERT_EQ(acc.run(t2), 4);
 }

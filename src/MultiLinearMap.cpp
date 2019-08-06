@@ -57,7 +57,7 @@ float MultiLinearMap::getParam(const intVec& location){
     return params[convertInd(location)];
 }
 
-int MultiLinearMap::convertInd(const IndexArray& index){
+int MultiLinearMap::convertInd(const IndexArray& index) const{
     int ind = 0;
     int currFactor = 1;
     for (int i = paramNum; i >= 0; i--) {
@@ -67,7 +67,7 @@ int MultiLinearMap::convertInd(const IndexArray& index){
     return ind;
 }
 
-int MultiLinearMap::convertInd(const intVec& index){
+int MultiLinearMap::convertInd(const intVec& index) const{
     int ind = 0;
     int currFactor = 1;
     for (int i = paramNum; i >= 0; i--) {
@@ -110,4 +110,16 @@ bool MultiLinearMap::testInput(const vector<floatVec>& input){
         }
     }
     return true;
+}
+
+void MultiLinearMap::printDesc() const{
+    cout << "output:" << dim << endl;
+    cout << "paramNum:" << paramNum << endl;
+    intVec maxLengths(paramNum+1, dim);
+    IndexArray ind(maxLengths);
+    for(;!ind.getOverflow();++ind){
+        int i = ind[0];
+        float toAdd = params[convertInd(ind)];
+        cout << ind << " " << toAdd << endl;
+    }
 }

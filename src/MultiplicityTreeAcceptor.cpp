@@ -86,3 +86,18 @@ float MultiplicityTreeAcceptor::run(const ParseTree& tree) const{
 bool MultiplicityTreeAcceptor::testMap(const MultiLinearMap& map, const rankedChar& c){
     return map.getParamNum()==c.rank;
 }
+
+void MultiplicityTreeAcceptor::printDesc() const {
+    cout << "acceptor" << endl;
+    for(auto tPair: transitions){
+        tPair.second.printDesc();
+    }
+    cout << "lambda [";
+    for(int i=0;i<lambda.size();++i){
+        cout << lambda[i];
+        if(i<lambda.size()-1){
+            cout << ",";
+        }
+    }
+    cout << "]" << endl;
+}

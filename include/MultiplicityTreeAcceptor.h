@@ -16,6 +16,8 @@ public:
     void addTransition(const MultiLinearMap&, const rankedChar&);
     void setLambda(const floatVec&);
 
+    void printDesc() const;
+
     float run(const ParseTree&) const;
 private:
     struct ranked_char_hash {
