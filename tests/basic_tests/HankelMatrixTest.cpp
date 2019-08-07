@@ -14,6 +14,10 @@ using namespace std;
 
 set<rankedChar> getAlphabet();
 
+set<rankedChar> getAlphabetSmall(){
+    return set<rankedChar>({a, l});
+}
+
 MultiplicityTreeAcceptor getCountingAcc();
 
 SimpleMultiplicityTeacher getMultiplicityTeacher(){
@@ -135,7 +139,7 @@ TEST(hankel_matrix_test,context_check){
 }
 
 TEST(hankel_matrix_test,suffixIterator){
-    set<rankedChar> alphabet = getAlphabet();
+    set<rankedChar> alphabet = getAlphabetSmall();
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
     HankelMatrix h(teacher, alphabet);
     ParseTree leaf(0);
@@ -156,6 +160,8 @@ TEST(hankel_matrix_test,suffixIterator){
     h.addTree(leaf);
     h.addTree(t);
     h.addTree(t2);
+    h.addTree(ParseTree(1, {leaf, t}));
+    h.addTree(ParseTree(1, {t, leaf}));
     h.getAcceptor();
     auto it = h.getSuffixIterator();
     vector<ParseTree*> s = h.getS();

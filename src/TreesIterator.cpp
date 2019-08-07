@@ -170,7 +170,6 @@ void TreesIterator::incLevel(){
     currChar = -1;
     remainingLevels--;
     incChar();
-    //createNewTree();
     if(verbose){printf("inc level fin\n");}
 }
 

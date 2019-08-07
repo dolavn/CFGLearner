@@ -206,7 +206,7 @@ bool HankelMatrix::checkClosed() const{
     while(it.hasNext()){
         auto currTree = *it++;
         if(!hasTree(currTree)){
-            cout << currTree << endl;
+            //cout << currTree << endl;
             return false;
         }
     }
