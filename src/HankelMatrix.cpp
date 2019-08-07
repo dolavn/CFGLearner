@@ -191,7 +191,6 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
     }
 }
 
-//TODO: Should be implemented with a teacher, to ask membership query on each tree.
 void HankelMatrix::closeTable(){
     auto it = getSuffixIterator();
     while(it.hasNext()){
@@ -207,6 +206,7 @@ bool HankelMatrix::checkClosed() const{
     while(it.hasNext()){
         auto currTree = *it++;
         if(!hasTree(currTree)){
+            cout << currTree << endl;
             return false;
         }
     }
@@ -235,50 +235,6 @@ vector<rankedChar> HankelMatrix::getAlphabetVec() const{
     return alphabetVec;
 }
 
-HankelMatrix::suffixIterator::suffixIterator(const HankelMatrix& mat):mat(mat),alphabet(),
-currChar(-1),arr(){
-    for(auto c: mat.alphabet){
-        alphabet.push_back(c);
-    }
-    incChar();
-}
-
-bool HankelMatrix::suffixIterator::hasNext(){
-    return currChar<alphabet.size();
-}
-
-ParseTree HankelMatrix::suffixIterator::operator*() const{
-    ParseTree ans(alphabet[currChar].c);
-    for(unsigned int i=0;i<alphabet[currChar].rank;++i){
-        ans.setSubtree(*mat.s[arr.get(i)], i);
-    }
-    return ans;
-}
-
-HankelMatrix::suffixIterator& HankelMatrix::suffixIterator::operator++(){
-    ++arr;
-    if(arr.getOverflow()){
-        incChar();
-    }
-}
-
-void HankelMatrix::suffixIterator::incChar(){
-    currChar++;
-    for(;currChar<alphabet.size();++currChar){
-        rankedChar& c = alphabet[currChar];
-        if(c.rank!=0){
-            break;
-        }
-    }
-    if(currChar<alphabet.size()){
-        vector<int> dim;
-        for(int i=0;i<alphabet[currChar].rank;++i){
-            dim.push_back(int(mat.s.size()));
-        }
-        arr = IndexArray(dim);
-    }
-}
-
-HankelMatrix::suffixIterator HankelMatrix::getSuffixIterator() const{
-    return suffixIterator(*this);
+TreesIterator HankelMatrix::getSuffixIterator() const{
+    return TreesIterator(this->s, this->alphabet, 1);
 }

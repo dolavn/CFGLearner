@@ -8,24 +8,9 @@
 #include <unordered_map>
 #include <vector>
 #include "ParseTree.h"
+#include "RankedChar.h"
 #include <set>
 #include <boost/functional/hash.hpp>
-
-struct rankedChar{
-    int c;
-    int rank;
-
-    friend inline bool operator==(const rankedChar& lhs,const rankedChar& rhs){
-        return lhs.c==rhs.c && lhs.rank==rhs.rank;
-    }
-
-    friend inline bool operator<(const rankedChar& lhs,const rankedChar& rhs){
-        if(lhs.c==rhs.c){
-            return lhs.rank<rhs.rank;
-        }
-        return lhs.c<rhs.c;
-    }
-};
 
 typedef std::vector<int> intVec;
 

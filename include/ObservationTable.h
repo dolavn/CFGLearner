@@ -11,6 +11,7 @@
 #include <armadillo>
 #include "IndexArray.h"
 #include "TreeAcceptor.h"
+#include "TreesIterator.h"
 
 class Teacher;
 class MultiplicityTeacher;
@@ -88,26 +89,7 @@ public:
     void closeTable();
     bool checkClosed() const;
 
-    class suffixIterator{
-    public:
-        suffixIterator(const HankelMatrix&);
-        bool hasNext();
-        ParseTree operator*() const;
-        suffixIterator& operator++();
-        suffixIterator operator++(int){
-            suffixIterator ans(*this);
-            ++(*this);
-            return ans;
-        }
-    private:
-        void incChar();
-        const HankelMatrix& mat;
-        std::vector<rankedChar> alphabet;
-        int currChar;
-        IndexArray arr;
-    };
-
-    suffixIterator getSuffixIterator() const;
+    TreesIterator getSuffixIterator() const;
 private:
     const MultiplicityTeacher& teacher;
     std::set<rankedChar> alphabet;

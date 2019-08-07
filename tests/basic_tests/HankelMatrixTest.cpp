@@ -4,6 +4,7 @@
 #include "../../include/MultiplicityTeacher.h"
 #include "../../include/MultiplicityTreeAcceptor.h"
 #include "../../include/ObservationTable.h"
+#include "../../include/TreesIterator.h"
 
 extern rankedChar a;
 extern rankedChar b;
@@ -172,6 +173,7 @@ TEST(hankel_matrix_test,suffixIterator){
     }
     int i=0;
     while(it.hasNext()){
+        cout << i << endl;
         ASSERT_EQ(*(it++), *trees[i++]);
 
     }

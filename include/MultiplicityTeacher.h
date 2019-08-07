@@ -6,9 +6,12 @@
 #define CFGLEARNER_MULTIPLICITYTEACHER_H
 
 #include <vector>
+#include <functional>
+#include <set>
 
 class ParseTree;
 class MultiplicityTreeAcceptor;
+class TreesIterator;
 
 
 class MultiplicityTeacher{
@@ -42,5 +45,24 @@ private:
     double defaultValue;
     std::vector<ParseTree*> trees;
 };
+
+class FunctionalMultiplicityTeacher: public MultiplicityTeacher{
+public:
+    explicit FunctionalMultiplicityTeacher(double, double, std::function<double(const ParseTree&)>&, TreesIterator&);
+
+    inline double getDefaultValue() const{return defaultValue;}
+
+    virtual double membership(const ParseTree&) const;
+    virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
+
+
+private:
+
+    double epsilon;
+    double defaultValue;
+    std::function<double(const ParseTree&)> func;
+    TreesIterator& it;
+};
+
 
 #endif //CFGLEARNER_MULTIPLICITYTEACHER_H
