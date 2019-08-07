@@ -82,8 +82,62 @@ TEST(trees_iterator_test,basic_check2){
         treesVec.push_back(ParseTree(c, {aTree, aTree}));
     }
     while(it.hasNext()){
+        ParseTree t = *it;
+        itVec.push_back(t);
+        ++it;
+    }
+    ASSERT_EQ(vecSameElem(treesVec, itVec), true);
+}
+
+TEST(trees_iterator_test,reset_test){
+    set<rankedChar> alphabet = getAlphabet();
+    ParseTree leaf = ParseTree(l.c);
+    vector<ParseTree> treesVec = {leaf};
+    vector<ParseTree> itVec;
+    TreesIterator it(alphabet, 1);
+    while(it.hasNext()){
+        ParseTree t = *it;
+        itVec.push_back(t);
+        it++;
+    }
+    ASSERT_EQ(vecSameElem(treesVec, itVec), true);
+    it.resetIterator();
+    itVec.clear();
+    while(it.hasNext()){
+        ParseTree t = *it;
+        itVec.push_back(t);
+        it++;
+    }
+    ASSERT_EQ(vecSameElem(treesVec, itVec), true);
+}
+
+TEST(trees_iterator_test,reset_test2){
+    set<rankedChar> alphabet = getAlphabet();
+    ParseTree leaf = ParseTree(l.c);
+    vector<ParseTree> itVec;
+    ParseTree aTree = ParseTree(a.c, {leaf, leaf});
+    ParseTree bTree = ParseTree(b.c, {leaf, leaf});
+    vector<ParseTree> treesVec = {leaf, aTree, bTree};
+    TreesIterator it = TreesIterator(alphabet, 3);
+    for(auto c: {a.c, b.c}){
+        treesVec.push_back(ParseTree(c, {aTree, leaf}));
+        treesVec.push_back(ParseTree(c, {leaf, aTree}));
+        treesVec.push_back(ParseTree(c, {bTree, leaf}));
+        treesVec.push_back(ParseTree(c, {leaf, bTree}));
+        treesVec.push_back(ParseTree(c, {aTree, bTree}));
+        treesVec.push_back(ParseTree(c, {bTree, aTree}));
+        treesVec.push_back(ParseTree(c, {bTree, bTree}));
+        treesVec.push_back(ParseTree(c, {aTree, aTree}));
+    }
+    while(it.hasNext()){
         ParseTree t = *(it++);
-        cout << t << endl;
+        itVec.push_back(t);
+    }
+    ASSERT_EQ(vecSameElem(treesVec, itVec), true);
+    itVec.clear();
+    it.resetIterator();
+    while(it.hasNext()){
+        ParseTree t = *(it++);
         itVec.push_back(t);
     }
     ASSERT_EQ(vecSameElem(treesVec, itVec), true);

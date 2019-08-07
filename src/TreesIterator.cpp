@@ -5,9 +5,9 @@
 using namespace std;
 
 TreesIterator::TreesIterator(vector<ParseTree*> prevLevel, set<rankedChar> alphabet, int maxLevel):prevLevels(prevLevel.size()),
-alphabet(),currChar(-1),remainingLevels(maxLevel), arr(){
+alphabet(),currChar(-1),maxLevel(maxLevel),remainingLevels(maxLevel), arr(){
     for(unsigned int i=0;i<prevLevel.size();++i){
-        this->prevLevels[i] = treeLevelPair(new ParseTree(*prevLevel[i]), remainingLevels);
+        this->prevLevels[i] = treeLevelPair(new ParseTree(*prevLevel[i]), remainingLevels+1);
     }
     for(auto c: alphabet){
         this->alphabet.push_back(c);
@@ -17,7 +17,7 @@ alphabet(),currChar(-1),remainingLevels(maxLevel), arr(){
 }
 
 TreesIterator::TreesIterator(set<rankedChar> alphabet, int maxLevel):prevLevels(),alphabet(),
-currChar(-1),remainingLevels(maxLevel), arr(){
+currChar(-1),maxLevel(maxLevel),remainingLevels(maxLevel), arr(){
     for(auto c: alphabet){
         this->alphabet.push_back(c);
     }
@@ -25,9 +25,10 @@ currChar(-1),remainingLevels(maxLevel), arr(){
     createNewTree();
 }
 
-TreesIterator::TreesIterator(const TreesIterator& other):prevLevels(), currLevel(), alphabet(other.alphabet), currChar(other.currChar),
-remainingLevels(other.remainingLevels),arr(other.arr){
+TreesIterator::TreesIterator(const TreesIterator& other):prevLevels(), currLevel(), alphabet(other.alphabet),
+currChar(other.currChar),maxLevel(other.maxLevel),remainingLevels(other.remainingLevels),arr(other.arr){
     copy(other);
+    verbose = other.verbose; //todo:delete;
 }
 
 TreesIterator& TreesIterator::operator=(const TreesIterator& other){
@@ -37,12 +38,15 @@ TreesIterator& TreesIterator::operator=(const TreesIterator& other){
     clear();
     copy(other);
     alphabet = other.alphabet; currChar = other.currChar;
-    remainingLevels = other.remainingLevels; arr = other.arr;
+    maxLevel = other.maxLevel; remainingLevels = other.remainingLevels;
+    arr = other.arr;
+    verbose = other.verbose; //todo:delete;
 }
 
 TreesIterator::TreesIterator(TreesIterator&& other):currLevel(std::move(other.currLevel)),
-prevLevels(std::move(other.prevLevels)), alphabet(other.alphabet), remainingLevels(other.remainingLevels),arr(other.arr){
-
+prevLevels(std::move(other.prevLevels)), alphabet(other.alphabet), maxLevel(other.maxLevel),
+remainingLevels(other.remainingLevels),arr(other.arr){
+    verbose = other.verbose; //todo:delete;
 }
 
 TreesIterator& TreesIterator::operator=(TreesIterator&& other){
@@ -52,11 +56,33 @@ TreesIterator& TreesIterator::operator=(TreesIterator&& other){
     clear();
     prevLevels = std::move(other.prevLevels); currLevel = std::move(other.currLevel);
     alphabet = other.alphabet; currChar = other.currChar;
-    remainingLevels = other.remainingLevels; arr = other.arr;
+    maxLevel = other.maxLevel; remainingLevels = other.remainingLevels;
+    arr = other.arr;
+    verbose = other.verbose; //todo:delete;
 }
 
 TreesIterator::~TreesIterator(){
     clear();
+}
+
+void TreesIterator::resetIterator() {
+    clearVec(currLevel);
+    currChar = -1;
+    remainingLevels = maxLevel;
+    for(auto it = prevLevels.begin();it!=prevLevels.end();){
+        treeLevelPair& curr = *it;
+        if(curr.second==remainingLevels+1){
+            ++it;
+        }else{
+            if(curr.first){
+                delete(curr.first);
+                curr.first = nullptr;
+            }
+            prevLevels.erase(it);
+        }
+    }
+    incChar();
+    createNewTree();
 }
 
 bool TreesIterator::hasNext() const{
@@ -67,13 +93,19 @@ ParseTree TreesIterator::operator*() const{
     if(currLevel.empty()){
         throw std::invalid_argument("No more trees!");
     }
-    //printf("operator*\n");
+    if(verbose){printf("operator*\n");}
     return *currLevel[currLevel.size()-1];
 }
 
 TreesIterator& TreesIterator::operator++(){
-    //printf("operator++\n");
+    if(verbose){printf("operator++\n");}
     do{
+        if(verbose){cout << arr << endl;}
+        /*if(verbose){
+            for(int i=0;i<prevLevels.size();++i){
+                cout << i << " " << *prevLevels[i].first << endl;
+            }
+        }*/
         ++arr;
         if(arr.getOverflow()){
             incChar();
@@ -94,25 +126,28 @@ bool TreesIterator::checkIndex(const IndexArray& arr){
 
 void TreesIterator::createNewTree(){
     if(!hasNext()){return;}
-    //printf("c new tree\n");
+    if(verbose){printf("c new tree\n");}
     auto ans = new ParseTree(alphabet[currChar].c);
     for(unsigned int i=0;i<alphabet[currChar].rank;++i) {
         ans->setSubtree(*prevLevels[arr.get(i)].first, i);
+    }
+    if(verbose){
+        cout << "t " << *ans << endl;
     }
     currLevel.push_back(ans);
 }
 
 void TreesIterator::incChar(){
-    //printf("inc char\n");
+    if(verbose){printf("inc char\n");}
     currChar++;
     for(;currChar<alphabet.size();++currChar){
         rankedChar& c = alphabet[currChar];
-        //printf("c:%d\n c.rank==0 : %d\n prevLevel.empty(): %d\n", c.c, c.rank==0, prevLevel.empty());
+        //if(verbose){printf("c:%d\n c.rank==0 : %d\n prevLevel.empty(): %d\n", c.c, c.rank==0, prevLevels.empty());}
         if(c.rank==0 == prevLevels.empty()){
-            //printf("found\nremainingLevels:%d\n",remainingLevels);
+            //if(verbose){printf("found\nremainingLevels:%d\n",remainingLevels);}
             break;
         }
-        //printf("next\n");
+        //if(verbose){printf("next\n");}
     }
     if(currChar<alphabet.size()){
         vector<int> dim;
@@ -123,10 +158,11 @@ void TreesIterator::incChar(){
     }else{
         incLevel();
     }
+    if(verbose){printf("inc char fin\n");}
 }
 
 void TreesIterator::incLevel(){
-    //printf("incLevel\n");
+    if(verbose){printf("incLevel\n");}
     for(auto t: currLevel){
         prevLevels.emplace_back(treeLevelPair(t, remainingLevels));
     }
@@ -134,7 +170,8 @@ void TreesIterator::incLevel(){
     currChar = -1;
     remainingLevels--;
     incChar();
-    createNewTree();
+    //createNewTree();
+    if(verbose){printf("inc level fin\n");}
 }
 
 void TreesIterator::copyVec(const vector<ParseTree*>& orig, vector<ParseTree*>& dest){

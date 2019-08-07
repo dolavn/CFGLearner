@@ -28,6 +28,8 @@ SET (SRCS src/ParseTree.cpp
           src/SimpleMultiplicityTeacher.cpp
           src/ObservationTable.cpp
           src/HankelMatrix.cpp
+          src/TreesIterator.cpp
+          src/FunctionalMultiplicityTeacher.cpp
         )
 
 
