@@ -179,7 +179,6 @@ TEST(hankel_matrix_test,suffixIterator){
     }
     int i=0;
     while(it.hasNext()){
-        cout << i << endl;
         ASSERT_EQ(*(it++), *trees[i++]);
 
     }

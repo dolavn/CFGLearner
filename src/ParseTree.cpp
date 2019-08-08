@@ -79,11 +79,11 @@ ParseTree::~ParseTree(){
     clear();
 }
 
-ParseTree::iterator ParseTree::getIterator(){
+ParseTree::iterator ParseTree::getIterator() const{
     return ParseTree::iterator(*this);
 }
 
-ParseTree::indexIterator ParseTree::getIndexIterator(){
+ParseTree::indexIterator ParseTree::getIndexIterator() const{
     return ParseTree::indexIterator(*this);
 }
 
@@ -215,7 +215,7 @@ ParseTree* ParseTree::mergeContext(const ParseTree& other) const{
 }
 
 ParseTree::stackPair ParseTree::incStack(stack<stackPair>& stack, stackPair& currPair){
-    ParseTree* tree = currPair.first;
+    const ParseTree* tree = currPair.first;
     vector<int> currLoc = currPair.second;
     if(tree==nullptr){
         throw runtime_error("No next node!");
@@ -225,7 +225,7 @@ ParseTree::stackPair ParseTree::incStack(stack<stackPair>& stack, stackPair& cur
         vector<int> copyLoc = currLoc; copyLoc.push_back(i);
         stack.emplace(tree->subtrees[i],copyLoc);
     }
-    ParseTree* ansNode = nullptr;
+    const ParseTree* ansNode = nullptr;
     vector<int> ansLoc;
     if(!stack.empty()){
         ansNode = stack.top().first;
@@ -342,7 +342,7 @@ std::string ParseTree::getLatexTree() const{
     return "\\Tree " + this->latexTreeRecursive();
 }
 
-ParseTree::iterator::iterator(ParseTree& tree):stack(),currNode(&tree),currLoc(){
+ParseTree::iterator::iterator(const ParseTree& tree):stack(),currNode(&tree),currLoc(){
 }
 
 
@@ -365,14 +365,14 @@ int ParseTree::iterator::operator*() const{
     return currNode->data;
 }
 
-int* ParseTree::iterator::operator->() const{
+const int* ParseTree::iterator::operator->() const{
     if(currNode==nullptr){
         throw runtime_error("No next node!");
     }
     return &currNode->data;
 }
 
-ParseTree::indexIterator::indexIterator(ParseTree& tree):currNode(&tree),currLoc(),leaves(false){
+ParseTree::indexIterator::indexIterator(const ParseTree& tree):currNode(&tree),currLoc(),leaves(false){
 
 }
 

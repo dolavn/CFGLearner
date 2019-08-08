@@ -186,6 +186,7 @@ void TreesIterator::clearVec(vector<ParseTree*>& vec){
             t = nullptr;
         }
     }
+    vec.clear();
 }
 
 
@@ -204,4 +205,5 @@ void TreesIterator::clear(){
             p.first = nullptr;
         }
     }
+    prevLevels.clear();
 }

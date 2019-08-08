@@ -12,6 +12,7 @@ add_executable(runBasicTests
                 CFGTest.cpp
                 FrequencyTeacherTest.cpp
                 DifferenceTeacherTest.cpp
+                FunctionalTeacherTest.cpp
                 TreeComparatorTest.cpp
                 IndexArrayTest.cpp
                 MultiLinearMapTest.cpp

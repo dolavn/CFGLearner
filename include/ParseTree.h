@@ -8,7 +8,7 @@
 
 class ParseTree{
 private:
-    typedef std::pair<ParseTree*, std::vector<int>> stackPair;
+    typedef std::pair<const ParseTree*, std::vector<int>> stackPair;
     bool empty;
     int data;
     int size;
@@ -32,10 +32,10 @@ private:
 public:
     class iterator{
     public:
-        explicit iterator(ParseTree&);
+        explicit iterator(const ParseTree&);
         bool hasNext();
         int operator*() const;
-        int* operator->() const;
+        const int* operator->() const;
         iterator& operator++();
         iterator operator++(int){
             iterator ans(*this);
@@ -44,12 +44,12 @@ public:
         }
     private:
         std::stack<stackPair> stack;
-        ParseTree* currNode;
+        const ParseTree* currNode;
         std::vector<int> currLoc;
     };
     class indexIterator{
     public:
-        explicit indexIterator(ParseTree&);
+        explicit indexIterator(const ParseTree&);
         indexIterator(ParseTree&,bool);
         bool hasNext();
         std::vector<int> operator*() const;
@@ -61,7 +61,7 @@ public:
         }
     private:
         std::stack<stackPair> stack;
-        ParseTree* currNode;
+        const ParseTree* currNode;
         std::vector<int> currLoc;
         bool leaves;
     };
@@ -81,8 +81,8 @@ public:
     friend std::ostream& operator<<(std::ostream&,const ParseTree&);
     const ParseTree& getNode(const std::vector<int>&) const;
     std::vector<ParseTree*> getSubtrees() const;
-    iterator getIterator();
-    indexIterator getIndexIterator();
+    iterator getIterator() const;
+    indexIterator getIndexIterator() const;
     indexIterator getLeafIterator();
     void setPointer(ParseTree* ptr, unsigned int ind){while(subtrees.size()<=ind){subtrees.push_back(nullptr);}subtrees[ind]=ptr;}
     void setSubtree(const ParseTree&, unsigned int ind);

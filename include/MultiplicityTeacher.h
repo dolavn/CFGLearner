@@ -48,7 +48,7 @@ private:
 
 class FunctionalMultiplicityTeacher: public MultiplicityTeacher{
 public:
-    explicit FunctionalMultiplicityTeacher(double, double, std::function<double(const ParseTree&)>&, TreesIterator&);
+    explicit FunctionalMultiplicityTeacher(double, double, std::function<double(const ParseTree&)>, TreesIterator&);
 
     inline double getDefaultValue() const{return defaultValue;}
 

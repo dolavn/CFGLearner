@@ -6,8 +6,8 @@
 using namespace std;
 
 FunctionalMultiplicityTeacher::FunctionalMultiplicityTeacher(double epsilon, double defaultValue,
-        function<double(const ParseTree&)>& func, TreesIterator& it):epsilon(epsilon),
-        defaultValue(defaultValue), func(func), it(it){
+        function<double(const ParseTree&)> func, TreesIterator& it):epsilon(epsilon),
+        defaultValue(defaultValue), func(std::move(func)), it(it){
 
 }
 
