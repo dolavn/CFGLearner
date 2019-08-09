@@ -68,8 +68,13 @@ TEST(hankel_matrix_test,basic_check){
     pair<ParseTree*, ParseTree*> pair2 = t.makeContext({0});
     ParseTree* emptyContext = pair1.first;
     ParseTree* secondContext = pair2.first;
+    ASSERT_EQ(h.hasContext(*emptyContext), false);
+    ASSERT_EQ(h.hasContext(*secondContext), false);
     h.addContext(*emptyContext);
+    ASSERT_EQ(h.hasContext(*emptyContext), true);
     h.addContext(*secondContext);
+    ASSERT_EQ(h.hasContext(*emptyContext), true);
+    ASSERT_ANY_THROW(h.addContext(*secondContext));
     delete(pair1.first);
     delete(pair1.second);
     pair1 = {nullptr, nullptr};
@@ -210,9 +215,10 @@ TEST(hankel_matrix_test,acceptor_test){
     delete(pair2.second);
     pair2 = {nullptr, nullptr};
     h.addTree(leaf);
-    h.addTree(t);
-    h.addTree(t2);
-    h.closeTable();
+    //h.addTree(t);
+    //h.addTree(t2);
+    h.makeConsistent();
+    //h.closeTable();
     MultiplicityTreeAcceptor acc = h.getAcceptor();
     ASSERT_EQ(acc.run(leaf), 1);
     ASSERT_EQ(acc.run(t), 2);

@@ -28,6 +28,7 @@ public:
     void addTree(const ParseTree&);
     void addContext(const ParseTree&);
     bool hasTree(const ParseTree&) const;
+    bool hasContext(const ParseTree&) const;
     bool treeInS(const ParseTree& tree);
     const ParseTree& getTreeS(int ind) const;
     inline const std::vector<ParseTree*>& getR(){return r;}
@@ -87,6 +88,7 @@ public:
     std::vector<double> getObs(const ParseTree&) const;
     MultiplicityTreeAcceptor getAcceptor() const;
     void closeTable();
+    void makeConsistent();
     bool checkClosed() const;
 
     TreesIterator getSuffixIterator() const;
@@ -99,6 +101,7 @@ private:
     arma::rowvec getObsVec(const ParseTree&) const;
     arma::mat getSInv() const;
     void fillMatLastRow(arma::mat&, ParseTree*);
+    MultiplicityTreeAcceptor getAcceptorTemp() const;
     void completeTree(ParseTree*);
     void updateTransition(MultiLinearMap&, const ParseTree&, const std::vector<rankedChar>&, const arma::mat&) const;
     void completeContextS(ParseTree*);

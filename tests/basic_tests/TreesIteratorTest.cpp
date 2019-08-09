@@ -211,3 +211,29 @@ TEST(trees_iterator_test,reset_test2){
     }
     ASSERT_EQ(vecSameElem(treesVec, itVec), true);
 }
+
+TEST(trees_iterator_test,reset_test3){
+    set<rankedChar> alphabet = getAlphabet();
+    ParseTree leaf = ParseTree(l.c);
+    vector<ParseTree> itVec;
+    ParseTree aTree = ParseTree(a.c, {leaf, leaf});
+    ParseTree bTree = ParseTree(b.c, {leaf, leaf});
+    vector<ParseTree> treesVec = {leaf, aTree, bTree};
+    TreesIterator it = TreesIterator(alphabet, 3);
+    it.resetIterator();
+    for(auto c: {a.c, b.c}){
+        treesVec.push_back(ParseTree(c, {aTree, leaf}));
+        treesVec.push_back(ParseTree(c, {leaf, aTree}));
+        treesVec.push_back(ParseTree(c, {bTree, leaf}));
+        treesVec.push_back(ParseTree(c, {leaf, bTree}));
+        treesVec.push_back(ParseTree(c, {aTree, bTree}));
+        treesVec.push_back(ParseTree(c, {bTree, aTree}));
+        treesVec.push_back(ParseTree(c, {bTree, bTree}));
+        treesVec.push_back(ParseTree(c, {aTree, aTree}));
+    }
+    while(it.hasNext()){
+        ParseTree t = *(it++);
+        itVec.push_back(t);
+    }
+    ASSERT_EQ(vecSameElem(treesVec, itVec), true);
+}

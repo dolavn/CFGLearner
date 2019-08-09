@@ -8,10 +8,10 @@
 #include <vector>
 #include <functional>
 #include <set>
+#include "TreesIterator.h"
 
 class ParseTree;
 class MultiplicityTreeAcceptor;
-class TreesIterator;
 
 
 class MultiplicityTeacher{
@@ -48,7 +48,8 @@ private:
 
 class FunctionalMultiplicityTeacher: public MultiplicityTeacher{
 public:
-    explicit FunctionalMultiplicityTeacher(double, double, std::function<double(const ParseTree&)>, TreesIterator&);
+    explicit FunctionalMultiplicityTeacher(double, double,
+            std::function<double(const ParseTree&)>, const TreesIterator&);
 
     inline double getDefaultValue() const{return defaultValue;}
 
@@ -57,11 +58,10 @@ public:
 
 
 private:
-
     double epsilon;
     double defaultValue;
     std::function<double(const ParseTree&)> func;
-    TreesIterator& it;
+    mutable TreesIterator it;
 };
 
 

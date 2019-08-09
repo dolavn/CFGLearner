@@ -28,7 +28,7 @@ currChar(-1),maxLevel(maxLevel),remainingLevels(maxLevel), arr(){
 TreesIterator::TreesIterator(const TreesIterator& other):prevLevels(), currLevel(), alphabet(other.alphabet),
 currChar(other.currChar),maxLevel(other.maxLevel),remainingLevels(other.remainingLevels),arr(other.arr){
     copy(other);
-    verbose = other.verbose; //todo:delete;
+    verbose = other.verbose; //todo:delete
 }
 
 TreesIterator& TreesIterator::operator=(const TreesIterator& other){

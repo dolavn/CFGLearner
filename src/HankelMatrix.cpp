@@ -5,6 +5,8 @@
 #include <armadillo>
 #include <algorithm>
 
+#define SAFE_DELETE(ptr)  if(ptr){delete(ptr);ptr=nullptr;}
+
 using namespace std;
 using namespace arma;
 
@@ -130,6 +132,10 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptor() const{
     if(!checkClosed()){
         throw std::invalid_argument("Table must be closed");
     }
+    return getAcceptorTemp();
+}
+
+MultiplicityTreeAcceptor HankelMatrix::getAcceptorTemp() const{
     vector<MultiLinearMap> maps;
     vector<rankedChar> alphabetVec = getAlphabetVec();
     for(auto c: alphabetVec){
@@ -165,6 +171,7 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptor() const{
     return acc;
 }
 
+
 void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const vector<rankedChar>& alphabetVec,
         const arma::mat& sInv) const{
     vector<int> sIndices;
@@ -192,11 +199,19 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
 }
 
 void HankelMatrix::closeTable(){
-    auto it = getSuffixIterator();
-    while(it.hasNext()){
-        auto currTree = *it++;
-        if(!hasTree(currTree)){
-            addTree(currTree);
+    while(true){
+        auto it = getSuffixIterator();
+        bool closed=true;
+        while(it.hasNext()){
+            auto currTree = *it++;
+            if(!hasTree(currTree)){
+                addTree(currTree);
+                closed=false;
+                break;
+            }
+        }
+        if(closed){
+            break;
         }
     }
 }
@@ -206,11 +221,45 @@ bool HankelMatrix::checkClosed() const{
     while(it.hasNext()){
         auto currTree = *it++;
         if(!hasTree(currTree)){
-            //cout << currTree << endl;
             return false;
         }
     }
     return true;
+}
+
+void HankelMatrix::makeConsistent(){
+    while(true){
+        closeTable();
+        MultiplicityTreeAcceptor acc = getAcceptorTemp();
+        vector<ParseTree*> newContexts;
+        for(auto tree: s){
+            vector<double> vec = getObs(*tree);
+            for(auto it=c.begin();it!=c.end();++it){
+                auto context = *it;
+                ParseTree* merged = context->mergeContext(*tree);
+                if(acc.run(*merged)!=vec[it-c.begin()]){
+                    cout << *merged << endl;
+                    cout << acc.run(*merged) << endl;
+                    cout << vec[it-c.begin()] << endl;
+                    cout << c.size() << endl;
+                    for(auto& suffix: merged->getAllContexts()){
+                        if(!hasContext(*suffix)){
+                            newContexts.push_back(suffix);
+                        }else{
+                            delete(suffix); suffix=nullptr;
+                        }
+                    }
+                }
+                SAFE_DELETE(merged)
+            }
+        }
+        if(newContexts.empty()){return;}
+        for(auto& context: newContexts){
+            addContext(*context);
+            delete(context);
+            context = nullptr;
+        }
+    }
 }
 
 arma::mat HankelMatrix::getSInv() const{

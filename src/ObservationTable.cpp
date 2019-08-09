@@ -15,7 +15,6 @@ void BaseTable::addTree(const ParseTree& tree){
         throw invalid_argument("Can't add a context to S");
     }
     if(hasTree(tree)){
-        cout << tree << endl;
         throw invalid_argument("Tree already exists");
     }
     auto newTree = new ParseTree(tree);
@@ -34,12 +33,23 @@ void BaseTable::addContext(const ParseTree& context){
     if (!context.getIsContext()) {
         throw invalid_argument("Tree must be a context to be added to C");
     }
+    if(hasContext(context)){
+        throw invalid_argument("Already has this context");
+    }
     auto newContext = new ParseTree(context);
     c.push_back(newContext);
     completeContextS(newContext);
     completeContextR(newContext);
 }
 
+bool BaseTable::hasContext(const ParseTree& context) const{
+    for(auto curr: c){
+        if(*curr==context){
+            return true;
+        }
+    }
+    return false;
+}
 
 bool BaseTable::hasTree(const ParseTree& tree) const{
     for(auto t: s){

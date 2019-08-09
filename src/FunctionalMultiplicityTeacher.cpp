@@ -6,7 +6,7 @@
 using namespace std;
 
 FunctionalMultiplicityTeacher::FunctionalMultiplicityTeacher(double epsilon, double defaultValue,
-        function<double(const ParseTree&)> func, TreesIterator& it):epsilon(epsilon),
+        function<double(const ParseTree&)> func, const TreesIterator& it):epsilon(epsilon),
         defaultValue(defaultValue), func(std::move(func)), it(it){
 
 }
@@ -29,7 +29,7 @@ ParseTree* FunctionalMultiplicityTeacher::equivalence(const MultiplicityTreeAcce
         if(diff>epsilon){
             return new ParseTree(t);
         }
-        it++;
+        ++it;
     }
     return nullptr;
 }
