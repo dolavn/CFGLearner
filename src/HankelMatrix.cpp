@@ -10,8 +10,8 @@
 using namespace std;
 using namespace arma;
 
-HankelMatrix::HankelMatrix(const MultiplicityTeacher& teacher, const set<rankedChar>& alphabet):teacher(teacher), obs(),
-alphabet(alphabet){
+HankelMatrix::HankelMatrix(const MultiplicityTeacher& teacher):teacher(teacher), obs(),
+alphabet(teacher.getAlphabet()){
 
 }
 

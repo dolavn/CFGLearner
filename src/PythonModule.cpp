@@ -6,7 +6,10 @@
 #include "CFG.h"
 #include "TreeComparator.h"
 #include "Definitions.h"
+#include "MultiplicityTreeAcceptor.h"
+#include "MultiplicityTeacher.h"
 #include "Matrix.h"
+#include "ObservationTable.h"
 #include <algorithm>
 #include <vector>
 #include <stack>
@@ -213,6 +216,37 @@ PYBIND11_MODULE(CFGLearner, m) {
     });
     differenceTeacher.def("setTreeComparator", [](DifferenceTeacher& t, TreeComparator& c){
         t.setTreeComparator(c);
+    });
+    py::class_<MultiplicityTeacher> multiplicityTeacher(m, "MultiplicityTeacher");
+    py::class_<SimpleMultiplicityTeacher> simpleMultiplicityTeacher(m, "SimpleMultiplicityTeacher",multiplicityTeacher);
+    simpleMultiplicityTeacher.def(py::init<double,double>(),py::arg("epsilon")=0.1, py::arg("default_val")=-1);
+    simpleMultiplicityTeacher.def("addExample",[](SimpleMultiplicityTeacher& t,py::object nltkTree,
+            double val){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        tree->setProb(val);
+        t.addExample(*tree);
+        delete(tree);
+    });
+    m.def("learnMult",[](const MultiplicityTeacher& t) {
+        py::gil_scoped_release release;
+        HankelMatrix h(t);
+        h.makeConsistent();
+        return h.getAcceptor();
+    });
+    py::class_<MultiplicityTreeAcceptor> multiplicityTreeAcceptor(m, "MultiplicityTreeAcceptor");
+    multiplicityTreeAcceptor.def("run",[](MultiplicityTreeAcceptor& acc, py::object nltkTree){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        double ans = acc.run(*tree);
+        delete(tree);
+        return ans;
     });
     m.def("learn",[](const Teacher& t, std::unordered_map<int,string> map) {
         py::gil_scoped_release release;

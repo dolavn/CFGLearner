@@ -79,7 +79,7 @@ class MultiLinearMap;
 
 class HankelMatrix: public BaseTable{
 public:
-    explicit HankelMatrix(const MultiplicityTeacher&, const std::set<rankedChar>&);
+    explicit HankelMatrix(const MultiplicityTeacher&);
     HankelMatrix(const HankelMatrix&)=delete;
     HankelMatrix& operator=(const HankelMatrix&)=delete;
     HankelMatrix(HankelMatrix&&)=delete;

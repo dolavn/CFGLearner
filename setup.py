@@ -31,7 +31,7 @@ ext_modules = [
          "src/TreeComparator.cpp", "src/ObservationTable.cpp",
          "src/HankelMatrix.cpp", "src/SimpleMultiplicityTeacher.cpp",
          "src/MultiLinearMap.cpp", "src/MultiplicityTreeAcceptor.cpp",
-         "src/IndexArray.cpp"],
+         "src/IndexArray.cpp", "src/TreesIterator.cpp", "src/FunctionalMultiplicityTeacher.cpp"],
         libraries=['armadillo'],
         include_dirs=[
             # Path to pybind11 headers

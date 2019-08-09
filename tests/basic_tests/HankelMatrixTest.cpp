@@ -60,7 +60,7 @@ SimpleMultiplicityTeacher getMultiplicityTeacher(){
 TEST(hankel_matrix_test,basic_check){
     set<rankedChar> alphabet = getAlphabet();
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
-    HankelMatrix h(teacher, alphabet);
+    HankelMatrix h(teacher);
     ParseTree leaf(0);
     ParseTree t(1, {ParseTree(0), ParseTree(0)});
     ParseTree t2(1, {t, t});
@@ -108,7 +108,7 @@ TEST(hankel_matrix_test,basic_check){
 TEST(hankel_matrix_test,context_check){
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
     set<rankedChar> alphabet = getAlphabet();
-    HankelMatrix h(teacher, alphabet);
+    HankelMatrix h(teacher);
     ParseTree leaf(0);
     ParseTree t(1, {leaf, leaf});
     ParseTree t2(1, {t, t});
@@ -146,7 +146,7 @@ TEST(hankel_matrix_test,context_check){
 TEST(hankel_matrix_test,suffixIterator){
     set<rankedChar> alphabet = getAlphabetSmall();
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
-    HankelMatrix h(teacher, alphabet);
+    HankelMatrix h(teacher);
     ParseTree leaf(0);
     ParseTree t(1, {ParseTree(0), ParseTree(0)});
     ParseTree t2(1, {t, t});
@@ -198,7 +198,7 @@ TEST(hankel_matrix_test,suffixIterator){
 TEST(hankel_matrix_test,acceptor_test){
     set<rankedChar> alphabet = getAlphabet();
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
-    HankelMatrix h(teacher, alphabet);
+    HankelMatrix h(teacher);
     ParseTree leaf(0);
     ParseTree t(1, {ParseTree(0), ParseTree(0)});
     ParseTree t2(1, {t, t});

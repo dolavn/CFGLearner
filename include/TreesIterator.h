@@ -24,6 +24,7 @@ public:
     void setVerbose(bool verbose){this->verbose = verbose;} //todo:delete
     bool hasNext() const;
     void resetIterator();
+    std::set<rankedChar> getAlphabet() const;
     ParseTree operator*() const;
     TreesIterator& operator++();
     TreesIterator operator++(int){

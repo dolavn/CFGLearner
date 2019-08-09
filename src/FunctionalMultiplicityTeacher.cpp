@@ -21,6 +21,10 @@ double FunctionalMultiplicityTeacher::membership(const ParseTree& tree) const{
     return ans;
 }
 
+set<rankedChar> FunctionalMultiplicityTeacher::getAlphabet() const{
+    return it.getAlphabet();
+}
+
 ParseTree* FunctionalMultiplicityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) const{
     it.resetIterator();
     while(it.hasNext()){

@@ -8,17 +8,18 @@
 #include <vector>
 #include <functional>
 #include <set>
+#include "RankedChar.h"
 #include "TreesIterator.h"
 
 class ParseTree;
 class MultiplicityTreeAcceptor;
-
 
 class MultiplicityTeacher{
 public:
     virtual double membership(const ParseTree&) const=0;
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const=0;
     virtual double getDefaultValue() const=0;
+    virtual std::set<rankedChar> getAlphabet() const=0;
 };
 
 class SimpleMultiplicityTeacher: public MultiplicityTeacher{
@@ -36,13 +37,14 @@ public:
 
     virtual double membership(const ParseTree&) const;
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
-
+    virtual std::set<rankedChar> getAlphabet() const {return alphabet;};
 
 private:
     void clear();
     void copy(const SimpleMultiplicityTeacher&);
     double epsilon;
     double defaultValue;
+    std::set<rankedChar> alphabet;
     std::vector<ParseTree*> trees;
 };
 
@@ -55,7 +57,7 @@ public:
 
     virtual double membership(const ParseTree&) const;
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
-
+    virtual std::set<rankedChar> getAlphabet() const;
 
 private:
     double epsilon;

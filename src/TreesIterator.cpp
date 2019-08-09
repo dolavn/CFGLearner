@@ -89,6 +89,11 @@ bool TreesIterator::hasNext() const{
     return remainingLevels>0;
 }
 
+set<rankedChar> TreesIterator::getAlphabet() const{
+    set<rankedChar> ans = set<rankedChar>(alphabet.begin(), alphabet.end());
+    return ans;
+}
+
 ParseTree TreesIterator::operator*() const{
     if(currLevel.empty()){
         throw std::invalid_argument("No more trees!");
