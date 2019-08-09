@@ -437,6 +437,49 @@ TEST(tree_test, advanced_difference_test2){
     tTest2.applyWeights(wTest2);
 }
 
+TEST(tree_test, get_all_contexts_test){
+    ParseTree l(0);
+    ParseTree t(1, {l, l});
+    ParseTree t2(1, {t, l});
+    vector<ParseTree*> v = l.getAllContexts();
+    ASSERT_EQ(v.size(), 1);
+    ASSERT_EQ(v[0]->getIsContext(), true);
+    ASSERT_EQ(v[0]->getContextLoc(), vector<int>({}));
+    delete(v[0]); v[0]=nullptr;
+    v = t.getAllContexts();
+    ASSERT_EQ(v.size(), 3);
+    ASSERT_EQ(v[0]->getIsContext(), true);
+    ASSERT_EQ(v[0]->getContextLoc(), vector<int>({}));
+    ASSERT_EQ(v[1]->getIsContext(), true);
+    ASSERT_EQ(v[1]->getContextLoc(), vector<int>({0}));
+    ASSERT_EQ(v[2]->getIsContext(), true);
+    ASSERT_EQ(v[2]->getContextLoc(), vector<int>({1}));
+    for(auto& ptr: v){
+        if(ptr){
+            delete(ptr);
+            ptr=nullptr;
+        }
+    }
+    v = t2.getAllContexts();
+    ASSERT_EQ(v.size(), 5);
+    ASSERT_EQ(v[0]->getIsContext(), true);
+    ASSERT_EQ(v[0]->getContextLoc(), vector<int>({}));
+    ASSERT_EQ(v[1]->getIsContext(), true);
+    ASSERT_EQ(v[1]->getContextLoc(), vector<int>({0}));
+    ASSERT_EQ(v[2]->getIsContext(), true);
+    ASSERT_EQ(v[2]->getContextLoc(), vector<int>({0, 0}));
+    ASSERT_EQ(v[3]->getIsContext(), true);
+    ASSERT_EQ(v[3]->getContextLoc(), vector<int>({0, 1}));
+    ASSERT_EQ(v[4]->getIsContext(), true);
+    ASSERT_EQ(v[4]->getContextLoc(), vector<int>({1}));
+    for(auto& ptr: v){
+        if(ptr){
+            delete(ptr);
+            ptr=nullptr;
+        }
+    }
+}
+
 
 TEST(tree_test,latex_tree_test){
     ParseTree t(2);

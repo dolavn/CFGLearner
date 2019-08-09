@@ -309,6 +309,22 @@ ParseTree ParseTree::getSkeleton() const{
     return ans;
 }
 
+vector<ParseTree*> ParseTree::getAllContexts() const{
+    auto it = getIndexIterator();
+    vector<ParseTree*> ans;
+    while(it.hasNext()){
+        auto ind = *it;
+        pair<ParseTree*, ParseTree*> contextTreePair = makeContext(ind);
+        if(contextTreePair.second){
+            delete(contextTreePair.second);
+            contextTreePair.second=nullptr;
+        }
+        ans.push_back(contextTreePair.first);
+        ++it;
+    }
+    return ans;
+}
+
 std::string ParseTree::latexTreeRecursive() const{
     stringstream stream;
     for(unsigned int i=0;i<subtrees.size();++i){
