@@ -7,9 +7,9 @@
 
 using namespace std;
 
-rankedChar inner{0, 2};
-rankedChar l1{1, 0};
-rankedChar l2{2, 0};
+extern rankedChar inner;
+extern rankedChar l1;
+extern rankedChar l2;
 
 set<rankedChar> getAlphabetCounting(){
     return set<rankedChar>({inner, l1, l2});

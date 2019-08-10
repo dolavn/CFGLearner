@@ -10,10 +10,14 @@
 extern rankedChar a;
 extern rankedChar b;
 extern rankedChar l;
+extern rankedChar a1;
+extern rankedChar b1;
+extern rankedChar inner;
 
 using namespace std;
 
 set<rankedChar> getAlphabet();
+set<rankedChar> getAlphabetProb();
 
 set<rankedChar> getAlphabetSmall(){
     return set<rankedChar>({a, l});
@@ -24,7 +28,6 @@ MultiplicityTreeAcceptor getCountingAcc();
 SimpleMultiplicityTeacher getMultiplicityTeacher(){
     SimpleMultiplicityTeacher teacher(0.2, 0.0);
     set<rankedChar> alphabet = getAlphabet();
-    MultiplicityTreeAcceptor acc = getCountingAcc();
     ParseTree t(1, {ParseTree(0), ParseTree(0)});
     t.setProb(2.0);
     ParseTree t2(1, {t, t});
@@ -46,6 +49,38 @@ SimpleMultiplicityTeacher getMultiplicityTeacher(){
     ParseTree leaf(0);
     leaf.setProb(1.0);
     teacher.addExample(leaf);
+    teacher.addExample(t);
+    teacher.addExample(t2);
+    teacher.addExample(t3);
+    teacher.addExample(t4);
+    teacher.addExample(t5);
+    teacher.addExample(t6);
+    teacher.addExample(t7);
+    teacher.addExample(t8);
+    teacher.addExample(t9);
+    return teacher;
+}
+
+SimpleMultiplicityTeacher getMultiplicityProbTeacher(){
+    SimpleMultiplicityTeacher teacher(0.05, 0.0);
+    set<rankedChar> alphabet = getAlphabetProb();
+    ParseTree t(0, {ParseTree(1), ParseTree(1)});
+    t.setProb(0.9);
+    ParseTree t2(0, {ParseTree(1), ParseTree(2)});
+    t2.setProb(0.5);
+    ParseTree t3(0, {ParseTree(2), ParseTree(1)});
+    t3.setProb(0.5);
+    ParseTree t4(0, {ParseTree(2), ParseTree(2)});
+    t4.setProb(0.1);
+    ParseTree t5(0, {t, t2});
+    t5.setProb(0.5);
+    ParseTree t6(0, {t2, t});
+    t6.setProb(0.9);
+    ParseTree t7(0, {ParseTree(2), t});
+    t7.setProb(0.5);
+    ParseTree t8(0, {t, ParseTree(2)});
+    t8.setProb(0.5);
+    ParseTree t9(0, {ParseTree(1), t});
     teacher.addExample(t);
     teacher.addExample(t2);
     teacher.addExample(t3);
@@ -196,6 +231,7 @@ TEST(hankel_matrix_test,suffixIterator){
     }
 }
 
+
 TEST(hankel_matrix_test,acceptor_test){
     set<rankedChar> alphabet = getAlphabet();
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
@@ -237,4 +273,15 @@ TEST(hankel_matrix_test,learner_test){
     ASSERT_EQ(acc.run(leaf), 1);
     ASSERT_EQ(acc.run(t), 2);
     ASSERT_EQ(acc.run(t2), 4);
+}
+
+TEST(hankel_matrix_test,learner_test2){
+    set<rankedChar> alphabet = getAlphabetProb();
+    SimpleMultiplicityTeacher teacher = getMultiplicityProbTeacher();
+    ParseTree t(0, {ParseTree(1), ParseTree(2)});
+    ParseTree t2(0, {ParseTree(2), ParseTree(1)});
+    HankelMatrix h(teacher);
+    MultiplicityTreeAcceptor acc = learn(teacher);
+    ASSERT_EQ(acc.run(t), 0.5);
+    ASSERT_EQ(acc.run(t2), 0.5);
 }

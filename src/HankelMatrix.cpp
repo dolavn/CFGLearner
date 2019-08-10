@@ -12,7 +12,6 @@ using namespace arma;
 
 HankelMatrix::HankelMatrix(const MultiplicityTeacher& teacher):teacher(teacher), obs(),
 alphabet(teacher.getAlphabet()){
-
 }
 
 void HankelMatrix::completeTree(ParseTree* tree){
@@ -171,6 +170,35 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptorTemp() const{
     return acc;
 }
 
+void HankelMatrix::printTable() const{
+    cout << "contexts" << endl;
+    for(auto con: c){
+        cout << *con << endl;
+    }
+    cout << "trees in s" << endl;
+    for(auto tree: s){
+        cout << *tree << endl;
+        vector<double> obs = getObs(*tree);
+        cout << "[";
+        for(unsigned int i=0;i<obs.size();++i){
+            cout << obs[i];
+            if(i<obs.size()-1){cout << ",";}
+        }
+        cout << "]" << endl;
+    }
+    cout << "trees in r" << endl;
+    for(auto tree: r){
+        cout << *tree << endl;
+        vector<double> obs = getObs(*tree);
+        cout << "[";
+        for(unsigned int i=0;i<obs.size();++i){
+            cout << obs[i];
+            if(i<obs.size()-1){cout << ",";}
+        }
+        cout << "]" << endl;
+    }
+}
+
 
 void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const vector<rankedChar>& alphabetVec,
         const arma::mat& s) const{
@@ -200,12 +228,14 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
      */
     arma::vec params = arma::solve(sT, v);
     for(int i=0;i<sT.n_cols;++i){
-        if(params(i)<0.001){params(i)=0;}
+        if(params(i)<0.000000001){params(i)=0;}
     }
+    //cout << t << endl;
+    //cout << params << endl;
     vector<int> mapParams;
     mapParams.push_back(-1);
     mapParams.insert(mapParams.end(), sIndices.begin(), sIndices.end());
-    for(int i=0;i<v.n_cols;++i){
+    for(int i=0;i<params.n_rows;++i){
         mapParams[0] = i;
         m.setParam(params(i), mapParams);
     }
@@ -213,6 +243,14 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
 
 void HankelMatrix::closeTable(){
     while(true){
+        if(s.empty()){
+            for(auto c:alphabet){
+                if(c.rank==0){
+                    addTree(ParseTree(c.c));
+                }
+            }
+            return;
+        }
         auto it = getSuffixIterator();
         bool closed=true;
         while(it.hasNext()){

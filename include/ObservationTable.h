@@ -92,6 +92,8 @@ public:
     virtual bool hasContext(const ParseTree&) const;
     bool checkClosed() const;
 
+    void printTable() const;
+
     TreesIterator getSuffixIterator() const;
 private:
     const MultiplicityTeacher& teacher;

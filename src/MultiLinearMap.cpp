@@ -120,6 +120,7 @@ bool MultiLinearMap::testInput(const vector<floatVec>& input){
 void MultiLinearMap::printDesc() const{
     cout << "output:" << dim << endl;
     cout << "paramNum:" << paramNum << endl;
+    if(dim==0){return;}
     intVec maxLengths(paramNum+1, dim);
     IndexArray ind(maxLengths);
     for(;!ind.getOverflow();++ind){

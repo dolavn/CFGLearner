@@ -1,8 +1,11 @@
 #include "MultiplicityTeacher.h"
 #include "MultiplicityTreeAcceptor.h"
 #include "ParseTree.h"
+#include <iostream> //todo:delete
 
-#define ABS(x) x>=0?x:-x
+#define ABS(x) (x)>=0?(x):-(x)
+
+using namespace std;
 
 SimpleMultiplicityTeacher::SimpleMultiplicityTeacher(double epsilon, double defaultVal):epsilon(epsilon),
 defaultValue(defaultVal),alphabet(), trees(){
@@ -66,7 +69,8 @@ double SimpleMultiplicityTeacher::membership(const ParseTree& tree) const{
 ParseTree* SimpleMultiplicityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) const{
     for(auto& tree: trees){
         double calculatedValue = acc.run(*tree);
-        if(ABS(calculatedValue-tree->getProb())<epsilon){
+        if(ABS(calculatedValue-tree->getProb())>epsilon){
+            double a = ABS(calculatedValue-tree->getProb());
             auto ans = new ParseTree(*tree);
             return ans;
         }

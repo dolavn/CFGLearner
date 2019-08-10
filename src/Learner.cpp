@@ -198,6 +198,7 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher){
         h.makeConsistent();
         MultiplicityTreeAcceptor acc = h.getAcceptor();
         ParseTree* counterExample = teacher.equivalence(acc);
+        h.printTable();
         if(counterExample==nullptr){
             return acc;
         }else{
