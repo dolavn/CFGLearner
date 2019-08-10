@@ -233,9 +233,7 @@ PYBIND11_MODULE(CFGLearner, m) {
     });
     m.def("learnMult",[](const MultiplicityTeacher& t) {
         py::gil_scoped_release release;
-        HankelMatrix h(t);
-        h.makeConsistent();
-        return h.getAcceptor();
+        return learn(t);
     });
     py::class_<MultiplicityTreeAcceptor> multiplicityTreeAcceptor(m, "MultiplicityTreeAcceptor");
     multiplicityTreeAcceptor.def("run",[](MultiplicityTreeAcceptor& acc, py::object nltkTree){

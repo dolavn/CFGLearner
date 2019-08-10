@@ -5,6 +5,7 @@
 #include "../../include/MultiplicityTreeAcceptor.h"
 #include "../../include/ObservationTable.h"
 #include "../../include/TreesIterator.h"
+#include "../../include/Learner.h"
 
 extern rankedChar a;
 extern rankedChar b;
@@ -220,6 +221,19 @@ TEST(hankel_matrix_test,acceptor_test){
     h.makeConsistent();
     //h.closeTable();
     MultiplicityTreeAcceptor acc = h.getAcceptor();
+    ASSERT_EQ(acc.run(leaf), 1);
+    ASSERT_EQ(acc.run(t), 2);
+    ASSERT_EQ(acc.run(t2), 4);
+}
+
+TEST(hankel_matrix_test,learner_test){
+    set<rankedChar> alphabet = getAlphabet();
+    SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
+    ParseTree leaf(0);
+    ParseTree t(1, {ParseTree(0), ParseTree(0)});
+    ParseTree t2(1, {t, t});
+    HankelMatrix h(teacher);
+    MultiplicityTreeAcceptor acc = learn(teacher);
     ASSERT_EQ(acc.run(leaf), 1);
     ASSERT_EQ(acc.run(t), 2);
     ASSERT_EQ(acc.run(t2), 4);

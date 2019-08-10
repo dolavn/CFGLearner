@@ -28,7 +28,7 @@ public:
     void addTree(const ParseTree&);
     void addContext(const ParseTree&);
     bool hasTree(const ParseTree&) const;
-    bool hasContext(const ParseTree&) const;
+    virtual bool hasContext(const ParseTree&) const;
     bool treeInS(const ParseTree& tree);
     const ParseTree& getTreeS(int ind) const;
     inline const std::vector<ParseTree*>& getR(){return r;}
@@ -84,11 +84,12 @@ public:
     HankelMatrix& operator=(const HankelMatrix&)=delete;
     HankelMatrix(HankelMatrix&&)=delete;
     HankelMatrix& operator=(HankelMatrix&&)=delete;
-
+    std::vector<double> test();
     std::vector<double> getObs(const ParseTree&) const;
     MultiplicityTreeAcceptor getAcceptor() const;
     void closeTable();
     void makeConsistent();
+    virtual bool hasContext(const ParseTree&) const;
     bool checkClosed() const;
 
     TreesIterator getSuffixIterator() const;
@@ -98,7 +99,7 @@ private:
     std::vector<arma::Row<double>> base;
     std::unordered_map<ParseTree*,std::vector<double>> obs;
     arma::mat getSMatrix(bool) const;
-    arma::rowvec getObsVec(const ParseTree&) const;
+    arma::vec getObsVec(const ParseTree&) const;
     arma::mat getSInv() const;
     void fillMatLastRow(arma::mat&, ParseTree*);
     MultiplicityTreeAcceptor getAcceptorTemp() const;

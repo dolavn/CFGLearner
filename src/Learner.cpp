@@ -1,6 +1,7 @@
 #include "Learner.h"
 #include "ParseTree.h"
 #include "Teacher.h"
+#include "MultiplicityTeacher.h"
 #include "ObservationTable.h"
 #include <vector>
 #include <unordered_map>
@@ -189,6 +190,28 @@ TreeAcceptor learn(const Teacher& teacher){
     myfile << "\\end{center}" << endl;
     myfile.close();
     return ans;
+}
+
+MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher){
+    HankelMatrix h(teacher);
+    while(true){
+        h.makeConsistent();
+        MultiplicityTreeAcceptor acc = h.getAcceptor();
+        ParseTree* counterExample = teacher.equivalence(acc);
+        if(counterExample==nullptr){
+            return acc;
+        }else{
+            cout << *counterExample << endl;
+            for(auto& context: counterExample->getAllContexts()){
+                if(!h.hasContext(*context)){
+                    h.addContext(*context);
+                    delete(context);
+                    context=nullptr;
+                }
+            }
+            delete(counterExample); counterExample=nullptr;
+        }
+    }
 }
 
 ObservationTable* table=nullptr;

@@ -173,7 +173,8 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptorTemp() const{
 
 
 void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const vector<rankedChar>& alphabetVec,
-        const arma::mat& sInv) const{
+        const arma::mat& s) const{
+    if(s.size()==0 || c.size()==0){return;}
     vector<int> sIndices;
     for(auto subtree: t.getSubtrees()){
         int subtreeInd = getIndInS(*subtree);
@@ -187,12 +188,24 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
     if(charInd>=alphabetVec.size()){
         throw std::invalid_argument("Character not in alphabet");
     }
-    arma::rowvec v = getObsVec(t);
-    arma::rowvec params = v*sInv;
+    arma::vec v = getObsVec(t);
+    arma::mat sT = s.t();
+    //arma::rowvec params = v*sInv;
+    /*
+    cout << v << endl;
+    cout << v.n_rows << "," << v.n_cols << endl;
+    cout << sT << endl;
+    cout << sT.n_rows << "," << sT.n_cols << endl;
+    cout << "-------------" << endl;
+     */
+    arma::vec params = arma::solve(sT, v);
+    for(int i=0;i<sT.n_cols;++i){
+        if(params(i)<0.001){params(i)=0;}
+    }
     vector<int> mapParams;
     mapParams.push_back(-1);
     mapParams.insert(mapParams.end(), sIndices.begin(), sIndices.end());
-    for(int i=0;i<v.size();++i){
+    for(int i=0;i<v.n_cols;++i){
         mapParams[0] = i;
         m.setParam(params(i), mapParams);
     }
@@ -211,7 +224,7 @@ void HankelMatrix::closeTable(){
             }
         }
         if(closed){
-            break;
+            return;
         }
     }
 }
@@ -227,6 +240,11 @@ bool HankelMatrix::checkClosed() const{
     return true;
 }
 
+bool HankelMatrix::hasContext(const ParseTree& context) const{
+    if(BaseTable::hasContext(context)){return true;}
+    return false;
+}
+
 void HankelMatrix::makeConsistent(){
     while(true){
         closeTable();
@@ -238,10 +256,6 @@ void HankelMatrix::makeConsistent(){
                 auto context = *it;
                 ParseTree* merged = context->mergeContext(*tree);
                 if(acc.run(*merged)!=vec[it-c.begin()]){
-                    cout << *merged << endl;
-                    cout << acc.run(*merged) << endl;
-                    cout << vec[it-c.begin()] << endl;
-                    cout << c.size() << endl;
                     for(auto& suffix: merged->getAllContexts()){
                         if(!hasContext(*suffix)){
                             newContexts.push_back(suffix);
@@ -255,21 +269,46 @@ void HankelMatrix::makeConsistent(){
         }
         if(newContexts.empty()){return;}
         for(auto& context: newContexts){
-            addContext(*context);
+            if(!hasContext(*context)){
+                addContext(*context);
+            }
             delete(context);
             context = nullptr;
         }
     }
 }
 
+vector<double> HankelMatrix::test(){
+    arma::mat t(2, 4);
+    t(0, 0)=1; t(0, 1)=1; t(0, 2)=2; t(0, 3)=0;
+    t(1, 0)=2; t(1, 1)=2; t(1, 2)=3; t(1, 3)=0;
+    t = t.t();
+    arma::vec a(4);
+    a(0)=3;a(1)=3;a(2)=5;a(3)=0;
+    cout << t << endl;
+    cout << a << endl;
+    arma::vec x = arma::solve(t,a);
+    cout << x << endl;
+    return {0};
+}
+
 arma::mat HankelMatrix::getSInv() const{
     mat sMat = getSMatrix(false);
+    return sMat;
+    for(auto con: c){
+        cout << *con << endl;
+    }
+    cout << sMat << endl;
+    for(auto t: r){
+        arma::rowvec v = getObsVec(*t);
+        cout << v << endl;
+    }
     return arma::inv(sMat);
 }
 
-arma::rowvec HankelMatrix::getObsVec(const ParseTree& tree) const{
+arma::vec HankelMatrix::getObsVec(const ParseTree& tree) const{
     vector<double> vec = getObs(tree);
-    arma::rowvec ans(vec.size());
+    arma::vec ans(vec.size());
     for(unsigned int i=0;i<vec.size();++i){
         ans(i) = vec[i];
     }

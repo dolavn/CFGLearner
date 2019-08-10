@@ -30,6 +30,7 @@ floatVec MultiLinearMap::operator()(const vector<floatVec>& input) {
         throw std::invalid_argument("Invalid input dimensions");
     }
     floatVec y(dim);
+    if(dim==0){return y;}
     intVec maxLengths(paramNum+1, dim);
     IndexArray ind(maxLengths);
     for(;!ind.getOverflow();++ind){
@@ -79,6 +80,7 @@ int MultiLinearMap::convertInd(const intVec& index) const{
 
 
 void MultiLinearMap::initParams(){
+    if(dim==0){return;}
     params = floatVec((unsigned long)(pow(dim, paramNum+1)));
     intVec maxLengths(paramNum+1, dim);
     IndexArray ind(maxLengths);
@@ -89,6 +91,9 @@ void MultiLinearMap::initParams(){
 
 
 bool MultiLinearMap::testLocation(const intVec& ind){
+    if(dim==0){
+        return false;
+    }
     if(ind.size()!=paramNum+1){
         return false;
     }
