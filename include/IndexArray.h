@@ -16,8 +16,8 @@ to iterate over a multi-dimensional table.
 
 class IndexArray;
 
-static int cmp(const IndexArray& first, const IndexArray& second);
-static bool sameDimensions(const IndexArray& first, const IndexArray& second);
+int cmp(const IndexArray& first, const IndexArray& second);
+bool sameDimensions(const IndexArray& first, const IndexArray& second);
 
 class IndexArray {
 public:
@@ -73,17 +73,5 @@ private:
     friend int cmp(const IndexArray& first, const IndexArray& second);
 };
 
-int cmp(const IndexArray& first, const IndexArray& second) {
-    if (first.dimensions > second.dimensions) { return 1; }
-    if (first.dimensions < second.dimensions) { return -1; }
-    for (unsigned int i = 0; i < first.dimensions; i++) {
-        if (first.arr[i] > second.arr[i]) {
-            return 1;
-        }
-        if (first.arr[i] < second.arr[i]) {
-            return -1;
-        }
-    }
-    return 0;
-}
+
 #endif //CFGLEARNER_INDEXARRAY_H

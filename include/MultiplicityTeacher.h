@@ -20,6 +20,9 @@ public:
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const=0;
     virtual double getDefaultValue() const=0;
     virtual std::set<rankedChar> getAlphabet() const=0;
+    virtual std::string toString() const;
+    virtual void printDesc() const;
+    friend std::ostream& operator<<(std::ostream&,const MultiplicityTeacher&);
 };
 
 class SimpleMultiplicityTeacher: public MultiplicityTeacher{
@@ -29,6 +32,7 @@ public:
     SimpleMultiplicityTeacher& operator=(const SimpleMultiplicityTeacher&);
     SimpleMultiplicityTeacher(SimpleMultiplicityTeacher&&);
     SimpleMultiplicityTeacher& operator=(SimpleMultiplicityTeacher&&);
+
     virtual ~SimpleMultiplicityTeacher();
 
     void addExample(const ParseTree&);
@@ -38,6 +42,8 @@ public:
     virtual double membership(const ParseTree&) const;
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
     virtual std::set<rankedChar> getAlphabet() const {return alphabet;};
+    virtual std::string toString() const;
+    virtual void printDesc() const;
 
 private:
     void clear();
@@ -58,6 +64,7 @@ public:
     virtual double membership(const ParseTree&) const;
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
     virtual std::set<rankedChar> getAlphabet() const;
+    virtual std::string toString() const;
 
 private:
     double epsilon;

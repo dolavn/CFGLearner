@@ -6,10 +6,10 @@
 
 using namespace std;
 
-IndexArray::IndexArray() :arr(), maxArr(), dimensions(0), overflow(false), underflow(false) {
+IndexArray::IndexArray() : dimensions(0), arr(), maxArr(), overflow(false), underflow(false) {
 
 }
-IndexArray::IndexArray(vector<int> maxArr) :arr(maxArr.size()),maxArr(maxArr),dimensions(maxArr.size()),overflow(false),underflow(false){
+IndexArray::IndexArray(vector<int> maxArr) :dimensions(maxArr.size()),arr(maxArr.size()),maxArr(maxArr),overflow(false),underflow(false){
 }
 
 IndexArray::IndexArray(const IndexArray& other) : dimensions(other.dimensions),arr(other.arr),maxArr(other.maxArr),overflow(other.overflow),underflow(other.underflow){
@@ -148,4 +148,18 @@ ostream& operator<<(ostream& stream, const IndexArray& arr) {
     }
     stream << "]";
     return stream;
+}
+
+int cmp(const IndexArray& first, const IndexArray& second) {
+    if (first.dimensions > second.dimensions) { return 1; }
+    if (first.dimensions < second.dimensions) { return -1; }
+    for (unsigned int i = 0; i < first.dimensions; i++) {
+        if (first.arr[i] > second.arr[i]) {
+            return 1;
+        }
+        if (first.arr[i] < second.arr[i]) {
+            return -1;
+        }
+    }
+    return 0;
 }

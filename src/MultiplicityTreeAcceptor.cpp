@@ -76,7 +76,7 @@ float MultiplicityTreeAcceptor::run(const ParseTree& tree) const{
     }
     float ans = 0;
     floatVec root = vecMap[{}];
-    for(int i=0;i<root.size();++i){
+    for(unsigned int i=0;i<root.size();++i){
         ans = ans + root[i]*lambda[i];
     }
     return ans;
@@ -93,7 +93,7 @@ void MultiplicityTreeAcceptor::printDesc() const {
         tPair.second.printDesc();
     }
     cout << "lambda [";
-    for(int i=0;i<lambda.size();++i){
+    for(unsigned int i=0;i<lambda.size();++i){
         cout << lambda[i];
         if(i<lambda.size()-1){
             cout << ",";

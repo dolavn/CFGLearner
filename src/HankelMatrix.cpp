@@ -2,16 +2,18 @@
 #include "ParseTree.h"
 #include "MultiplicityTeacher.h"
 #include "MultiplicityTreeAcceptor.h"
+#include "utility.h"
 #include <armadillo>
 #include <algorithm>
 
-#define SAFE_DELETE(ptr)  if(ptr){delete(ptr);ptr=nullptr;}
+
+#define EPSILON (0.000001)
 
 using namespace std;
 using namespace arma;
 
-HankelMatrix::HankelMatrix(const MultiplicityTeacher& teacher):teacher(teacher), obs(),
-alphabet(teacher.getAlphabet()){
+HankelMatrix::HankelMatrix(const MultiplicityTeacher& teacher):teacher(teacher),
+alphabet(teacher.getAlphabet()),base(),obs(){
 }
 
 void HankelMatrix::completeTree(ParseTree* tree){
@@ -144,7 +146,7 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptorTemp() const{
     MultiplicityTreeAcceptor acc(alphabet, base.size());
     for(auto currTree: s){
         rankedChar c = {currTree->getData(), (int)(currTree->getSubtrees().size())};
-        int charInd = (int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+        unsigned int charInd = (unsigned int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
         if(charInd>=alphabetVec.size()){
             throw std::invalid_argument("Character not in alphabet");
         }
@@ -152,13 +154,13 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptorTemp() const{
     }
     for(auto currTree: r){
         rankedChar c = {currTree->getData(), (int)(currTree->getSubtrees().size())};
-        int charInd = (int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+        unsigned int charInd = (unsigned int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
         if(charInd>=alphabetVec.size()){
             throw std::invalid_argument("Character not in alphabet");
         }
         updateTransition(maps[charInd], *currTree, alphabetVec, sInv);
     }
-    for(int i=0;i<alphabetVec.size();++i){
+    for(unsigned int i=0;i<alphabetVec.size();++i){
         acc.addTransition(maps[i], alphabetVec[i]);
     }
     vector<float> lambdaVec;
@@ -212,7 +214,7 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
         sIndices.push_back(subtreeInd);
     }
     rankedChar c = {t.getData(), (int)(sIndices.size())};
-    int charInd = (int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+    unsigned int charInd = (unsigned int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
     if(charInd>=alphabetVec.size()){
         throw std::invalid_argument("Character not in alphabet");
     }
@@ -220,22 +222,28 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
     arma::mat sT = s.t();
     //arma::rowvec params = v*sInv;
     /*
+    cout << "<------------->" << endl;
     cout << v << endl;
-    cout << v.n_rows << "," << v.n_cols << endl;
     cout << sT << endl;
-    cout << sT.n_rows << "," << sT.n_cols << endl;
-    cout << "-------------" << endl;
+
+    for(auto tree: this->s){
+        cout << getObsVec(*tree) << endl;
+    }
      */
     arma::vec params = arma::solve(sT, v);
-    for(int i=0;i<sT.n_cols;++i){
-        if(params(i)<0.000000001){params(i)=0;}
+    for(unsigned int i=0;i<sT.n_cols;++i){
+        if(params(i)<EPSILON && params(i)>-EPSILON){params(i)=0;}
     }
-    //cout << t << endl;
-    //cout << params << endl;
+    /*
+    cout << params << endl;
+    cout << t << endl;
+
+    cout << "<------------->" << endl;
+     */
     vector<int> mapParams;
     mapParams.push_back(-1);
     mapParams.insert(mapParams.end(), sIndices.begin(), sIndices.end());
-    for(int i=0;i<params.n_rows;++i){
+    for(unsigned int i=0;i<params.n_rows;++i){
         mapParams[0] = i;
         m.setParam(params(i), mapParams);
     }
@@ -254,7 +262,8 @@ void HankelMatrix::closeTable(){
         auto it = getSuffixIterator();
         bool closed=true;
         while(it.hasNext()){
-            auto currTree = *it++;
+            auto currTree = *it;
+            ++it;
             if(!hasTree(currTree)){
                 addTree(currTree);
                 closed=false;
@@ -288,6 +297,7 @@ void HankelMatrix::makeConsistent(){
         closeTable();
         MultiplicityTreeAcceptor acc = getAcceptorTemp();
         vector<ParseTree*> newContexts;
+        //acc.printDesc();
         for(auto tree: s){
             vector<double> vec = getObs(*tree);
             for(auto it=c.begin();it!=c.end();++it){
@@ -317,12 +327,14 @@ void HankelMatrix::makeConsistent(){
 }
 
 vector<double> HankelMatrix::test(){
-    arma::mat t(2, 4);
-    t(0, 0)=1; t(0, 1)=1; t(0, 2)=2; t(0, 3)=0;
-    t(1, 0)=2; t(1, 1)=2; t(1, 2)=3; t(1, 3)=0;
-    t = t.t();
+    arma::mat t(4, 4);
+    t(0, 0)=0.9; t(0, 1)=1; t(0, 2)=0.9; t(0, 3)=1;
+    t(1, 0)=0.9; t(1, 1)=0.5; t(1, 2)=1; t(1, 3)=1;
+    t(2, 0)=0.5; t(2, 1)=1; t(2, 2)=1; t(2, 3)=1;
+    t(3, 0)=0.9; t(3, 1)=1; t(3, 2)=1; t(3, 3)=1;
+    //t = t.t();
     arma::vec a(4);
-    a(0)=3;a(1)=3;a(2)=5;a(3)=0;
+    a(0)=0.5; a(1)=1;a(2)=1;a(3)=1;
     cout << t << endl;
     cout << a << endl;
     arma::vec x = arma::solve(t,a);

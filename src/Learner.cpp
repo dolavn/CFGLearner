@@ -3,6 +3,7 @@
 #include "Teacher.h"
 #include "MultiplicityTeacher.h"
 #include "ObservationTable.h"
+#include "utility.h"
 #include <vector>
 #include <unordered_map>
 #include <iostream>
@@ -132,8 +133,8 @@ void extend(ObservationTable& s, ParseTree* t, const Teacher& teacher){
     }else{
         s.addTree(*tree);
     }
-    delete(tree);
-    delete(context);
+    SAFE_DELETE(tree)
+    SAFE_DELETE(context)
 }
 
 TreeAcceptor learn(const Teacher& teacher){
@@ -182,7 +183,7 @@ TreeAcceptor learn(const Teacher& teacher){
         /*cout << "syntTime:" << syntTime << endl;
         cout << "equivTime:" << equivTime << endl;
         cout << "extendTime:" << extendTime << endl;*/
-        delete(counterExample);
+        SAFE_DELETE(counterExample)
     }
     myfile << "Final table:\\\\" << endl;
     myfile << "\\begin{center}" << endl;
@@ -194,23 +195,24 @@ TreeAcceptor learn(const Teacher& teacher){
 
 MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher){
     HankelMatrix h(teacher);
+    //h.test();
+    //return h.getAcceptor();
     while(true){
         h.makeConsistent();
         MultiplicityTreeAcceptor acc = h.getAcceptor();
+        //acc.printDesc();
         ParseTree* counterExample = teacher.equivalence(acc);
-        h.printTable();
         if(counterExample==nullptr){
             return acc;
         }else{
-            cout << *counterExample << endl;
+            //cout << "counter:" << *counterExample << endl;
             for(auto& context: counterExample->getAllContexts()){
                 if(!h.hasContext(*context)){
                     h.addContext(*context);
-                    delete(context);
-                    context=nullptr;
                 }
+                SAFE_DELETE(context)
             }
-            delete(counterExample); counterExample=nullptr;
+            SAFE_DELETE(counterExample)
         }
     }
 }

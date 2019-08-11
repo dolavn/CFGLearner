@@ -4,8 +4,9 @@
 
 using namespace std;
 
-TreesIterator::TreesIterator(vector<ParseTree*> prevLevel, set<rankedChar> alphabet, int maxLevel):prevLevels(prevLevel.size()),
-alphabet(),currChar(-1),maxLevel(maxLevel),remainingLevels(maxLevel), arr(){
+TreesIterator::TreesIterator(vector<ParseTree*> prevLevel, set<rankedChar> alphabet, int maxLevel):
+currLevel(), prevLevels(prevLevel.size()), alphabet(),currChar(-1),maxLevel(maxLevel),remainingLevels(maxLevel),
+arr(){
     for(unsigned int i=0;i<prevLevel.size();++i){
         this->prevLevels[i] = treeLevelPair(new ParseTree(*prevLevel[i]), remainingLevels+1);
     }
@@ -16,16 +17,17 @@ alphabet(),currChar(-1),maxLevel(maxLevel),remainingLevels(maxLevel), arr(){
     createNewTree();
 }
 
-TreesIterator::TreesIterator(set<rankedChar> alphabet, int maxLevel):prevLevels(),alphabet(),
+TreesIterator::TreesIterator(set<rankedChar> alphabet, int maxLevel):currLevel(), prevLevels(),alphabet(),
 currChar(-1),maxLevel(maxLevel),remainingLevels(maxLevel), arr(){
     for(auto c: alphabet){
         this->alphabet.push_back(c);
     }
+    //verbose = true; //todo: delete
     incChar();
     createNewTree();
 }
 
-TreesIterator::TreesIterator(const TreesIterator& other):prevLevels(), currLevel(), alphabet(other.alphabet),
+TreesIterator::TreesIterator(const TreesIterator& other):currLevel(), prevLevels(), alphabet(other.alphabet),
 currChar(other.currChar),maxLevel(other.maxLevel),remainingLevels(other.remainingLevels),arr(other.arr){
     copy(other);
     verbose = other.verbose; //todo:delete
@@ -66,6 +68,9 @@ TreesIterator::~TreesIterator(){
 }
 
 void TreesIterator::resetIterator() {
+    if(verbose){
+        cout << "reset" << endl;
+    }
     clearVec(currLevel);
     currChar = -1;
     remainingLevels = maxLevel;
@@ -113,7 +118,10 @@ TreesIterator& TreesIterator::operator++(){
         }*/
         ++arr;
         if(arr.getOverflow()){
+            //cout << "overflow" << alphabet[currChar].c << endl;
             incChar();
+            //todo: check it
+            //if(alphabet[currChar].rank==0){break;}
         }
     }while(!checkIndex(arr));
     createNewTree();
@@ -147,8 +155,12 @@ void TreesIterator::incChar(){
     currChar++;
     for(;currChar<alphabet.size();++currChar){
         rankedChar& c = alphabet[currChar];
-        //if(verbose){printf("c:%d\n c.rank==0 : %d\n prevLevel.empty(): %d\n", c.c, c.rank==0, prevLevels.empty());}
+        if(verbose){printf("c:%d\n c.rank==0 : %d\n prevLevel.empty(): %d\n", c.c, c.rank==0, prevLevels.empty());}
         if(c.rank==0 == prevLevels.empty()){
+            /*Either it's the first level and we reached a character with arity 0, or it's an
+             * advanced level and we reached a character with arity>0
+             */
+            if(verbose){cout << "{" << c.c << " , " << c.rank << "}" << endl;}
             //if(verbose){printf("found\nremainingLevels:%d\n",remainingLevels);}
             break;
         }

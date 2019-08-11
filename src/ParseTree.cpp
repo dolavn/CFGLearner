@@ -277,7 +277,7 @@ void ParseTree::applyWeights(const ParseTree& weightsTree){
         throw std::invalid_argument("Weights tree must have the same topology as this tree!");
     }
     weight = weightsTree.getData();
-    for(int i=0;i<subtrees.size();i++){
+    for(unsigned int i=0;i<subtrees.size();i++){
         if(!subtrees[i]){continue;}
         subtrees[i]->applyWeights(*weightsTree.getSubtrees()[i]);
     }
@@ -287,7 +287,7 @@ bool ParseTree::sameTopology(const ParseTree& other){
     if(subtrees.size()!=other.subtrees.size()){
         return false;
     }
-    for(int i=0;i<subtrees.size();i++){
+    for(unsigned int i=0;i<subtrees.size();i++){
         if((subtrees[i]==nullptr) != (other.subtrees[i]==nullptr)){
             return false;
         }

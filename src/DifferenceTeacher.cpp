@@ -62,7 +62,7 @@ DifferenceTeacher::~DifferenceTeacher(){
 
 bool DifferenceTeacher::membership(const ParseTree& tree) const{
     int minPos = std::numeric_limits<int>::max();
-    ParseTree* exp = nullptr;
+    //ParseTree* exp = nullptr;
     for(ParseTree* ptr: positiveCache){
         if(tree==*ptr){
             return true;
@@ -75,7 +75,7 @@ bool DifferenceTeacher::membership(const ParseTree& tree) const{
     }
     for(ParseTree* ptr: positiveExamples){
         int diff = cmpFunc(*ptr, tree);
-        if(diff<minPos){minPos=diff;exp=ptr;}
+        if(diff<minPos){minPos=diff;/*exp=ptr;*/}
     }
     int minNeg = std::numeric_limits<int>::max();
     for(ParseTree* ptr: negativeExamples){

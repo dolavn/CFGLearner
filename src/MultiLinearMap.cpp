@@ -7,7 +7,7 @@ using namespace std;
 
 void printVec(const floatVec& vec){ //TODO: Delete
     cout << "[";
-    for(int k=0;k<vec.size();k++){
+    for(unsigned int k=0;k<vec.size();k++){
         cout << vec[k];
         if(k<vec.size()-1){
             cout << " , ";
@@ -94,7 +94,7 @@ bool MultiLinearMap::testLocation(const intVec& ind){
     if(dim==0){
         return false;
     }
-    if(ind.size()!=paramNum+1){
+    if(ind.size()!=(unsigned int)(paramNum+1)){
         return false;
     }
     for(int i=0;i<paramNum+1;++i){
@@ -106,11 +106,11 @@ bool MultiLinearMap::testLocation(const intVec& ind){
 }
 
 bool MultiLinearMap::testInput(const vector<floatVec>& input){
-    if(input.size()!=paramNum){
+    if(input.size()!=(unsigned int)paramNum){
         return false;
     }
     for(int i=0;i<paramNum;++i){
-        if(input[i].size()!=dim){
+        if(input[i].size()!=(unsigned int)dim){
             return false;
         }
     }
@@ -124,7 +124,7 @@ void MultiLinearMap::printDesc() const{
     intVec maxLengths(paramNum+1, dim);
     IndexArray ind(maxLengths);
     for(;!ind.getOverflow();++ind){
-        int i = ind[0];
+        //int i = ind[0];
         float toAdd = params[convertInd(ind)];
         cout << ind << " " << toAdd << endl;
     }

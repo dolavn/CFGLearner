@@ -12,13 +12,13 @@ int& scoresMap::operator[](intPair p){
     return map[p];
 }
 
-TreeComparator::TreeComparator(scoresMap scores, int indelScore):scores(std::move(scores)),indelScore(indelScore),
-innerNode(-1),replaceScore(-1){
+TreeComparator::TreeComparator(scoresMap scores, int indelScore):indelScore(indelScore),
+innerNode(-1),replaceScore(-1),scores(std::move(scores)){
 
 }
 
-TreeComparator::TreeComparator(int innerNode, int replaceScore, int indelScore):scores(),indelScore(indelScore),innerNode(innerNode),
-replaceScore(replaceScore){
+TreeComparator::TreeComparator(int innerNode, int replaceScore, int indelScore):indelScore(indelScore),innerNode(innerNode),
+replaceScore(replaceScore),scores(){
 
 }
 
@@ -28,8 +28,8 @@ int TreeComparator::alignInnerNodes(const ParseTree& t1, const ParseTree& t2,
     unsigned long lengths[] = {t1.getSubtrees().size()+1, t2.getSubtrees().size()+1};
     alignmentTable table(lengths[0], vector<int>(lengths[1]));
     table[0][0] = getScore(t1.getData(), t2.getData());
-    for(int i=0;i<lengths[0];++i){
-        for(int j=i>0?0:1;j<lengths[1];++j){
+    for(unsigned long i=0;i<lengths[0];++i){
+        for(unsigned long j=i>0?0:1;j<lengths[1];++j){
             int currMin = numeric_limits<int>::max();
             //cout << "currMin: " << currMin << endl;
             if(i>0){
@@ -54,7 +54,7 @@ int TreeComparator::alignInnerNodes(const ParseTree& t1, const ParseTree& t2,
 
 unordered_map<const ParseTree*, int> createMapping(vector<const ParseTree*> v){
     unordered_map<const ParseTree*, int> map;
-    for(int i=0;i<v.size();++i){
+    for(unsigned int i=0;i<v.size();++i){
         map[v[i]] = i;
     }
     return map;
@@ -70,8 +70,8 @@ int TreeComparator::compare(const ParseTree& t1, const ParseTree& t2){
     treeToIndMap v1PtrToIndMapping = createMapping(v1);
     treeToIndMap v2PtrToIndMapping = createMapping(v2);
     alignmentTable table(v1.size(), vector<int>(v2.size()));
-    for(int i=0;i<v1.size();++i){
-        for(int j=0;j<v2.size();++j){
+    for(unsigned int i=0;i<v1.size();++i){
+        for(unsigned int j=0;j<v2.size();++j){
             const ParseTree* subtree1 = v1[i];
             const ParseTree* subtree2 = v2[j];
             //cout << "[" << i << "," << j << "]" << endl;
@@ -87,8 +87,8 @@ int TreeComparator::compare(const ParseTree& t1, const ParseTree& t2){
             //cout << "------------" << endl;
         }
     }
-    int score = table[v1.size()-1][v2.size()-1];
-    //cout << "score:" << score << endl;
+    /*int score = table[v1.size()-1][v2.size()-1];
+    cout << "score:" << score << endl;*/
     return table[v1.size()-1][v2.size()-1];
 }
 

@@ -2,6 +2,7 @@
 #include "MultiplicityTreeAcceptor.h"
 #include "TreesIterator.h"
 #include "ParseTree.h"
+#include "utility.h"
 
 using namespace std;
 
@@ -29,11 +30,16 @@ ParseTree* FunctionalMultiplicityTeacher::equivalence(const MultiplicityTreeAcce
     it.resetIterator();
     while(it.hasNext()){
         ParseTree t = *it;
-        double diff = acc.run(t)-func(t);
+        cout << t << endl;
+        double diff = ABS(acc.run(t)-func(t));
         if(diff>epsilon){
             return new ParseTree(t);
         }
         ++it;
     }
     return nullptr;
+}
+
+string FunctionalMultiplicityTeacher::toString() const{
+    return "FunctionalMultiplicityTeacher";
 }

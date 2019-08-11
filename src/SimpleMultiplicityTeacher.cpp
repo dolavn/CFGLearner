@@ -1,11 +1,16 @@
 #include "MultiplicityTeacher.h"
 #include "MultiplicityTreeAcceptor.h"
 #include "ParseTree.h"
+#include "utility.h"
+#include <sstream>
 #include <iostream> //todo:delete
 
-#define ABS(x) (x)>=0?(x):-(x)
-
 using namespace std;
+
+ostream& operator<<(ostream& output, const MultiplicityTeacher& teacher){
+    output << teacher.toString();
+    return output;
+}
 
 SimpleMultiplicityTeacher::SimpleMultiplicityTeacher(double epsilon, double defaultVal):epsilon(epsilon),
 defaultValue(defaultVal),alphabet(), trees(){
@@ -70,7 +75,6 @@ ParseTree* SimpleMultiplicityTeacher::equivalence(const MultiplicityTreeAcceptor
     for(auto& tree: trees){
         double calculatedValue = acc.run(*tree);
         if(ABS(calculatedValue-tree->getProb())>epsilon){
-            double a = ABS(calculatedValue-tree->getProb());
             auto ans = new ParseTree(*tree);
             return ans;
         }
@@ -92,6 +96,27 @@ void SimpleMultiplicityTeacher::clear(){
         }
     }
     trees.clear();
+}
+
+string MultiplicityTeacher::toString() const{
+    return "MultiplicityTeacher";
+}
+
+void MultiplicityTeacher::printDesc() const{
+    cout << "MultiplicityTeacher" << endl;
+}
+
+string SimpleMultiplicityTeacher::toString() const{
+    stringstream stream;
+    stream << "SimpleMultiplicityTeacher eps=" << epsilon << " examplesNum:" << trees.size();
+    return stream.str();
+}
+
+void SimpleMultiplicityTeacher::printDesc() const{
+    cout << "SimpleMultiplicityTeacher eps=" << epsilon << " examplesNum:" << trees.size() << endl;
+    for(auto tree: trees){
+        cout << *tree << " - " << tree->getProb() << endl;
+    }
 }
 
 SimpleMultiplicityTeacher::~SimpleMultiplicityTeacher(){

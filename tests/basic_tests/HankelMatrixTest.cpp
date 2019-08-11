@@ -93,6 +93,8 @@ SimpleMultiplicityTeacher getMultiplicityProbTeacher(){
     return teacher;
 }
 
+FunctionalMultiplicityTeacher getFuncTeacherProb();
+
 TEST(hankel_matrix_test,basic_check){
     set<rankedChar> alphabet = getAlphabet();
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
@@ -284,4 +286,23 @@ TEST(hankel_matrix_test,learner_test2){
     MultiplicityTreeAcceptor acc = learn(teacher);
     ASSERT_EQ(acc.run(t), 0.5);
     ASSERT_EQ(acc.run(t2), 0.5);
+}
+
+TEST(hankel_matrix_test,learner_test3){
+    set<rankedChar> alphabet = getAlphabetProb();
+    SimpleMultiplicityTeacher teacher(0.05, 1);
+    ParseTree t(1); t.setProb(0.9);
+    ParseTree t2(0, {ParseTree(1), ParseTree(1)}); t2.setProb(0.9);
+    ParseTree t4(0, {ParseTree(2), ParseTree(1)}); t4.setProb(0.5);
+    teacher.addExample(t); teacher.addExample(t2); teacher.addExample(t4);
+    HankelMatrix h(teacher);
+    MultiplicityTreeAcceptor acc = learn(teacher);
+}
+
+TEST(hankel_matrix_test,learner_test4){
+    set<rankedChar> alphabet = getAlphabetProb();
+    FunctionalMultiplicityTeacher teacher = getFuncTeacherProb();
+    HankelMatrix h(teacher);
+    MultiplicityTreeAcceptor acc = learn(teacher);
+    acc.printDesc();
 }
