@@ -302,6 +302,7 @@ TEST(hankel_matrix_test,learner_test3){
 TEST(hankel_matrix_test,learner_test4){
     set<rankedChar> alphabet = getAlphabetProb();
     FunctionalMultiplicityTeacher teacher = getFuncTeacherProb();
+    //SimpleMultiplicityTeacher teacher(0.05, 1);
     HankelMatrix h(teacher);
     MultiplicityTreeAcceptor acc = learn(teacher);
     acc.printDesc();

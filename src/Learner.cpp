@@ -195,14 +195,29 @@ TreeAcceptor learn(const Teacher& teacher){
 
 MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher){
     HankelMatrix h(teacher);
+    ofstream myfile;
+    myfile.open("multLearn");
     //h.test();
     //return h.getAcceptor();
     while(true){
         h.makeConsistent();
         MultiplicityTreeAcceptor acc = h.getAcceptor();
+        myfile << "Current table:\\\\" << endl;
+        myfile << "\\begin{center}" << endl;
+        myfile << h.getTableLatex() << endl;
+        myfile << "\\end{center}" << endl;
         //acc.printDesc();
         ParseTree* counterExample = teacher.equivalence(acc);
+        if(h.getC().size()>20){
+            SAFE_DELETE(counterExample);
+            myfile << "stopping learning" << endl;
+        }
         if(counterExample==nullptr){
+            myfile << "Final table:\\\\" << endl;
+            myfile << "\\begin{center}" << endl;
+            myfile << h.getTableLatex() << endl;
+            myfile << "\\end{center}" << endl;
+            myfile.close();
             return acc;
         }else{
             //cout << "counter:" << *counterExample << endl;

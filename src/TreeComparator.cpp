@@ -1,10 +1,9 @@
 #include "TreeComparator.h"
 #include "ParseTree.h"
+#include "utility.h"
 #include <limits>
 
 #define INDEL 2
-#define MAX(A,B)    A>=B?A:B
-#define MIN(A,B)    A<=B?A:B
 
 using namespace std;
 

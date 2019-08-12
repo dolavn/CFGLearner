@@ -17,6 +17,7 @@ alphabet(teacher.getAlphabet()),base(),obs(){
 }
 
 void HankelMatrix::completeTree(ParseTree* tree){
+    obs[tree] = vector<double>();
     for(auto it=c.begin();it!=c.end();it++){
         ParseTree* context = *it;
         ParseTree* merged = context->mergeContext(*tree);
@@ -38,6 +39,12 @@ void HankelMatrix::completeContextS(ParseTree* context){
 }
 
 bool HankelMatrix::checkTableComplete(ParseTree* tree){
+    if(s.empty()){
+        return false;
+    }
+    if(c.empty()){
+        return true;
+    }
     mat sMat = getSMatrix(true);
     fillMatLastRow(sMat, tree);
     /*
@@ -94,6 +101,7 @@ vector<double> HankelMatrix::getObs(const ParseTree& tree) const{
 
 void HankelMatrix::completeContextR(ParseTree* context){
     mat sMat = getSMatrix(true);
+    mat sMat2 = getSMatrix(false);
     auto it = r.begin();
     while(it!=r.end()){
         auto tree = *it;
@@ -101,11 +109,19 @@ void HankelMatrix::completeContextR(ParseTree* context){
         obs[tree].push_back(teacher.membership(*merged));
         delete (merged);
         fillMatLastRow(sMat, tree);
+        arma::vec x = getObsVec(*tree);
+        arma::vec p;
+        cout << "{sMat r:" << sMat2.n_rows << " c:" << sMat2.n_cols << "}" << endl;
+        cout << "{x r:" << x.n_rows << " c:" << x.n_cols << "}" << endl;
+        cout << "c:" << c.size() << " s:" << s.size() << "r:" << r.size() << endl;
+        bool sol = arma::solve(p, sMat2, x, solve_opts::no_approx);
         if(arma::rank(sMat)==s.size()+1){ //The vector is now linearly independent from s.
+            if(sol){throw std::invalid_argument("why?");}
             s.push_back(tree);
             sMat = getSMatrix(true);
             r.erase(it);
         }else{
+            if(!sol){throw std::invalid_argument("why?");}
             it++;
         }
     }
@@ -113,6 +129,7 @@ void HankelMatrix::completeContextR(ParseTree* context){
 
 mat HankelMatrix::getSMatrix(bool extraSpace) const{
     mat sMat(s.size()+(extraSpace?1:0), c.size());
+    cout << s.size() << " , " << c.size() << endl;
     for(auto it=s.begin();it!=s.end();it++){
         vector<double> observation = obs.find(*it)->second;
         for(unsigned int i=0;i<c.size();++i){
@@ -164,9 +181,11 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptorTemp() const{
         acc.addTransition(maps[i], alphabetVec[i]);
     }
     vector<float> lambdaVec;
-    for(auto treeS: s){
-        vector<double> obs = getObs(*treeS);
-        lambdaVec.push_back((float)(obs[0]));
+    if(!c.empty()){
+        for(auto treeS: s){
+            vector<double> obs = getObs(*treeS);
+            lambdaVec.push_back((float)(obs[0]));
+        }
     }
     acc.setLambda(lambdaVec);
     return acc;
@@ -251,6 +270,7 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
 
 void HankelMatrix::closeTable(){
     while(true){
+        if(c.size()>10){return;}
         if(s.empty()){
             for(auto c:alphabet){
                 if(c.rank==0){
@@ -275,6 +295,47 @@ void HankelMatrix::closeTable(){
         }
     }
 }
+
+string HankelMatrix::getTableLatex(){
+    stringstream stream;
+    static int MAX_CONTEXTS_SHOW = 10;
+    stream << "\\begin{tabular}{ l |";
+    for(unsigned int i=0;i<c.size();++i){
+        stream << " l |";
+    }
+    stream << " }" << endl;
+    for(unsigned int i=0;i<MIN(c.size(),MAX_CONTEXTS_SHOW);++i){
+        //stream << "& $c_{" << i << "}$";
+        stream <<  "& " << c[i]->getLatexTree();
+    }
+    stream << "\\\\ \\hline" << endl;
+    for(unsigned int i=0;i<s.size();i++){
+        auto tree = s[i];
+        vector<double> obs = getObs(*tree);
+        //stream << "$s_{" << i << "}$";
+        cout << "obs:" << obs.size() << endl;
+        cout << "c:" << c.size() << endl;
+        stream << "\\color{blue}" << s[i]->getLatexTree();
+        for(unsigned int i=0;i<MIN(c.size(), MAX_CONTEXTS_SHOW);++i){
+            stream << "&" << obs[i];
+        }
+        stream << "\\\\ \\hline" << endl;
+    }
+    for(unsigned int i=0;i<r.size();i++){
+        auto tree = r[i];
+        vector<double> obs = getObs(*tree);
+        //stream << "$r_{" << i << "}$";
+        stream << r[i]->getLatexTree();
+        for(unsigned int i=0;i<MIN(c.size(), MAX_CONTEXTS_SHOW);++i){
+            stream << "&" << obs[i];
+        }
+        stream << "\\\\ \\hline" << endl;
+    }
+    stream << "\\end{tabular}" << endl;
+    return stream.str();
+}
+
+
 
 bool HankelMatrix::checkClosed() const{
     auto it = getSuffixIterator();
@@ -305,7 +366,7 @@ void HankelMatrix::makeConsistent(){
                 ParseTree* merged = context->mergeContext(*tree);
                 if(acc.run(*merged)!=vec[it-c.begin()]){
                     for(auto& suffix: merged->getAllContexts()){
-                        if(!hasContext(*suffix)){
+                        if(!hasContext(*suffix) && c.size() < 20){
                             newContexts.push_back(suffix);
                         }else{
                             delete(suffix); suffix=nullptr;
@@ -343,6 +404,7 @@ vector<double> HankelMatrix::test(){
 }
 
 arma::mat HankelMatrix::getSInv() const{
+    if(c.size()==0 || s.size()==0){return arma::mat(0, 0);}
     mat sMat = getSMatrix(false);
     return sMat;
     for(auto con: c){

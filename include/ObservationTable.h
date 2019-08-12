@@ -91,7 +91,7 @@ public:
     void makeConsistent();
     virtual bool hasContext(const ParseTree&) const;
     bool checkClosed() const;
-
+    std::string getTableLatex();
     void printTable() const;
 
     TreesIterator getSuffixIterator() const;
