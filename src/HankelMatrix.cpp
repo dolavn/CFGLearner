@@ -111,17 +111,23 @@ void HankelMatrix::completeContextR(ParseTree* context){
         fillMatLastRow(sMat, tree);
         arma::vec x = getObsVec(*tree);
         arma::vec p;
-        cout << "{sMat r:" << sMat2.n_rows << " c:" << sMat2.n_cols << "}" << endl;
-        cout << "{x r:" << x.n_rows << " c:" << x.n_cols << "}" << endl;
-        cout << "c:" << c.size() << " s:" << s.size() << "r:" << r.size() << endl;
-        bool sol = arma::solve(p, sMat2, x, solve_opts::no_approx);
         if(arma::rank(sMat)==s.size()+1){ //The vector is now linearly independent from s.
-            if(sol){throw std::invalid_argument("why?");}
             s.push_back(tree);
             sMat = getSMatrix(true);
             r.erase(it);
         }else{
-            if(!sol){throw std::invalid_argument("why?");}
+            /*
+            cout << "rank:" << arma::rank(sMat) << endl;
+            cout << sMat << endl;
+            cout << "s size:" << s.size() << endl;
+            arma::mat mat2(4, 6);
+            mat2(0, 0) = 0.9; mat2(0, 1)=0.5; mat2(0, 2)=0.9; mat2(0, 3)=0.9; mat2(0, 4)=0.5; mat2(0, 5)=0.9;
+            mat2(1, 0) = 0.1; mat2(1, 1)=0.1; mat2(1, 2)=0.5; mat2(1, 3)=0.5; mat2(1, 4)=0.1; mat2(1, 5)=0.5;
+            mat2(2, 0) = 0.5; mat2(2, 1)=0.5; mat2(2, 2)=0.5; mat2(2, 3)=0.9; mat2(2, 4)=0.1; mat2(2, 5)=0.9;
+            mat2(3, 0) = 0.5; mat2(3, 1)=0.1; mat2(3, 2)=0.9; mat2(3, 3)=0.5; mat2(3, 4)=0.5; mat2(3, 5)=0.5;
+            cout << mat2 << endl;
+            cout << "mat2 rank:" << arma::rank(mat2) << endl;
+            */
             it++;
         }
     }
@@ -129,7 +135,7 @@ void HankelMatrix::completeContextR(ParseTree* context){
 
 mat HankelMatrix::getSMatrix(bool extraSpace) const{
     mat sMat(s.size()+(extraSpace?1:0), c.size());
-    cout << s.size() << " , " << c.size() << endl;
+    //cout << s.size() << " , " << c.size() << endl;
     for(auto it=s.begin();it!=s.end();it++){
         vector<double> observation = obs.find(*it)->second;
         for(unsigned int i=0;i<c.size();++i){
@@ -239,6 +245,7 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
     }
     arma::vec v = getObsVec(t);
     arma::mat sT = s.t();
+    //cout << v << endl;
     //arma::rowvec params = v*sInv;
     /*
     cout << "<------------->" << endl;
@@ -253,12 +260,12 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
     for(unsigned int i=0;i<sT.n_cols;++i){
         if(params(i)<EPSILON && params(i)>-EPSILON){params(i)=0;}
     }
-    /*
+/*
     cout << params << endl;
     cout << t << endl;
 
     cout << "<------------->" << endl;
-     */
+*/
     vector<int> mapParams;
     mapParams.push_back(-1);
     mapParams.insert(mapParams.end(), sIndices.begin(), sIndices.end());
@@ -270,14 +277,20 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
 
 void HankelMatrix::closeTable(){
     while(true){
-        if(c.size()>10){return;}
+        if(c.size()>10){return;} //todo: delete
         if(s.empty()){
             for(auto c:alphabet){
                 if(c.rank==0){
                     addTree(ParseTree(c.c));
                 }
             }
-            return;
+        }
+        if(c.empty()){ /*Adds an empty context */
+            ParseTree t(1);
+            pair<ParseTree*,ParseTree*> contextTreePair = t.makeContext({});
+            SAFE_DELETE(contextTreePair.second);
+            addContext(*contextTreePair.first);
+            SAFE_DELETE(contextTreePair.first);
         }
         auto it = getSuffixIterator();
         bool closed=true;
@@ -313,8 +326,8 @@ string HankelMatrix::getTableLatex(){
         auto tree = s[i];
         vector<double> obs = getObs(*tree);
         //stream << "$s_{" << i << "}$";
-        cout << "obs:" << obs.size() << endl;
-        cout << "c:" << c.size() << endl;
+        //cout << "obs:" << obs.size() << endl;
+        //cout << "c:" << c.size() << endl;
         stream << "\\color{blue}" << s[i]->getLatexTree();
         for(unsigned int i=0;i<MIN(c.size(), MAX_CONTEXTS_SHOW);++i){
             stream << "&" << obs[i];
