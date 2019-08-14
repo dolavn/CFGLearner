@@ -39,12 +39,14 @@ void HankelMatrix::completeContextS(ParseTree* context){
 }
 
 bool HankelMatrix::checkTableComplete(ParseTree* tree){
+    /*
     if(s.empty()){
         return false;
     }
     if(c.empty()){
         return true;
     }
+     */
     mat sMat = getSMatrix(true);
     fillMatLastRow(sMat, tree);
     /*
@@ -101,7 +103,7 @@ vector<double> HankelMatrix::getObs(const ParseTree& tree) const{
 
 void HankelMatrix::completeContextR(ParseTree* context){
     mat sMat = getSMatrix(true);
-    mat sMat2 = getSMatrix(false);
+    //mat sMat2 = getSMatrix(false);
     auto it = r.begin();
     while(it!=r.end()){
         auto tree = *it;
@@ -109,8 +111,8 @@ void HankelMatrix::completeContextR(ParseTree* context){
         obs[tree].push_back(teacher.membership(*merged));
         delete (merged);
         fillMatLastRow(sMat, tree);
-        arma::vec x = getObsVec(*tree);
-        arma::vec p;
+        //arma::vec x = getObsVec(*tree);
+        //arma::vec p;
         if(arma::rank(sMat)==s.size()+1){ //The vector is now linearly independent from s.
             s.push_back(tree);
             sMat = getSMatrix(true);
@@ -277,7 +279,7 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
 
 void HankelMatrix::closeTable(){
     while(true){
-        if(c.size()>10){return;} //todo: delete
+        //if(c.size()>10){return;} //todo: delete
         if(s.empty()){
             for(auto c:alphabet){
                 if(c.rank==0){
