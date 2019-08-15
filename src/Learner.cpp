@@ -197,8 +197,6 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher){
     HankelMatrix h(teacher);
     ofstream myfile;
     myfile.open("multLearn");
-    //h.test();
-    //return h.getAcceptor();
     while(true){
         h.makeConsistent();
         MultiplicityTreeAcceptor acc = h.getAcceptor();

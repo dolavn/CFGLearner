@@ -290,20 +290,50 @@ TEST(hankel_matrix_test,learner_test2){
 
 TEST(hankel_matrix_test,learner_test3){
     set<rankedChar> alphabet = getAlphabetProb();
-    SimpleMultiplicityTeacher teacher(0.05, 1);
-    ParseTree t(1); t.setProb(0.9);
-    ParseTree t2(0, {ParseTree(1), ParseTree(1)}); t2.setProb(0.9);
-    ParseTree t4(0, {ParseTree(2), ParseTree(1)}); t4.setProb(0.5);
-    teacher.addExample(t); teacher.addExample(t2); teacher.addExample(t4);
+    SimpleMultiplicityTeacher teacher(0.005, 0);
+    ParseTree t(1); t.setProb(0);
+    ParseTree t2(2); t2.setProb(0);
+    ParseTree t3(0, {ParseTree(1), ParseTree(1)}); t3.setProb(0.15);
+    ParseTree t4(0, {ParseTree(2), ParseTree(2)}); t4.setProb(0.15);
+    ParseTree t5(0, {ParseTree(1), ParseTree(2)}); t5.setProb(0.3);
+    ParseTree t6(0, {ParseTree(2), ParseTree(1)}); t6.setProb(0.3);
+    ParseTree t7(0, {ParseTree(1), t5}); t7.setProb(0.025);
+    ParseTree t8(0, {ParseTree(1), t7}); t8.setProb(0.05);
+    ParseTree t9(0, {ParseTree(1), t8}); t8.setProb(0.025);
+    teacher.addExample(t); teacher.addExample(t2); teacher.addExample(t3);
+    teacher.addExample(t4); teacher.addExample(t5); teacher.addExample(t6);
+    teacher.addExample(t7); teacher.addExample(t8); teacher.addExample(t9);
     HankelMatrix h(teacher);
     MultiplicityTreeAcceptor acc = learn(teacher);
+    acc.printDesc();
+    ASSERT_FLOAT_EQ(acc.run(t), 0);
+    ASSERT_FLOAT_EQ(acc.run(t2), 0);
+    ASSERT_FLOAT_EQ(acc.run(t3), 0.15);
+    ASSERT_FLOAT_EQ(acc.run(t4), 0.15);
+    ASSERT_FLOAT_EQ(acc.run(t5), 0.3);
+    ASSERT_FLOAT_EQ(acc.run(t6), 0.3);
+    ASSERT_FLOAT_EQ(acc.run(t7), 0.025);
+    ASSERT_FLOAT_EQ(acc.run(t8), 0.05);
 }
 
 TEST(hankel_matrix_test,learner_test4){
     set<rankedChar> alphabet = getAlphabetProb();
     FunctionalMultiplicityTeacher teacher = getFuncTeacherProb();
-    //SimpleMultiplicityTeacher teacher(0.05, 1);
     HankelMatrix h(teacher);
     MultiplicityTreeAcceptor acc = learn(teacher);
-    acc.printDesc();
+    ParseTree t1(1); ParseTree t2(2);
+    ParseTree t3(0, {t1, t2});
+    ParseTree t4(0, {t3, ParseTree(1)});
+    ParseTree t5(0, {t1, t4});
+    ParseTree t6(0, {t2, t5});
+    ParseTree t7(0, {t6, t6});
+    ParseTree t8(0, {ParseTree(2), t7});
+    ASSERT_FLOAT_EQ(acc.run(t1), 0.9);
+    ASSERT_FLOAT_EQ(acc.run(t2), 0.1);
+    ASSERT_FLOAT_EQ(acc.run(t3), 0.5);
+    ASSERT_FLOAT_EQ(acc.run(t4), 0.9);
+    ASSERT_FLOAT_EQ(acc.run(t5), 0.9);
+    ASSERT_FLOAT_EQ(acc.run(t6), 0.5);
+    ASSERT_FLOAT_EQ(acc.run(t7), 0.5);
+    ASSERT_FLOAT_EQ(acc.run(t8), 0.5);
 }

@@ -30,7 +30,6 @@ ParseTree* FunctionalMultiplicityTeacher::equivalence(const MultiplicityTreeAcce
     it.resetIterator();
     while(it.hasNext()){
         ParseTree t = *it;
-        cout << t << endl;
         double diff = ABS(acc.run(t)-func(t));
         if(diff>epsilon){
             return new ParseTree(t);

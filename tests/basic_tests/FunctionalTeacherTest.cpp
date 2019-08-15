@@ -36,10 +36,7 @@ FunctionalMultiplicityTeacher getFuncTeacher(){
 
 FunctionalMultiplicityTeacher getFuncTeacherProb(){
     ParseTree t1(1); ParseTree t2(2);
-    TreesIterator it({&t1, &t2}, getAlphabetProb(), 1);
-    for(;it.hasNext();++it){
-        cout << *it << endl;
-    }
+    TreesIterator it({&t1, &t2}, getAlphabetProb(), 2);
     FunctionalMultiplicityTeacher teacher(0.05, 0, [](const ParseTree& tree){
         unsigned long maxLenL=0; int leftChar=tree.getData();
         unsigned long maxLenR=0; int rightChar=tree.getData();
@@ -55,7 +52,6 @@ FunctionalMultiplicityTeacher getFuncTeacherProb(){
             if(right && ind.size()>maxLenR){rightChar=tree.getNode(*indexIt).getData();maxLenR=ind.size();}
             ++indexIt;
         }
-        //if(rightChar==1){return 0.9;}else{return 0.2;}
         if(leftChar==1 && rightChar==1){return 0.9;}
         if(leftChar==1 && rightChar==2){return 0.5;}
         if(leftChar==2 && rightChar==1){return 0.5;}
