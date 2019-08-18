@@ -53,6 +53,12 @@ void MultiLinearMap::setParam(float param, const intVec& location){
 
 float MultiLinearMap::getParam(const intVec& location){
     if(!testLocation(location)){
+        cout << "get [";
+        for(int i=0;i<location.size();++i){
+            cout << location[i];
+            if(i<location.size()-1){cout << ", ";}
+        }
+        cout << "]" << endl;
         throw std::invalid_argument("Parameters index out of bounds");
     }
     return params[convertInd(location)];

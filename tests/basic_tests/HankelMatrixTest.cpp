@@ -10,8 +10,8 @@
 extern rankedChar a;
 extern rankedChar b;
 extern rankedChar l;
-extern rankedChar a1;
-extern rankedChar b1;
+extern rankedChar l1;
+extern rankedChar l2;
 extern rankedChar inner;
 
 using namespace std;
@@ -291,29 +291,23 @@ TEST(hankel_matrix_test,learner_test2){
 TEST(hankel_matrix_test,learner_test3){
     set<rankedChar> alphabet = getAlphabetProb();
     SimpleMultiplicityTeacher teacher(0.005, 0);
-    ParseTree t(1); t.setProb(0);
+    ParseTree t(1); t.setProb(0.05);
     ParseTree t2(2); t2.setProb(0);
-    ParseTree t3(0, {ParseTree(1), ParseTree(1)}); t3.setProb(0.15);
+    ParseTree t3(0, {ParseTree(1), ParseTree(1)}); t3.setProb(0.1);
     ParseTree t4(0, {ParseTree(2), ParseTree(2)}); t4.setProb(0.15);
-    ParseTree t5(0, {ParseTree(1), ParseTree(2)}); t5.setProb(0.3);
-    ParseTree t6(0, {ParseTree(2), ParseTree(1)}); t6.setProb(0.3);
-    ParseTree t7(0, {ParseTree(1), t5}); t7.setProb(0.025);
-    ParseTree t8(0, {ParseTree(1), t7}); t8.setProb(0.05);
-    ParseTree t9(0, {ParseTree(1), t8}); t8.setProb(0.025);
+    ParseTree t5(0, {ParseTree(1), ParseTree(2)}); t5.setProb(0.35);
+    ParseTree t6(0, {ParseTree(2), ParseTree(1)}); t6.setProb(0.35);
     teacher.addExample(t); teacher.addExample(t2); teacher.addExample(t3);
     teacher.addExample(t4); teacher.addExample(t5); teacher.addExample(t6);
-    teacher.addExample(t7); teacher.addExample(t8); teacher.addExample(t9);
     HankelMatrix h(teacher);
     MultiplicityTreeAcceptor acc = learn(teacher);
     acc.printDesc();
-    ASSERT_FLOAT_EQ(acc.run(t), 0);
+    ASSERT_FLOAT_EQ(acc.run(t), 0.05);
     ASSERT_FLOAT_EQ(acc.run(t2), 0);
-    ASSERT_FLOAT_EQ(acc.run(t3), 0.15);
+    ASSERT_FLOAT_EQ(acc.run(t3), 0.1);
     ASSERT_FLOAT_EQ(acc.run(t4), 0.15);
-    ASSERT_FLOAT_EQ(acc.run(t5), 0.3);
-    ASSERT_FLOAT_EQ(acc.run(t6), 0.3);
-    ASSERT_FLOAT_EQ(acc.run(t7), 0.025);
-    ASSERT_FLOAT_EQ(acc.run(t8), 0.05);
+    ASSERT_FLOAT_EQ(acc.run(t5), 0.35);
+    ASSERT_FLOAT_EQ(acc.run(t6), 0.35);
 }
 
 TEST(hankel_matrix_test,learner_test4){

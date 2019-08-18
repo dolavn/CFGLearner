@@ -168,7 +168,7 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptorTemp() const{
         maps.emplace_back(MultiLinearMap((int)(s.size()), c.rank));
     }
     arma::mat sInv = getSInv();
-    MultiplicityTreeAcceptor acc(alphabet, base.size());
+    MultiplicityTreeAcceptor acc(alphabet, s.size());
     for(auto currTree: s){
         rankedChar c = {currTree->getData(), (int)(currTree->getSubtrees().size())};
         unsigned int charInd = (unsigned int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());

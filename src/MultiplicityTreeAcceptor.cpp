@@ -1,4 +1,6 @@
 #include "MultiplicityTreeAcceptor.h"
+#include "IndexArray.h"
+#include <math.h>
 
 using namespace std;
 
@@ -80,6 +82,71 @@ float MultiplicityTreeAcceptor::run(const ParseTree& tree) const{
         ans = ans + root[i]*lambda[i];
     }
     return ans;
+}
+
+bool MultiplicityTreeAcceptor::checkIsPositive() const{
+    for(auto elem: lambda){
+        if(elem<0){return false;}
+    }
+    for(auto c: alphabet){
+        MultiLinearMap m = transitions.find(c)->second;
+        intVec maxLengths(c.rank+1, dim);
+        for(IndexArray ind(maxLengths);!ind.getOverflow();++ind){
+            if(m.getParam(ind.getIntVector())<0){return false;}
+        }
+    }
+    return true;
+}
+
+vector<float> MultiplicityTreeAcceptor::getParamSums(bool softmax) const{
+    vector<float> sums;
+    sums.push_back(0);
+    for(auto elem: lambda){
+        sums[0] = sums[0] + (softmax?exp(elem):elem);
+    }
+    for(int state=0;state<dim;++state){
+        float sum=0;
+        for(auto c: alphabet){
+            MultiLinearMap m = transitions.find(c)->second;
+            intVec maxLengths(c.rank, dim);
+            intVec currVec(c.rank+1); currVec[0]=state;
+            for(IndexArray ind(maxLengths);!ind.getOverflow();++ind){
+                for(int i=0;i<c.rank;++i){
+                    currVec[i+1]=ind.get(i);
+                }
+                sum = sum + (softmax?exp(m.getParam(currVec)):m.getParam(currVec));
+            }
+        }
+        sums.push_back(sum);
+    }
+    return sums;
+}
+
+MultiplicityTreeAcceptor MultiplicityTreeAcceptor::getNormalizedAcceptor(bool softmax) const{
+    MultiplicityTreeAcceptor ans(*this);
+    if(!softmax && !checkIsPositive()){
+        throw std::invalid_argument("Tree acceptor must be positive to normalize, unless using softmax");
+    }
+    vector<float> sums = getParamSums(softmax);
+    for(auto& elem: ans.lambda){elem=(softmax?exp(elem):elem)/sums[0];}
+    for(auto c: alphabet){
+        MultiLinearMap& m = ans.transitions[c];
+        intVec maxLengths(c.rank+1, dim);
+        for(IndexArray ind(maxLengths);!ind.getOverflow();++ind){
+            intVec currInd = ind.getIntVector();
+            float elem = m.getParam(currInd);
+            m.setParam((softmax?exp(elem):elem)/sums[currInd[0]+1],currInd);
+        }
+    }
+    return ans;
+}
+
+MultiLinearMap MultiplicityTreeAcceptor::getMap(rankedChar c) const{
+    auto it = transitions.find(c);
+    if(it==transitions.end()){
+        throw invalid_argument("No transition for given character");
+    }
+    return it->second;
 }
 
 

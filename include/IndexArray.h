@@ -28,6 +28,7 @@ public:
     ~IndexArray();
 
     int getMax(int dim) const;
+    std::vector<int> getIntVector() const{return arr;}
     /*Operators overloading*/
     IndexArray& operator++(); //prefix ++
     const IndexArray operator++(int); //postfix ++

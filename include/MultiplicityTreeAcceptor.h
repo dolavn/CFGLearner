@@ -15,8 +15,12 @@ public:
 
     void addTransition(const MultiLinearMap&, const rankedChar&);
     void setLambda(const floatVec&);
-
+    floatVec getLambda() const{return lambda;}
+    MultiLinearMap getMap(rankedChar) const;
     void printDesc() const;
+
+    bool checkIsPositive() const;
+    MultiplicityTreeAcceptor getNormalizedAcceptor(bool) const;
 
     float run(const ParseTree&) const;
 private:
@@ -32,6 +36,7 @@ private:
             return boost::hash_range(c.begin(), c.end());
         }
     };
+    std::vector<float> getParamSums(bool) const;
     bool testMap(const MultiLinearMap&, const rankedChar&);
     std::set<rankedChar> alphabet;
     int dim;

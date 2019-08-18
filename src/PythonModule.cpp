@@ -246,6 +246,12 @@ PYBIND11_MODULE(CFGLearner, m) {
         delete(tree);
         return ans;
     });
+    multiplicityTreeAcceptor.def("get_normalized_acceptor",[](MultiplicityTreeAcceptor& acc){
+        return acc.getNormalizedAcceptor(false);
+    });
+    multiplicityTreeAcceptor.def("get_normalized_acceptor_softmax",[](MultiplicityTreeAcceptor& acc){
+        return acc.getNormalizedAcceptor(true);
+    });
     m.def("learn",[](const Teacher& t, std::unordered_map<int,string> map) {
         py::gil_scoped_release release;
         TreeAcceptor acc = learn(t);

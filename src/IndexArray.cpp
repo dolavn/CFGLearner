@@ -37,7 +37,7 @@ int IndexArray::getMax(int dim) const{
 
 IndexArray& IndexArray::operator++() {
     int i = dimensions - 1;
-    while (i >= 0 && arr[i] == maxArr[i] - 1) {
+    while (i >= 0 && arr[i] >= maxArr[i] - 1) {
         arr[i--] = 0;
     }
     if (i >= 0) {
