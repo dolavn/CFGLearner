@@ -246,6 +246,9 @@ PYBIND11_MODULE(CFGLearner, m) {
         delete(tree);
         return ans;
     });
+    multiplicityTreeAcceptor.def("print_desc",[](MultiplicityTreeAcceptor& acc){
+        return acc.printDesc();
+    });
     multiplicityTreeAcceptor.def("get_normalized_acceptor",[](MultiplicityTreeAcceptor& acc){
         return acc.getNormalizedAcceptor(false);
     });

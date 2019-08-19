@@ -157,6 +157,7 @@ bool MultiplicityTreeAcceptor::testMap(const MultiLinearMap& map, const rankedCh
 void MultiplicityTreeAcceptor::printDesc() const {
     cout << "acceptor" << endl;
     for(auto tPair: transitions){
+        cout << tPair.first.c << " , " << tPair.first.rank << endl;
         tPair.second.printDesc();
     }
     cout << "lambda [";
