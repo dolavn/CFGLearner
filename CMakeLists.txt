@@ -2,14 +2,17 @@ cmake_minimum_required(VERSION 3.12)
 project(CFGLearner)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_CXX_STANDARD 14)
-
 find_package(Armadillo REQUIRED)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
+include_directories(soplex-4.0.2/src)
 link_libraries(${ARMADILLO_LIBRARIES})
 find_package(PythonLibs REQUIRED)
 include_directories(include venv/include/site/python3.6/ /users/studs/bsc/2016/dolavn/CFGLearner/venv/include/site/python3.6 ${PYTHON_INCLUDE_DIRS})
 link_libraries(${PYTHON_LIBRARIES})
 add_subdirectory(tests)
+add_subdirectory(soplex-4.0.2)
+link_libraries(libsoplex)
+add_subdirectory(pybind11)
 
 SET (SRCS src/ParseTree.cpp
           src/TreeConstructor.cpp
@@ -35,5 +38,7 @@ SET (SRCS src/ParseTree.cpp
 
 add_library(mainProg
         ${SRCS})
-add_executable(CFGLearner
+link_libraries(mainProg)
+add_executable(CFGLearnerExec
         ${SRCS})
+pybind11_add_module(CFGLearner src/PythonModule.cpp)
