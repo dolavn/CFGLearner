@@ -33,6 +33,7 @@ SET (SRCS src/ParseTree.cpp
           src/HankelMatrix.cpp
           src/TreesIterator.cpp
           src/FunctionalMultiplicityTeacher.cpp
+          src/ConicCombinationFinder.cpp
         )
 
 

@@ -3,6 +3,7 @@
 #include "MultiplicityTeacher.h"
 #include "MultiplicityTreeAcceptor.h"
 #include "utility.h"
+#include "soplex.h"
 #include <armadillo>
 #include <algorithm>
 
@@ -103,6 +104,7 @@ vector<double> HankelMatrix::getObs(const ParseTree& tree) const{
 
 void HankelMatrix::completeContextR(ParseTree* context){
     mat sMat = getSMatrix(true);
+    soplex::SoPlex mysoplex;
     //mat sMat2 = getSMatrix(false);
     auto it = r.begin();
     while(it!=r.end()){

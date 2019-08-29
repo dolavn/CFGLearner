@@ -1,7 +1,8 @@
-from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, test_np
+from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, test_arma,\
+    SimpleMultiplicityTeacher, learnMult
 from nltk import Tree, CFG
 from itertools import product
-from TreeGenerator import generate_trees
+from TreeGenerator import generate_trees, generate_distribution
 # from nltk.parse import generate
 import matplotlib.pyplot as plt
 import json
@@ -12,9 +13,133 @@ from nltk.draw.util import CanvasFrame
 from nltk.draw import TreeWidget
 from nltk.parse.generate import generate
 import tkinter
-import sys
-print(sys.path)
+
+
+def calc_prob_non_uniform(seq, alphabet, index=0, letter=0, letter_prob=0.9,
+                          total_prob=1.0):
+    size = len(seq)
+    alphabet_size = len(alphabet)
+    curr_prob = total_prob/(alphabet_size**(size-1))
+    if seq[index] == letter:
+        curr_prob = curr_prob*letter_prob
+    else:
+        curr_prob = curr_prob*(1-letter_prob)
+    return curr_prob
+
+
+def foo(A):
+    if len(A) == 0:
+        return 0
+
+    if len(A) == 1:
+        return 1
+
+    curr_max = 1
+
+    if len(A) == 2:
+        curr_max = 1 if A[0] == A[1] else 2
+        return curr_max
+    curr = curr_max
+    last = A[:2]
+    for i in range(2, len(A)):
+        if (A[i] > last[1] and last[1] < last[0]) or (A[i] < last[1] and last[1] > last[0]):
+            curr = curr + 1
+        if A[i] > last[1] > last[0] or A[i] < last[1] < last[0]:
+            curr = 2
+        if A[i] == last[1]:
+            curr = 1
+        last[0] = last[1]
+        last[1] = A[i]
+        curr_max = max(curr, curr_max)
+    return curr_max
+
+
+def calc_kl(a1, a2, tree_list):
+    ans = 0
+    sum_probs = [0, 0]
+    for tree in tree_list:
+        for ind, auto in zip([0, 1], [a1, a2]):
+            sum_probs[ind] = sum_probs[ind] + auto.run(tree)
+        ans = ans + a1.run(tree)*np.log((a1.run(tree))/(a2.run(tree)))
+    return ans
+
+"""
+Grammar:
+S->1N1 0.6 | 1N2 0.4
+N1->11 0.8 | 22 0.2
+N2->12 0.8 | 21 0.2
+"""
+tree_list_cfg1 = [(Tree(0, [Tree(1, []), Tree(0, [Tree(1, []), Tree(1, [])])]), 0.48),
+                  (Tree(0, [Tree(1, []), Tree(0, [Tree(1, []), Tree(2, [])])]), 0.32),
+                  (Tree(0, [Tree(1, []), Tree(0, [Tree(2, []), Tree(1, [])])]), 0.12),
+                  (Tree(0, [Tree(1, []), Tree(0, [Tree(2, []), Tree(2, [])])]), 0.08)]
+
+
+iterator = generate_distribution([1, 2], max_len=4,
+                                 calc_prob=lambda a: calc_prob_non_uniform(a, [1, 2],
+                                                                           letter=1,
+                                                                           letter_prob=0.2,
+                                                                           total_prob=total_prob))
+
+iterator = tree_list_cfg1
+
+lin = np.linspace(0.05, 1.0, 100)
+lin = [1]
+kls = []
+kls2 = []
+for total_prob in lin:
+    trees = []
+    def_val = (1-total_prob)/100
+    teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=def_val)
+    teacher2 = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
+    for tree, prob in iterator:
+        teacher.addExample(tree, prob)
+        teacher2.addExample(tree, prob)
+        trees.append(tree)
+    print('learning')
+    acc = learnMult(teacher)
+    acc2 = learnMult(teacher2)
+    acc.print_desc()
+    norm = acc.get_normalized_acceptor_softmax()
+    norm.print_desc()
+    norm2 = acc2.get_normalized_acceptor_softmax()
+    for tree in trees[:10]:
+        print(tree)
+        print("acc:{}, normalized:{}".format(acc.run(tree), norm.run(tree)))
+    kls.append(calc_kl(norm, acc, trees))
+    kls2.append(calc_kl(norm2, acc2, trees))
+plt.plot(lin, kls)
+# plt.plot(lin, kls2)
+plt.show()
 exit()
+
+teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
+t = Tree(1, [])
+t2 = Tree(0, [Tree(1, []), Tree(1, [])])
+t3 = Tree(0, [Tree(1, []), Tree(2, [])])
+t4 = Tree(0, [Tree(2, []), Tree(1, [])])
+t5 = Tree(0, [Tree(2, []), Tree(2, [])])
+t6 = Tree(0, [t, t2])
+t7 = Tree(0, [t6, t2])
+t8 = Tree(0, [t2, t7])
+teacher.addExample(t, 0.05)
+teacher.addExample(t2, 0.1)
+teacher.addExample(t3, 0.1)
+teacher.addExample(t4, 0.1)
+teacher.addExample(t5, 0.1)
+teacher.addExample(t6, 0.5)
+teacher.addExample(t7, 0.025)
+teacher.addExample(t8, 0.025)
+print('learning')
+acc = learnMult(teacher)
+print(acc.run(t))
+print(acc.run(t8))
+print(acc.run(Tree(0, [t, t2])))
+print(acc.run(Tree(0, [t2, t])))
+norm = acc.get_normalized_acceptor()
+print(calc_kl(acc, norm, [t, t2, t3, t4, t5, t6, t7, t8]))
+exit()
+
 def update_weights(tree):
     for t in tree.treepositions():
         tree[t].set_label(int(tree[t].label())+1)
