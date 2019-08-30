@@ -38,8 +38,6 @@ void ConicCombinationFinder::solve(int col) {
         for (int i = 0; i < mat.n_cols - 1; ++i) {
             sol(i) = prim[i];
         }
-        //cout << prim << endl;
-        //std::cout << "Objective value is " << mysoplex.objValueReal() << ".\n";
     }
 }
 

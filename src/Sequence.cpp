@@ -1,12 +1,13 @@
 #include "Sequence.h"
 #include <iostream>
 #include <vector>
+#include <armadillo>
 #include "Learner.h"
 #include "Teacher.h"
 #include "ParseTree.h"
 #include "TreeAcceptor.h"
 #include "CFG.h"
-
+#include "ConicCombinationFinder.h"
 
 using namespace std;
 
@@ -55,7 +56,30 @@ vector<int> Sequence::subseq(int begin, int end) const{
     return vector<int>(seq.begin()+begin, seq.begin()+end);
 }
 
+using namespace arma;
+
+int testCone(){
+    static int dim = 5;
+    static int vec_num = 1000;
+    mat m(dim, vec_num,fill::randu);
+    ConicCombinationFinder c(m);
+    int solvedCount = 0;
+    for(int i=0;i<vec_num;++i){
+        c.solve(i);
+        if(c.getStatus()==ConicCombinationFinder::SOLVED){
+            solvedCount++;
+        }
+        cout << i << endl;
+    }
+    cout << "dim:" << dim << endl;
+    cout << "vec num:" << vec_num << endl;
+    cout << "solved:" << solvedCount << endl;
+    return 0;
+}
+
+
 int main(int argc, char** argv){
+    return testCone();
     Teacher* t = getTeacher2();
     TreeAcceptor acc = learn(*t);
     acc.printDescription();

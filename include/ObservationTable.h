@@ -95,15 +95,16 @@ public:
     void printTable() const;
 
     TreesIterator getSuffixIterator() const;
-private:
+protected:
     const MultiplicityTeacher& teacher;
+    arma::mat getSMatrix(bool) const;
+    void fillMatLastRow(arma::mat&, ParseTree*);
+    std::unordered_map<ParseTree*,std::vector<double>> obs;
+private:
     std::set<rankedChar> alphabet;
     std::vector<arma::Row<double>> base;
-    std::unordered_map<ParseTree*,std::vector<double>> obs;
-    arma::mat getSMatrix(bool) const;
     arma::vec getObsVec(const ParseTree&) const;
     arma::mat getSInv() const;
-    void fillMatLastRow(arma::mat&, ParseTree*);
     MultiplicityTreeAcceptor getAcceptorTemp() const;
     void completeTree(ParseTree*);
     void updateTransition(MultiLinearMap&, const ParseTree&, const std::vector<rankedChar>&, const arma::mat&) const;
@@ -112,4 +113,20 @@ private:
     bool checkTableComplete(ParseTree*);
     std::vector<rankedChar> getAlphabetVec() const;
 };
+
+class PositiveHankelMatrix: public HankelMatrix{
+public:
+    explicit PositiveHankelMatrix(const MultiplicityTeacher&);
+    PositiveHankelMatrix(const PositiveHankelMatrix&)=delete;
+    PositiveHankelMatrix& operator=(const PositiveHankelMatrix&)=delete;
+    PositiveHankelMatrix(PositiveHankelMatrix&&)=delete;
+    PositiveHankelMatrix& operator=(PositiveHankelMatrix&&)=delete;
+
+private:
+    void completeTree(ParseTree*);
+    void completeContextS(ParseTree*);
+    void completeContextR(ParseTree*);
+    bool checkTableComplete(ParseTree*);
+};
+
 #endif //CFGLEARNER_OBSERVATIONTABLE_H

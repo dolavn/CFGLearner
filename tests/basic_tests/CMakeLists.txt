@@ -20,7 +20,8 @@ add_executable(runBasicTests
                 MultiplicityTeacherTest.cpp
                 HankelMatrixTest.cpp
                 TreesIteratorTest.cpp
-                ConicCombinationFinderTest.cpp)
+                ConicCombinationFinderTest.cpp
+                PositiveHankelMatrixTest.cpp)
 
 
 include_directories(include venv/include/site/python3.6/ /users/studs/bsc/2016/dolavn/CFGLearner/venv/include/site/python3.6 ${PYTHON_INCLUDE_DIRS})
