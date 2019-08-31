@@ -22,6 +22,7 @@ void PositiveHankelMatrix::completeTree(ParseTree* tree){
         }
         double val;
         if((val=teacher.membership(*merged))<0){
+            delete(merged);
             throw std::invalid_argument("Must return positive value for positive Hankel Matrix");
         }
         obs[tree][it-c.begin()]=val;

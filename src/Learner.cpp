@@ -4,6 +4,7 @@
 #include "MultiplicityTeacher.h"
 #include "ObservationTable.h"
 #include "utility.h"
+#include <functional>
 #include <vector>
 #include <unordered_map>
 #include <iostream>
@@ -193,8 +194,7 @@ TreeAcceptor learn(const Teacher& teacher){
     return ans;
 }
 
-MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher){
-    HankelMatrix h(teacher);
+MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix& h){
     ofstream myfile;
     myfile.open("multLearn");
     while(true){

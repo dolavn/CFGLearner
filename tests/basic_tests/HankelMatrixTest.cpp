@@ -264,6 +264,7 @@ TEST(hankel_matrix_test,acceptor_test){
     ASSERT_EQ(acc.run(t2), 4);
 }
 
+
 TEST(hankel_matrix_test,learner_test){
     set<rankedChar> alphabet = getAlphabet();
     SimpleMultiplicityTeacher teacher = getMultiplicityTeacher();
@@ -271,7 +272,7 @@ TEST(hankel_matrix_test,learner_test){
     ParseTree t(1, {ParseTree(0), ParseTree(0)});
     ParseTree t2(1, {t, t});
     HankelMatrix h(teacher);
-    MultiplicityTreeAcceptor acc = learn(teacher);
+    MultiplicityTreeAcceptor acc = learn(teacher, h);
     ASSERT_EQ(acc.run(leaf), 1);
     ASSERT_EQ(acc.run(t), 2);
     ASSERT_EQ(acc.run(t2), 4);
@@ -283,7 +284,7 @@ TEST(hankel_matrix_test,learner_test2){
     ParseTree t(0, {ParseTree(1), ParseTree(2)});
     ParseTree t2(0, {ParseTree(2), ParseTree(1)});
     HankelMatrix h(teacher);
-    MultiplicityTreeAcceptor acc = learn(teacher);
+    MultiplicityTreeAcceptor acc = learn(teacher, h);
     ASSERT_EQ(acc.run(t), 0.5);
     ASSERT_EQ(acc.run(t2), 0.5);
 }
@@ -300,7 +301,7 @@ TEST(hankel_matrix_test,learner_test3){
     teacher.addExample(t); teacher.addExample(t2); teacher.addExample(t3);
     teacher.addExample(t4); teacher.addExample(t5); teacher.addExample(t6);
     HankelMatrix h(teacher);
-    MultiplicityTreeAcceptor acc = learn(teacher);
+    MultiplicityTreeAcceptor acc = learn(teacher, h);
     acc.printDesc();
     ASSERT_FLOAT_EQ(acc.run(t), 0.05);
     ASSERT_FLOAT_EQ(acc.run(t2), 0);
@@ -314,7 +315,7 @@ TEST(hankel_matrix_test,learner_test4){
     set<rankedChar> alphabet = getAlphabetProb();
     FunctionalMultiplicityTeacher teacher = getFuncTeacherProb();
     HankelMatrix h(teacher);
-    MultiplicityTreeAcceptor acc = learn(teacher);
+    MultiplicityTreeAcceptor acc = learn(teacher, h);
     ParseTree t1(1); ParseTree t2(2);
     ParseTree t3(0, {t1, t2});
     ParseTree t4(0, {t3, ParseTree(1)});

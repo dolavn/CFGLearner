@@ -18,7 +18,13 @@ void BaseTable::addTree(const ParseTree& tree){
         throw invalid_argument("Tree already exists");
     }
     auto newTree = new ParseTree(tree);
-    completeTree(newTree);
+    try{
+        completeTree(newTree);
+    }catch(exception& e){
+        delete(newTree);
+        newTree = nullptr;
+        throw e;
+    }
     bool isComplete = checkTableComplete(newTree);
     if(!isComplete){
         sNew.push_back((int)(s.size()));

@@ -6,14 +6,16 @@
 #define CFGLEARNER_LEARNER_H
 
 #include <vector>
+#include <functional>
 #include "TreeAcceptor.h"
 #include "MultiplicityTreeAcceptor.h"
 
 class Teacher;
 class MultiplicityTeacher;
+class HankelMatrix;
 
 TreeAcceptor learn(const Teacher&);
-MultiplicityTreeAcceptor learn(const MultiplicityTeacher&);
+MultiplicityTreeAcceptor learn(const MultiplicityTeacher&, HankelMatrix&);
 
 //Methods for testing here.
 //TODO: delete
