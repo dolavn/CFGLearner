@@ -21,6 +21,7 @@ public:
     };
 
     Status getStatus() const;
+    arma::vec getSolution() const;
 private:
     arma::mat mat;
     arma::vec sol;

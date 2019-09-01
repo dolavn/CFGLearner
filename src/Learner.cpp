@@ -216,6 +216,8 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
             myfile << h.getTableLatex() << endl;
             myfile << "\\end{center}" << endl;
             myfile.close();
+            cout << h.getS().size() << endl;
+            cout << h.getR().size() << endl;
             return acc;
         }else{
             //cout << "counter:" << *counterExample << endl;

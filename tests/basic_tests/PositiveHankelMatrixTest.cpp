@@ -93,5 +93,6 @@ TEST(positive_hankel_matrix_test, learn_test){
     set<rankedChar> alphabet = getAlphabet();
     FunctionalMultiplicityTeacher teacher = getFuncTeacherProb();
     PositiveHankelMatrix h(teacher);
+    h.setVerbose(true);
     learn(teacher, h);
 }

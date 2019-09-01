@@ -35,10 +35,18 @@ void ConicCombinationFinder::solve(int col) {
     } else {
         status = SOLVED;
         sol = arma::vec(mat.n_cols - 1);
+        mysoplex.getPrimalReal(prim);
         for (int i = 0; i < mat.n_cols - 1; ++i) {
             sol(i) = prim[i];
         }
     }
+}
+
+arma::vec ConicCombinationFinder::getSolution() const{
+    if(status!=SOLVED){
+        throw std::invalid_argument("System not solved");
+    }
+    return sol;
 }
 
 ConicCombinationFinder::Status ConicCombinationFinder::getStatus() const{

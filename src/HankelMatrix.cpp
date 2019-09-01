@@ -14,7 +14,7 @@ using namespace std;
 using namespace arma;
 
 HankelMatrix::HankelMatrix(const MultiplicityTeacher& teacher):teacher(teacher),
-alphabet(teacher.getAlphabet()),base(),obs(){
+alphabet(teacher.getAlphabet()),base(),obs(),verbose(false){
 }
 
 void HankelMatrix::completeTree(ParseTree* tree){
@@ -49,7 +49,7 @@ bool HankelMatrix::checkTableComplete(ParseTree* tree){
     }
      */
     mat sMat = getSMatrix(true);
-    fillMatLastRow(sMat, tree);
+    fillMatLastRow(sMat, *tree);
     /*
     cout << sMat << endl;
     //printf("s size:%d\n", s.size());
@@ -112,7 +112,7 @@ void HankelMatrix::completeContextR(ParseTree* context){
         ParseTree *merged = context->mergeContext(*tree);
         obs[tree].push_back(teacher.membership(*merged));
         delete (merged);
-        fillMatLastRow(sMat, tree);
+        fillMatLastRow(sMat, *tree);
         //arma::vec x = getObsVec(*tree);
         //arma::vec p;
         if(arma::rank(sMat)==s.size()+1){ //The vector is now linearly independent from s.
@@ -149,8 +149,8 @@ mat HankelMatrix::getSMatrix(bool extraSpace) const{
     return sMat;
 }
 
-void HankelMatrix::fillMatLastRow(mat& sMat, ParseTree* tree){
-    vector<double>& observation = obs[tree];
+void HankelMatrix::fillMatLastRow(mat& sMat, const ParseTree& tree) const{
+    vector<double> observation = getObs(tree);
     for(unsigned int i=0;i<c.size();++i){
         sMat(s.size(),i) = observation[i];
     }
@@ -230,24 +230,14 @@ void HankelMatrix::printTable() const{
     }
 }
 
+void HankelMatrix::printVerbose(string msg){
+    if(verbose){
+        cout << msg << endl;
+    }
+}
 
-void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const vector<rankedChar>& alphabetVec,
-        const arma::mat& s) const{
-    if(s.size()==0 || c.size()==0){return;}
-    vector<int> sIndices;
-    for(auto subtree: t.getSubtrees()){
-        int subtreeInd = getIndInS(*subtree);
-        if(subtreeInd<0){
-            throw std::invalid_argument("Subtree not in S");
-        }
-        sIndices.push_back(subtreeInd);
-    }
-    rankedChar c = {t.getData(), (int)(sIndices.size())};
-    unsigned int charInd = (unsigned int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
-    if(charInd>=alphabetVec.size()){
-        throw std::invalid_argument("Character not in alphabet");
-    }
-    arma::vec v = getObsVec(t);
+arma::vec HankelMatrix::getCoefficients(const ParseTree& tree, const arma::mat& s) const{
+    arma::vec v = getObsVec(tree);
     arma::mat sT = s.t();
     //cout << v << endl;
     //arma::rowvec params = v*sInv;
@@ -270,6 +260,26 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
 
     cout << "<------------->" << endl;
 */
+    return params;
+}
+
+void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const vector<rankedChar>& alphabetVec,
+        const arma::mat& s) const{
+    if(this->s.size()==0 || c.size()==0){return;}
+    vector<int> sIndices;
+    for(auto subtree: t.getSubtrees()){
+        int subtreeInd = getIndInS(*subtree);
+        if(subtreeInd<0){
+            throw std::invalid_argument("Subtree not in S");
+        }
+        sIndices.push_back(subtreeInd);
+    }
+    rankedChar c = {t.getData(), (int)(sIndices.size())};
+    unsigned int charInd = (unsigned int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+    if(charInd>=alphabetVec.size()){
+        throw std::invalid_argument("Character not in alphabet");
+    }
+    arma::vec params = getCoefficients(t, s);
     vector<int> mapParams;
     mapParams.push_back(-1);
     mapParams.insert(mapParams.end(), sIndices.begin(), sIndices.end());
@@ -361,6 +371,14 @@ bool HankelMatrix::checkClosed() const{
         if(!hasTree(currTree)){
             return false;
         }
+    }
+    return true;
+}
+
+bool HankelMatrix::checkIsTreeZero(const ParseTree& tree) const{
+    vector<double> obs = getObs(tree);
+    for(auto& elem: obs){
+        if(elem!=0){return false;}
     }
     return true;
 }

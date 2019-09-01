@@ -14,7 +14,10 @@ void BaseTable::addTree(const ParseTree& tree){
     if(tree.getIsContext()){
         throw invalid_argument("Can't add a context to S");
     }
+    cout << "adding tree" << endl;
+    cout << tree << endl;
     if(hasTree(tree)){
+        cout << tree << endl;
         throw invalid_argument("Tree already exists");
     }
     auto newTree = new ParseTree(tree);

@@ -31,13 +31,31 @@ void PositiveHankelMatrix::completeTree(ParseTree* tree){
 }
 
 void PositiveHankelMatrix::completeContextR(ParseTree* context){
-    for (auto tree: s) {
+    auto it = r.begin();
+    while(it!=r.end()){
+        auto tree = *it;
         ParseTree *merged = context->mergeContext(*tree);
         double val;
         if((val=teacher.membership(*merged))<0){
             throw std::invalid_argument("Must return positive value for positive Hankel Matrix");
         }
         obs[tree].push_back(val);
+        if(!checkTableComplete(tree)){
+            auto itNew = rNew.begin();
+            while(itNew!=rNew.end()){ //Remove tree if from rNew list if it's there.
+                int& ind = *itNew;
+                if(ind==(int)(it-r.begin())){
+                    rNew.erase(itNew);
+                    break;
+                }
+                itNew++;
+            }
+            sNew.push_back((int)(s.size()));
+            s.push_back(tree);
+            r.erase(it); //Remove tree from r list.
+        }else{
+            it++;
+        }
         delete (merged);
     }
 }
@@ -45,9 +63,6 @@ void PositiveHankelMatrix::completeContextR(ParseTree* context){
 void PositiveHankelMatrix::completeContextS(ParseTree* context){
     for (auto tree: s) {
         ParseTree *merged = context->mergeContext(*tree);
-        if(teacher.membership(*merged)<0){
-            throw std::invalid_argument("Must return positive value for positive Hankel Matrix");
-        }
         double val;
         if((val=teacher.membership(*merged))<0){
             throw std::invalid_argument("Must return positive value for positive Hankel Matrix");
@@ -59,9 +74,19 @@ void PositiveHankelMatrix::completeContextS(ParseTree* context){
 
 bool PositiveHankelMatrix::checkTableComplete(ParseTree* tree){
     mat sMat = getSMatrix(true);
-    fillMatLastRow(sMat, tree);
+    fillMatLastRow(sMat, *tree);
     inplace_trans(sMat);
     ConicCombinationFinder c(sMat);
     c.solve((int)(sMat.n_cols)-1);
     return c.getStatus()==ConicCombinationFinder::SOLVED;
+}
+
+arma::vec PositiveHankelMatrix::getCoefficients(const ParseTree& tree, const arma::mat& s) const{
+    mat sMat = getSMatrix(true);
+    fillMatLastRow(sMat, tree);
+    inplace_trans(sMat);
+    ConicCombinationFinder c(sMat);
+    c.solve((int)(sMat.n_cols)-1);
+    arma::vec params = c.getSolution();
+    return params;
 }

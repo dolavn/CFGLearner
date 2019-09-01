@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <set>
 #include <armadillo>
+#include <string>
 #include "IndexArray.h"
 #include "TreeAcceptor.h"
 #include "TreesIterator.h"
@@ -93,12 +94,16 @@ public:
     bool checkClosed() const;
     std::string getTableLatex();
     void printTable() const;
-
+    void setVerbose(bool verbose){this->verbose=verbose;}
     TreesIterator getSuffixIterator() const;
 protected:
     const MultiplicityTeacher& teacher;
     arma::mat getSMatrix(bool) const;
-    void fillMatLastRow(arma::mat&, ParseTree*);
+    void fillMatLastRow(arma::mat&, const ParseTree&) const;
+    bool verbose;
+    void printVerbose(std::string msg);
+    bool checkIsTreeZero(const ParseTree&) const;
+    virtual arma::vec getCoefficients(const ParseTree&, const arma::mat&) const;
     std::unordered_map<ParseTree*,std::vector<double>> obs;
 private:
     std::set<rankedChar> alphabet;
@@ -123,6 +128,7 @@ public:
     PositiveHankelMatrix& operator=(PositiveHankelMatrix&&)=delete;
 
 private:
+    virtual arma::vec getCoefficients(const ParseTree&, const arma::mat&) const override;
     void completeTree(ParseTree*);
     void completeContextS(ParseTree*);
     void completeContextR(ParseTree*);
