@@ -6,7 +6,7 @@
 
 using namespace std;
 
-BaseTable::BaseTable():s(),sNew(),r(),rNew(),c(){
+BaseTable::BaseTable():s(),sNew(),r(),rNew(),c(),logger(Logger::LOG_ERRORS, Logger::LOG_ERRORS){
 
 }
 
@@ -14,8 +14,9 @@ void BaseTable::addTree(const ParseTree& tree){
     if(tree.getIsContext()){
         throw invalid_argument("Can't add a context to S");
     }
-    cout << "adding tree" << endl;
-    cout << tree << endl;
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
+    logger << "adding tree";
+    logger << tree;
     if(hasTree(tree)){
         cout << tree << endl;
         throw invalid_argument("Tree already exists");

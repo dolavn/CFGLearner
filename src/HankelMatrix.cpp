@@ -14,7 +14,7 @@ using namespace std;
 using namespace arma;
 
 HankelMatrix::HankelMatrix(const MultiplicityTeacher& teacher):teacher(teacher),
-alphabet(teacher.getAlphabet()),base(),obs(),verbose(false){
+alphabet(teacher.getAlphabet()),base(),obs(){
 }
 
 void HankelMatrix::completeTree(ParseTree* tree){
@@ -227,12 +227,6 @@ void HankelMatrix::printTable() const{
             if(i<obs.size()-1){cout << ",";}
         }
         cout << "]" << endl;
-    }
-}
-
-void HankelMatrix::printVerbose(string msg){
-    if(verbose){
-        cout << msg << endl;
     }
 }
 

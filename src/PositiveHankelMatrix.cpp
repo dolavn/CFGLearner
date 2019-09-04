@@ -5,6 +5,8 @@
 using namespace std;
 using namespace arma;
 
+#define EPSILON (0.000001)
+
 PositiveHankelMatrix::PositiveHankelMatrix(const MultiplicityTeacher& teacher):HankelMatrix(teacher){
     if(teacher.getDefaultValue()<0){
         throw std::invalid_argument("Default value must be positive for positive Hankel Matrix");
@@ -88,5 +90,8 @@ arma::vec PositiveHankelMatrix::getCoefficients(const ParseTree& tree, const arm
     ConicCombinationFinder c(sMat);
     c.solve((int)(sMat.n_cols)-1);
     arma::vec params = c.getSolution();
+    for(unsigned int i=0;i<sMat.n_cols-1;++i){
+        if(params(i)<EPSILON && params(i)>-EPSILON){params(i)=0;}
+    }
     return params;
 }

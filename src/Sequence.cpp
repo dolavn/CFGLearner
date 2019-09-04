@@ -5,6 +5,7 @@
 #include "Learner.h"
 #include "Teacher.h"
 #include "ParseTree.h"
+#include "Logger.h"
 #include "TreeAcceptor.h"
 #include "CFG.h"
 #include "ConicCombinationFinder.h"
@@ -77,8 +78,18 @@ int testCone(){
     return 0;
 }
 
+int testLogger(){
+    Logger l(Logger::LOG_DEBUG, Logger::LOG_DEBUG);
+    l.setPrintLevel(Logger::LOG_ERRORS);
+    l << "hello, shouldn't print that";
+    l.setPrintLevel(Logger::LOG_DEBUG);
+    l << "this should be printed";
+    return 0;
+}
+
 
 int main(int argc, char** argv){
+    return testLogger();
     return testCone();
     Teacher* t = getTeacher2();
     TreeAcceptor acc = learn(*t);

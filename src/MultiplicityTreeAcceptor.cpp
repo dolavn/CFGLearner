@@ -135,6 +135,10 @@ MultiplicityTreeAcceptor MultiplicityTreeAcceptor::getNormalizedAcceptor(bool so
         for(IndexArray ind(maxLengths);!ind.getOverflow();++ind){
             intVec currInd = ind.getIntVector();
             float elem = m.getParam(currInd);
+            if(sums[currInd[0]+1]==0){
+                m.setParam(0, currInd);
+                continue;
+            }
             m.setParam((softmax?exp(elem):elem)/sums[currInd[0]+1],currInd);
         }
     }
