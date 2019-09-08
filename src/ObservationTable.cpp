@@ -46,6 +46,8 @@ void BaseTable::addContext(const ParseTree& context){
     if(hasContext(context)){
         throw invalid_argument("Already has this context");
     }
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
+    logger << "add context";
     auto newContext = new ParseTree(context);
     c.push_back(newContext);
     completeContextS(newContext);

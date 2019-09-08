@@ -3,16 +3,9 @@
 #include "../../include/ParseTree.h"
 #include "../../include/MultiplicityTeacher.h"
 #include "../../include/MultiplicityTreeAcceptor.h"
+#include "TestsHelperFunctions.h"
 
 using namespace std;
-
-extern rankedChar l;
-extern rankedChar a;
-extern rankedChar b;
-
-set<rankedChar> getAlphabet();
-
-MultiplicityTreeAcceptor getCountingAcc();
 
 TEST(multiplicity_teacher_test,basic_check){
     ParseTree t(2);

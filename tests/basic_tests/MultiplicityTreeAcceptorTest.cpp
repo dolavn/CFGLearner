@@ -2,38 +2,10 @@
 #include "../../include/MultiplicityTreeAcceptor.h"
 #include "../../include/ParseTree.h"
 #include "../../include/IndexArray.h"
-
+#include "TestsHelperFunctions.h"
 #include <iostream>
 
 using namespace std;
-
-extern rankedChar l;
-extern rankedChar a;
-extern rankedChar b;
-extern rankedChar l1;
-extern rankedChar l2;
-extern rankedChar inner;
-
-set<rankedChar> getAlphabet();
-
-MultiplicityTreeAcceptor getCountingAcc(){
-    set<rankedChar> alphabet = getAlphabet();
-    MultiplicityTreeAcceptor acc(alphabet, 2);
-    acc.setLambda(floatVec({1, 0}));
-    MultiLinearMap m_l(2, 0), m_a(2, 2), m_b(2, 2);
-    m_l.setParam(1.0f,{0});
-    m_l.setParam(1.0f,{1});
-    m_a.setParam(1.0f,{0, 0, 1});
-    m_a.setParam(1.0f,{0, 1, 0});
-    m_a.setParam(1.0f,{1, 1, 1});
-    m_b.setParam(1.0f,{0, 0, 1});
-    m_b.setParam(1.0f,{0, 1, 0});
-    m_b.setParam(1.0f,{1, 1, 1});
-    acc.addTransition(m_l, l);
-    acc.addTransition(m_a, a);
-    acc.addTransition(m_b, b);
-    return acc;
-}
 
 TEST(multiplicity_tree_acceptor_test,basic_check){
     set<rankedChar> alphabet = getAlphabet();

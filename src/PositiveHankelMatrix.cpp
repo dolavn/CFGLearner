@@ -11,6 +11,8 @@ PositiveHankelMatrix::PositiveHankelMatrix(const MultiplicityTeacher& teacher):H
     if(teacher.getDefaultValue()<0){
         throw std::invalid_argument("Default value must be positive for positive Hankel Matrix");
     }
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
+    logger << "Matrix Created";
 }
 
 void PositiveHankelMatrix::completeTree(ParseTree* tree){

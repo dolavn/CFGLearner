@@ -49,7 +49,7 @@ protected:
     std::vector<ParseTree*> r;
     std::vector<int> rNew;
     std::vector<ParseTree*> c;
-    Logger logger;
+    mutable Logger logger;
 private:
     void clear();
 };

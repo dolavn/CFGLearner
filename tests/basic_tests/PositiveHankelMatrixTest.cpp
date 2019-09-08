@@ -6,6 +6,7 @@
 #include "../../include/ObservationTable.h"
 #include "../../include/TreesIterator.h"
 #include "../../include/Learner.h"
+#include "TestsHelperFunctions.h"
 
 extern rankedChar a;
 extern rankedChar b;
@@ -16,40 +17,6 @@ extern rankedChar inner;
 
 using namespace std;
 
-set<rankedChar> getAlphabet();
-set<rankedChar> getAlphabetProb();
-set<rankedChar> getAlphabetSmall();
-MultiplicityTreeAcceptor getCountingAcc();
-SimpleMultiplicityTeacher getMultiplicityTeacher();
-SimpleMultiplicityTeacher getMultiplicityProbTeacher();
-FunctionalMultiplicityTeacher getFuncTeacherProb();
-
-FunctionalMultiplicityTeacher getFuncTeacherNeg(){
-    ParseTree t1(1); ParseTree t2(2);
-    TreesIterator it({&t1, &t2}, getAlphabetProb(), 2);
-    FunctionalMultiplicityTeacher teacher(0.05, 0, [](const ParseTree& tree){
-        return -1;
-    }, it);
-    return teacher;
-}
-
-SimpleMultiplicityTeacher getProbTeacherPositiveTest(){
-    set<rankedChar> alphabet = getAlphabetProb();
-    ParseTree i12(0, {ParseTree(1), ParseTree(2)});
-    ParseTree i21(0, {ParseTree(2), ParseTree(1)});
-    ParseTree t1(0, {ParseTree(1), i12});
-    t1.setProb(0.09);
-    ParseTree t2(0, {ParseTree(2), i12});
-    t2.setProb(0.36);
-    ParseTree t3(0, {ParseTree(1), i21});
-    t3.setProb(0.09);
-    ParseTree t4(0, {ParseTree(2), i21});
-    t4.setProb(0.36);
-    SimpleMultiplicityTeacher teacher(0.05, 0.0);
-    teacher.addExample(t1); teacher.addExample(t2);
-    teacher.addExample(t3); teacher.addExample(t4);
-    return teacher;
-}
 
 TEST(positive_hankel_matrix_test,basic_check){
     set<rankedChar> alphabet = getAlphabet();
@@ -91,7 +58,9 @@ TEST(positive_hankel_matrix_test, exception_check){
 
 TEST(positive_hankel_matrix_test, learn_test){
     set<rankedChar> alphabet = getAlphabet();
-    FunctionalMultiplicityTeacher teacher = getFuncTeacherProb();
-    PositiveHankelMatrix h(teacher);
-    learn(teacher, h);
+    for(double totalProb: {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4 ,0.45, 0.5}){
+        SimpleMultiplicityTeacher teacher = getDistributionTeacher(totalProb);
+        PositiveHankelMatrix h(teacher);
+        learn(teacher, h);
+    }
 }

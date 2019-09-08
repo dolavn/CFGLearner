@@ -5,26 +5,9 @@
 #include "gtest/gtest.h"
 #include "../../include/TreeAcceptor.h"
 #include "../../include/ParseTree.h"
+#include "TestsHelperFunctions.h"
 
 using namespace std;
-
-rankedChar l{0,0};
-rankedChar a{1,2};
-rankedChar b{2,2};
-rankedChar inner{0, 2};
-rankedChar l1{1, 0};
-rankedChar l2{2, 0};
-
-set<rankedChar> getAlphabet(){
-    set<rankedChar> alphabet = {a,b,l};
-    return alphabet;
-}
-
-set<rankedChar> getAlphabetProb(){
-    set<rankedChar> alphabet = {inner,l1,l2};
-    return alphabet;
-}
-
 
 TEST(acceptor_test,basic_check){
     set<rankedChar> alphabet = getAlphabet();
