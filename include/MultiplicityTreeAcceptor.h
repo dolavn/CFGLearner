@@ -22,6 +22,7 @@ public:
     bool checkIsPositive() const;
     MultiplicityTreeAcceptor getNormalizedAcceptor(bool) const;
 
+    int getDim() const{return dim;}
     float run(const ParseTree&) const;
 private:
     struct ranked_char_hash {

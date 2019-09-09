@@ -28,15 +28,23 @@ set<rankedChar> FunctionalMultiplicityTeacher::getAlphabet() const{
 
 ParseTree* FunctionalMultiplicityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) const{
     it.resetIterator();
+    int wrong = 0;
+    int total = 0;
+    ParseTree* ans = nullptr;
     while(it.hasNext()){
         ParseTree t = *it;
         double diff = ABS(acc.run(t)-func(t));
         if(diff>epsilon){
-            return new ParseTree(t);
+            if(!ans){
+                ans = new ParseTree(t);
+            }
+            wrong++;
         }
+        total++;
         ++it;
     }
-    return nullptr;
+    error = wrong/total;
+    return ans;
 }
 
 string FunctionalMultiplicityTeacher::toString() const{

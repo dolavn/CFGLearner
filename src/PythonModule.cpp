@@ -10,6 +10,7 @@
 #include "MultiplicityTeacher.h"
 #include "Matrix.h"
 #include "ObservationTable.h"
+#include "Logger.h"
 #include <algorithm>
 #include <vector>
 #include <stack>
@@ -94,6 +95,10 @@ ParseTree* parseTree(std::string& str){
         ans=nullptr;
     }
     return ans;
+}
+
+namespace PythonModule{
+    Logger::LoggingLevel verbosity = Logger::LOG_ERRORS;
 }
 
 PYBIND11_MODULE(CFGLearner, m) {
@@ -231,14 +236,19 @@ PYBIND11_MODULE(CFGLearner, m) {
         t.addExample(*tree);
         delete(tree);
     });
+    m.def("set_verbose",[](bool verbose){
+        PythonModule::verbosity = verbose?Logger::LOG_DEBUG:Logger::LOG_ERRORS;
+    });
     m.def("learnMult",[](const MultiplicityTeacher& t) {
         py::gil_scoped_release release;
         HankelMatrix h(t);
+        h.setVerbosity(PythonModule::verbosity);
         return learn(t, h);
     });
     m.def("learnMultPos",[](const MultiplicityTeacher& t) {
         py::gil_scoped_release release;
         PositiveHankelMatrix h(t);
+        h.setVerbosity(PythonModule::verbosity);
         return learn(t, h);
     });
     py::class_<MultiplicityTreeAcceptor> multiplicityTreeAcceptor(m, "MultiplicityTreeAcceptor");
@@ -260,6 +270,9 @@ PYBIND11_MODULE(CFGLearner, m) {
     });
     multiplicityTreeAcceptor.def("get_normalized_acceptor_softmax",[](MultiplicityTreeAcceptor& acc){
         return acc.getNormalizedAcceptor(true);
+    });
+    multiplicityTreeAcceptor.def("get_dimension", [](MultiplicityTreeAcceptor& acc){
+        return acc.getDim();
     });
     m.def("learn",[](const Teacher& t, std::unordered_map<int,string> map) {
         py::gil_scoped_release release;

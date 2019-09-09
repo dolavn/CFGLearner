@@ -206,6 +206,7 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
         myfile << "\\end{center}" << endl;
         //acc.printDesc();
         ParseTree* counterExample = teacher.equivalence(acc);
+        cout << "Error:" << teacher.getError() << endl;
         if(h.getC().size()>20){
             SAFE_DELETE(counterExample);
             myfile << "stopping learning" << endl;

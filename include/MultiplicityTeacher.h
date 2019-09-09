@@ -22,6 +22,7 @@ public:
     virtual std::set<rankedChar> getAlphabet() const=0;
     virtual std::string toString() const;
     virtual void printDesc() const;
+    virtual double getError() const=0;
     friend std::ostream& operator<<(std::ostream&,const MultiplicityTeacher&);
 };
 
@@ -44,12 +45,13 @@ public:
     virtual std::set<rankedChar> getAlphabet() const {return alphabet;};
     virtual std::string toString() const;
     virtual void printDesc() const;
-
+    virtual double getError() const{return error;}
 private:
     void clear();
     void copy(const SimpleMultiplicityTeacher&);
     double epsilon;
     double defaultValue;
+    mutable double error;
     std::set<rankedChar> alphabet;
     std::vector<ParseTree*> trees;
 };
@@ -65,10 +67,11 @@ public:
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
     virtual std::set<rankedChar> getAlphabet() const;
     virtual std::string toString() const;
-
+    virtual double getError() const{return error;}
 private:
     double epsilon;
     double defaultValue;
+    mutable double error;
     std::function<double(const ParseTree&)> func;
     mutable TreesIterator it;
 };

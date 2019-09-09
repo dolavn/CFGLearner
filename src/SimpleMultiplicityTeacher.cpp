@@ -72,14 +72,19 @@ double SimpleMultiplicityTeacher::membership(const ParseTree& tree) const{
 }
 
 ParseTree* SimpleMultiplicityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) const{
+    ParseTree* ans = nullptr;
+    int wrong = 0;
     for(auto& tree: trees){
         double calculatedValue = acc.run(*tree);
         if(ABS(calculatedValue-tree->getProb())>epsilon){
-            auto ans = new ParseTree(*tree);
-            return ans;
+            wrong = wrong+1;
+            if(!ans){
+                ans = new ParseTree(*tree);
+            }
         }
     }
-    return nullptr;
+    error = wrong/(int)(trees.size());
+    return ans;
 }
 
 void SimpleMultiplicityTeacher::copy(const SimpleMultiplicityTeacher& other){
