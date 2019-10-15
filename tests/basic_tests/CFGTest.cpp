@@ -26,3 +26,20 @@ TEST(CFG_test, basic_test){
         ASSERT_EQ(e.what(),std::string("Not all symbols in RHS exist in grammar"));
     }
 }
+
+TEST(CFG_test, simplify_grammar_test){
+    CFG c("S");
+    c.addNonTerminal("A");
+    c.addNonTerminal("B");
+    c.addTerminal("a");
+    c.addDerivation("S",{"A"});
+    c.addDerivation("S",{"A","A"});
+    c.addDerivation("S",{"A","B"});
+    c.addDerivation("A",{"B", "a"});
+    c.addDerivation("B",{"a","a"});
+    c.addDerivation("B",{"a"});
+    ASSERT_TRUE(c.hasNonTerminal("A"));
+    c.simplifyGrammar();
+    ASSERT_FALSE(c.hasNonTerminal("A"));
+    std::cout << c.getRepr() << std::endl;
+}

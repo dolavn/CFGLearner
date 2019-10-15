@@ -47,18 +47,25 @@ public:
     void addNonTerminal(std::string);
     void addTerminal(std::string);
     void addDerivation(std::string,std::vector<std::string>);
+    void simplifyGrammar();
+    bool hasNonTerminal(std::string) const;
+    int getDerivationsNum(std::string) const;
+    bool isSimple() const;
     std::string getRepr() const; //Returns a representation of this CFG, could be used to construct nltk cfg object.
 private:
     //Creates a context free grammar from a tree acceptor
     void initFromAcceptor(const TreeAcceptor&, std::unordered_map<int, std::string>&);
     std::vector<nonTerminal> nonTerminals;
+    nonTerminal startSymbol;
     std::vector<terminal> terminals;
     std::vector<derivation> derivations;
+    void removeNonterminal(std::string);
+    void swapSymbolRhs(symbol, std::vector<symbol>);
     /* A mapping used to decide if a given symbol is in the grammar,
      * and whether it's a terminal or a non terminal symbol. */
     std::unordered_map<std::string,int> symbolsMapping;
     //Returns true if the given symbol exists in the grammar.
-    bool checkSymbolExists(std::string);
+    bool checkSymbolExists(std::string) const;
 };
 
 #endif //CFGLEARNER_CFG_H

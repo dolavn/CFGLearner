@@ -111,7 +111,11 @@ PYBIND11_MODULE(CFGLearner, m) {
         }
         string str = py::str(nltkTree);
         ParseTree* tree = parseTree(str);
-        t.addPositiveExample(*tree);
+        try{
+            t.addPositiveExample(*tree);
+        }catch(exception& e){
+
+        }
         delete(tree);
     });
     simpleTeacher.def("addNegativeExample",[](SimpleTeacher& t,py::object nltkTree){
@@ -120,7 +124,11 @@ PYBIND11_MODULE(CFGLearner, m) {
         }
         string str = py::str(nltkTree);
         ParseTree* tree = parseTree(str);
-        t.addNegativeExample(*tree);
+        try{
+            t.addPositiveExample(*tree);
+        }catch(exception& e){
+
+        }
         delete(tree);
     });
     simpleTeacher.def("__repr__",[](const SimpleTeacher& t){
