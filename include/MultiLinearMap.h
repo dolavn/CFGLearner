@@ -22,11 +22,11 @@ public:
     void setParam(float, const intVec&);
     inline int getVDim() const{return dim;};
     inline int getParamNum() const{return paramNum;};
-    float getParam(const intVec&);
+    float getParam(const intVec&) const;
     void printDesc() const;
 private:
     void initParams();
-    bool testLocation(const intVec&);
+    bool testLocation(const intVec&) const;
     bool testInput(const std::vector<floatVec>&);
     int convertInd(const IndexArray&) const;
     int convertInd(const intVec&) const;

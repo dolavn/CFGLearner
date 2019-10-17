@@ -259,7 +259,35 @@ PYBIND11_MODULE(CFGLearner, m) {
         h.setVerbosity(PythonModule::verbosity);
         return learn(t, h);
     });
+    py::class_<MultiLinearMap> multiLinearMap(m, "MultiLinearMap");
+    multiLinearMap.def("get_param",[](const MultiLinearMap& m, vector<int> v){
+        return m.getParam(v);
+    });
+    multiLinearMap.def("get_dim",[](const MultiLinearMap& m){
+        return m.getVDim();
+    });
+    multiLinearMap.def("get_input_num",[](const MultiLinearMap& m){
+        return m.getParamNum();
+    });
+    multiLinearMap.def("__repr__",[](const MultiLinearMap& m){
+        stringstream stream;
+        stream << "<MultiLinearMap with output_dim=";
+        stream << m.getVDim();
+        stream << " input_num=" << m.getParamNum() << ">";
+        return stream.str();
+    });
     py::class_<MultiplicityTreeAcceptor> multiplicityTreeAcceptor(m, "MultiplicityTreeAcceptor");
+    multiplicityTreeAcceptor.def("get_lambda",[](MultiplicityTreeAcceptor& acc){
+        return acc.getLambda();
+    });
+    multiplicityTreeAcceptor.def("get_map_terminal",[](MultiplicityTreeAcceptor& acc, int c){
+        rankedChar r{c, 0};
+        return acc.getMap(r);
+    });
+    multiplicityTreeAcceptor.def("get_map_non_terminal",[](MultiplicityTreeAcceptor& acc, int rank){
+        rankedChar r{0, rank};
+        return acc.getMap(r);
+    });
     multiplicityTreeAcceptor.def("run",[](MultiplicityTreeAcceptor& acc, py::object nltkTree){
         if(!checkType(nltkTree)){
             throw std::invalid_argument("Must give an nltk tree");

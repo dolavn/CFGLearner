@@ -51,7 +51,7 @@ void MultiLinearMap::setParam(float param, const intVec& location){
     params[convertInd(location)] = param;
 }
 
-float MultiLinearMap::getParam(const intVec& location){
+float MultiLinearMap::getParam(const intVec& location) const{
     if(!testLocation(location)){
         cout << "get [";
         for(int i=0;i<location.size();++i){
@@ -96,7 +96,7 @@ void MultiLinearMap::initParams(){
 }
 
 
-bool MultiLinearMap::testLocation(const intVec& ind){
+bool MultiLinearMap::testLocation(const intVec& ind) const{
     if(dim==0){
         return false;
     }
