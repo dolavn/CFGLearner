@@ -23,6 +23,9 @@ public:
     MultiplicityTreeAcceptor getNormalizedAcceptor(bool) const;
 
     int getDim() const{return dim;}
+    std::vector<rankedChar> getAlphabet() const;
+    std::vector<rankedChar> getAlphabet(int) const;
+    std::vector<int> getRanks() const;
     float run(const ParseTree&) const;
 private:
     struct ranked_char_hash {

@@ -288,6 +288,17 @@ PYBIND11_MODULE(CFGLearner, m) {
         rankedChar r{0, rank};
         return acc.getMap(r);
     });
+    multiplicityTreeAcceptor.def("get_alphabet",[](MultiplicityTreeAcceptor& acc, int rank){
+        std::vector<rankedChar> alphabet = acc.getAlphabet(rank);
+        std::vector<int> ans;
+        for(auto& rc: alphabet){
+            ans.push_back(rc.c);
+        }
+        return ans;
+    });
+    multiplicityTreeAcceptor.def("get_ranks",[](MultiplicityTreeAcceptor& acc){
+        return acc.getRanks();
+    });
     multiplicityTreeAcceptor.def("run",[](MultiplicityTreeAcceptor& acc, py::object nltkTree){
         if(!checkType(nltkTree)){
             throw std::invalid_argument("Must give an nltk tree");

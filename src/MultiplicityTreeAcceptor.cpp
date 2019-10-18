@@ -158,6 +158,37 @@ bool MultiplicityTreeAcceptor::testMap(const MultiLinearMap& map, const rankedCh
     return map.getParamNum()==c.rank;
 }
 
+vector<rankedChar> MultiplicityTreeAcceptor::getAlphabet() const{
+    vector<rankedChar> ans;
+    for(auto rc: alphabet){
+        ans.push_back(rc);
+    }
+    return ans;
+}
+
+vector<rankedChar> MultiplicityTreeAcceptor::getAlphabet(int rank) const{
+    vector<rankedChar> ans;
+    for(auto rc: alphabet){
+        if(rc.rank==rank){
+            ans.push_back(rc);
+        }
+    }
+    return ans;
+}
+
+vector<int> MultiplicityTreeAcceptor::getRanks() const{
+    set<int> ranks;
+    vector<int> ans;
+    for(auto rc: alphabet){
+        ranks.insert(rc.rank);
+    }
+    for(auto r: ranks){
+        ans.push_back(r);
+    }
+    return ans;
+}
+
+
 void MultiplicityTreeAcceptor::printDesc() const {
     cout << "acceptor" << endl;
     for(auto tPair: transitions){

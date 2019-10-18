@@ -13,6 +13,24 @@ gen_iter = lambda : generate_distribution([1, 2], max_len=5,
                                                                                     total_prob=total_prob))
 
 
+class Symbol:
+
+    def __init__(self, symbol):
+        self._symbol = symbol
+
+
+class NonTerminal(Symbol):
+
+    def __init__(self, symbol):
+        Symbol.__init__(symbol)
+
+
+class Terminal(Symbol):
+
+    def __init__(self, symbol):
+        Symbol.__init__(symbol)
+
+
 class WeightedProduction:
 
     def __init__(self, lhs, rhs, weight):
@@ -28,6 +46,7 @@ class WeightedProduction:
 def get_productions(multi_map, terminal=None):
     inp_dim = multi_map.get_input_num()
     out_dim = multi_map.get_dim()
+    ans = []
     for a in product(*[range(out_dim) for _ in range(inp_dim+1)]):
         p = multi_map.get_param(a)
         if p != 0:
@@ -37,9 +56,27 @@ def get_productions(multi_map, terminal=None):
             else:
                 rhs = [terminal]
             prod = WeightedProduction(lhs, rhs, p)
-            print(prod)
+            ans.append(prod)
+    return ans
 
 
+def get_grammar(acc):
+    prods = []
+    g = {'prod': [], 'nt': ['S'], 'terminals': []}
+    for ind, weight in enumerate(acc.get_lambda()):
+        nt = 'N{0}'.format(ind+1)
+        g['nt'].append(nt)
+        g['prod'].append(WeightedProduction('S', [nt], weight))
+    for rank in acc.get_ranks():
+        if rank == 0:
+            terminals = acc.get_alphabet(rank)
+            for terminal in terminals:
+                g['terminals'].append(terminal)
+                g['prod'] = g['prod'] + get_productions(acc.get_map_terminal(terminal),
+                                                        terminal=str(terminal))
+        else:
+            g['prod'] = g['prod'] + get_productions(acc.get_map_non_terminal(rank))
+    return g
 
 
 # gen_iter = lambda : tree_list_cfg1
@@ -52,23 +89,18 @@ dims = []
 dims_pos = []
 #total_prob = 0.5
 set_verbose(False)
+prods = []
 for total_prob in lin:
     trees = []
     def_val = (1-total_prob)/10
     teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=def_val)
-    teacher2 = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
     iterator = gen_iter()
     for tree, prob in iterator:
         teacher.addExample(tree, prob)
-        teacher2.addExample(tree, prob)
         trees.append(tree)
+        print(tree)
     print('learning')
     acc = learnMultPos(teacher)
-    acc2 = learnMult(teacher2)
-    m = acc.get_map_terminal(1)
-    m2 = acc.get_map_terminal(2)
-    nt2 = acc.get_map_non_terminal(2)
-    get_productions(m, terminal='1')
-    get_productions(m2, terminal='2')
-    get_productions(nt2)
+    g = get_grammar(acc)
+    print(g)
 exit()
