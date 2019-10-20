@@ -9,11 +9,13 @@ from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teach
     SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose
 
 
-gen_iter = lambda : generate_distribution([1, 2], max_len=6,
+lengths = [2, 4]
+gen_iter = lambda : generate_distribution([1, 2], lengths=lengths,
                                           calc_prob=lambda a: calc_prob_non_uniform(a, [1, 2],
                                                                                     letter=1,
-                                                                                    letter_prob=0.5,
-                                                                                    total_prob=total_prob))
+                                                                                    letter_prob=0.1,
+                                                                                    total_prob=total_prob,
+                                                                                    lengths=lengths))
 
 
 class Symbol:
@@ -118,6 +120,7 @@ def calc_partition_functions(variables):
                                                       [1 if nt not in variables else variables[
                                                           nt]['value'] for nt in prod.get_rhs()]) for prod in equation])
             new_values[variable] = new_value
+            print(variable, new_value)
             conv[variable].append(new_value)
         for variable in variables.keys():
             variables[variable]['value'] = new_values[variable]
@@ -164,9 +167,9 @@ toy_grammar = {'prod': [WeightedProduction('A', ['a', 'A'], p),
                         WeightedProduction('B', ['B', 'b'], q),
                         WeightedProduction('B', ['b'], s)],
                'nt': ['A', 'B'], 'terminals': ['a', 'b']}
-g = normalize_grammar(toy_grammar)
-g = get_nltk_pcfg(g)
-lin = [0.5]
+#g = normalize_grammar(toy_grammar)
+#g = get_nltk_pcfg(g)
+lin = [0.25]
 #def_vals = np.linspace(0.0001, 0.0005, 10)
 kls = []
 kls2 = []
@@ -185,6 +188,7 @@ for total_prob in lin:
         trees.append(tree)
     print('learning')
     acc = learnMultPos(teacher)
+    acc.print_desc()
     g = convert_pmta_to_pcfg(acc)
 print(g)
 exit()

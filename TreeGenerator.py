@@ -18,19 +18,20 @@ def convert_to_tree(seq: List[int]) -> Tree:
 
 
 def generate_distribution(alphabet: List[int], calc_prob: Callable[[List[int]], float] = None,
-                          max_len: int = 1) -> Tuple[Tree, float]:
+                          lengths: List[int] = [1]) -> Tuple[Tree, float]:
     if not calc_prob:
-        calc_prob = lambda a: 1/(len(alphabet)**max_len)
+        calc_prob = lambda a: 1/(len(alphabet)**(sum(lengths)))
     total_prob = 0
-    for tuples in product(*[range(len(alphabet)) for _ in range(max_len)]):
-        curr_seq = [0]*max_len
-        for i in range(max_len):
-            curr_seq[i] = alphabet[tuples[i]]
-        curr_prob = calc_prob(curr_seq)
-        total_prob += curr_prob
-        if total_prob > 1:
-            raise BaseException("Total probability exceeds 1")
-        yield (convert_to_tree(curr_seq), curr_prob)
+    for length in lengths:
+        for tuples in product(*[range(len(alphabet)) for _ in range(length)]):
+            curr_seq = [0]*length
+            for i in range(length):
+                curr_seq[i] = alphabet[tuples[i]]
+            curr_prob = calc_prob(curr_seq)
+            total_prob += curr_prob
+            if total_prob > 1:
+                raise BaseException("Total probability exceeds 1")
+            yield (convert_to_tree(curr_seq), curr_prob)
 
 
 def generate_trees(string: List[int], max_len=-1) -> Tree:
