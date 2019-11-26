@@ -198,16 +198,33 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
     ofstream myfile;
     myfile.open("multLearn");
     while(true){
+        clock_t begin = clock();
         h.makeConsistent();
+        clock_t end = clock();
+        double consistentTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
+        begin = clock();
         MultiplicityTreeAcceptor acc = h.getAcceptor();
+        end = clock();
+        double acceptorTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
         myfile << "Current table:\\\\" << endl;
         myfile << "\\begin{center}" << endl;
         myfile << h.getTableLatex() << endl;
         myfile << "\\end{center}" << endl;
         //acc.printDesc();
+        begin = clock();
         ParseTree* counterExample = teacher.equivalence(acc);
+        end = clock();
+        double equivTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
         cout << "Error:" << teacher.getError() << endl;
-        if(h.getC().size()>20){
+        cout << "c size:" << h.getC().size() << endl;
+        cout << "s size:" << h.getS().size() << endl;
+        cout << "consistentTime:" << consistentTime << endl;
+        cout << "acceptorTime" << acceptorTime << endl;
+        cout << "equivTime:" << equivTime << endl;
+        if(counterExample){
+            cout << *counterExample << endl;
+        }
+        if(0 && h.getC().size()>35){
             SAFE_DELETE(counterExample);
             myfile << "stopping learning" << endl;
         }

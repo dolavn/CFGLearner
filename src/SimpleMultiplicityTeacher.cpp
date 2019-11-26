@@ -52,6 +52,11 @@ SimpleMultiplicityTeacher& SimpleMultiplicityTeacher::operator=(SimpleMultiplici
 }
 
 void SimpleMultiplicityTeacher::addExample(const ParseTree& t){
+    for(auto currTree: trees){
+        if(*currTree == t){
+            throw std::invalid_argument("Tree already in data");
+        }
+    }
     auto tNew = new ParseTree(t);
     trees.push_back(tNew);
     for(auto it=t.getIndexIterator();it.hasNext();++it){
@@ -79,6 +84,8 @@ ParseTree* SimpleMultiplicityTeacher::equivalence(const MultiplicityTreeAcceptor
         if(ABS(calculatedValue-tree->getProb())>epsilon){
             wrong = wrong+1;
             if(!ans){
+                cout << "accVal:" << calculatedValue << endl;
+                cout << "prob:" << tree->getProb() << endl;
                 ans = new ParseTree(*tree);
             }
         }

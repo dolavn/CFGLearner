@@ -285,7 +285,8 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
 
 void HankelMatrix::closeTable(){
     while(true){
-        //if(c.size()>10){return;} //todo: delete
+        cout << "closing " << "c:" << c.size() << " s:" << s.size() << " r:" << r.size() << endl;
+        //if(c.size()>20){return;} //todo: delete
         if(s.empty()){
             for(auto c:alphabet){
                 if(c.rank==0){

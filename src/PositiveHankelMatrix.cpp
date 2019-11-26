@@ -88,6 +88,7 @@ bool PositiveHankelMatrix::checkTableComplete(ParseTree* tree){
 arma::vec PositiveHankelMatrix::getCoefficients(const ParseTree& tree, const arma::mat& s) const{
     mat sMat = getSMatrix(true);
     fillMatLastRow(sMat, tree);
+    //cout << "mat size: [" << sMat.n_rows << " , " << sMat.n_cols << "]" << endl;
     inplace_trans(sMat);
     ConicCombinationFinder c(sMat);
     c.solve((int)(sMat.n_cols)-1);
