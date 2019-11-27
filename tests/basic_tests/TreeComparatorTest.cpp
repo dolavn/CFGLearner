@@ -29,7 +29,7 @@ scoresMap getScores(){
 }
 
 
-TEST(tree_comparator_test,basic_check){
+TEST(tree_aligner_test,basic_check){
     ParseTree t(0);
     ParseTree t2(0);
     ParseTree t3(0);
@@ -44,18 +44,18 @@ TEST(tree_comparator_test,basic_check){
     t5.setSubtree(t2, 0);
     t5.setSubtree(t, 1);
     scoresMap scores = getScores();
-    TreeComparator c(scores, INDEL);
+    TreeAligner c(scores, INDEL);
     ASSERT_EQ(2,c.compare(t, t2));
     ASSERT_EQ(2,c.compare(t4, t5));
     ASSERT_EQ(2*INDEL,c.compare(t, t3));
 }
 
-TEST(tree_comparator_test,advanced_check){
+TEST(tree_aligner_test,advanced_check){
     ParseTree t6(ParseTree(0, {ParseTree(0,{ParseTree(0, {ParseTree(3253)
                                                 , ParseTree(3252)}), ParseTree(0, {ParseTree(3254)})}),
                                                         ParseTree(0, {ParseTree(3257)})}));
     ParseTree t8(0,{ParseTree(3252), ParseTree(0, {ParseTree(2077)})});
     scoresMap scores = getScores();
-    TreeComparator c(scores, INDEL);
+    TreeAligner c(scores, INDEL);
     ASSERT_EQ(c.compare(t6, t8), 4);
 }

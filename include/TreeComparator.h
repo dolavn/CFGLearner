@@ -22,9 +22,13 @@ private:
 
 class TreeComparator{
 public:
-    TreeComparator(scoresMap, int);
-    TreeComparator(int, int, int);
-//    TreeComparator(std::unordered_map<intPair, int, pair_hash>, int);
+    virtual int compare(const ParseTree&, const ParseTree&)=0;
+};
+
+class TreeAligner: public TreeComparator{
+public:
+    TreeAligner(scoresMap, int);
+    TreeAligner(int, int, int);
     int compare(const ParseTree&, const ParseTree&);
 private:
     typedef std::unordered_map<const ParseTree*, int> treeToIndMap;
@@ -35,6 +39,12 @@ private:
     int innerNode;
     int replaceScore;
     scoresMap scores;
+};
+
+class SwapComparator: public TreeComparator{
+public:
+    SwapComparator();
+    int compare(const ParseTree&, const ParseTree&);
 };
 
 int safeAdd(int, int);

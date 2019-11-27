@@ -16,7 +16,7 @@ public:
         LOG_DEBUG
     };
     static Logger& getLogger(){
-        static Logger log(LOG_DEBUG, LOG_DEBUG);
+        static Logger log(LOG_DEBUG, LOG_ERRORS);
         return log;
     }
 

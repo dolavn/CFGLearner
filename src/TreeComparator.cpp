@@ -11,17 +11,17 @@ int& scoresMap::operator[](intPair p){
     return map[p];
 }
 
-TreeComparator::TreeComparator(scoresMap scores, int indelScore):indelScore(indelScore),
+TreeAligner::TreeAligner(scoresMap scores, int indelScore):indelScore(indelScore),
 innerNode(-1),replaceScore(-1),scores(std::move(scores)){
 
 }
 
-TreeComparator::TreeComparator(int innerNode, int replaceScore, int indelScore):indelScore(indelScore),innerNode(innerNode),
+TreeAligner::TreeAligner(int innerNode, int replaceScore, int indelScore):indelScore(indelScore),innerNode(innerNode),
 replaceScore(replaceScore),scores(){
 
 }
 
-int TreeComparator::alignInnerNodes(const ParseTree& t1, const ParseTree& t2,
+int TreeAligner::alignInnerNodes(const ParseTree& t1, const ParseTree& t2,
         treeToIndMap& m1, treeToIndMap& m2, alignmentTable& bigTable){
     //cout << "filling inner table" << endl;
     unsigned long lengths[] = {t1.getSubtrees().size()+1, t2.getSubtrees().size()+1};
@@ -59,7 +59,7 @@ unordered_map<const ParseTree*, int> createMapping(vector<const ParseTree*> v){
     return map;
 }
 
-int TreeComparator::compare(const ParseTree& t1, const ParseTree& t2){
+int TreeAligner::compare(const ParseTree& t1, const ParseTree& t2){
     //cout << "comparing" << endl;
     //cout << "t1 " << t1 << endl;
     //cout << "t2 " << t2 << endl;
@@ -92,7 +92,7 @@ int TreeComparator::compare(const ParseTree& t1, const ParseTree& t2){
 }
 
 
-int TreeComparator::getScore(int a, int b){
+int TreeAligner::getScore(int a, int b){
     if(innerNode==-1){
         return scores[{a,b}];
     }else{

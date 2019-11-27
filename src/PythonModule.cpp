@@ -213,8 +213,9 @@ PYBIND11_MODULE(CFGLearner, m) {
         delete(weightParseTree);
     });
     py::class_<TreeComparator> treeComparator(m, "TreeComparator");
-    treeComparator.def(py::init<int, int, int>());
-    treeComparator.def("compare", [](TreeComparator& c, py::object nltkTree1, py::object nltkTree2){
+    py::class_<TreeAligner> treeAligner(m, "TreeAligner",treeComparator);
+    treeAligner.def(py::init<int, int, int>());
+    treeAligner.def("compare", [](TreeComparator& c, py::object nltkTree1, py::object nltkTree2){
         if(!checkType(nltkTree1) || !checkType(nltkTree2)){
             throw std::invalid_argument("Must give an nltk tree");
         }
