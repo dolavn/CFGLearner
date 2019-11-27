@@ -1,5 +1,6 @@
 #include "ObservationTable.h"
 #include "ParseTree.h"
+#include "Logger.h"
 #include "MultiplicityTeacher.h"
 #include "MultiplicityTreeAcceptor.h"
 #include "utility.h"
@@ -285,7 +286,9 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
 
 void HankelMatrix::closeTable(){
     while(true){
-        cout << "closing " << "c:" << c.size() << " s:" << s.size() << " r:" << r.size() << endl;
+        Logger& logger = Logger::getLogger();
+        logger.setLoggingLevel(Logger::LOG_DEBUG);
+        logger << "closing " << "c:" << c.size() << " s:" << s.size() << " r:" << r.size() << logger.endline;
         //if(c.size()>20){return;} //todo: delete
         if(s.empty()){
             for(auto c:alphabet){

@@ -2,11 +2,12 @@
 #include "ObservationTable.h"
 #include "Teacher.h"
 #include "ParseTree.h"
+#include "Logger.h"
 #include <sstream>
 
 using namespace std;
 
-BaseTable::BaseTable():s(),sNew(),r(),rNew(),c(),logger(Logger::LOG_ERRORS, Logger::LOG_ERRORS){
+BaseTable::BaseTable():s(),sNew(),r(),rNew(),c(){
 
 }
 
@@ -14,6 +15,7 @@ void BaseTable::addTree(const ParseTree& tree){
     if(tree.getIsContext()){
         throw invalid_argument("Can't add a context to S");
     }
+    Logger& logger = Logger::getLogger();
     logger.setLoggingLevel(Logger::LOG_DEBUG);
     logger << "adding tree";
     logger << tree;
@@ -46,6 +48,7 @@ void BaseTable::addContext(const ParseTree& context){
     if(hasContext(context)){
         throw invalid_argument("Already has this context");
     }
+    Logger& logger = Logger::getLogger();
     logger.setLoggingLevel(Logger::LOG_DEBUG);
     logger << "add context";
     auto newContext = new ParseTree(context);

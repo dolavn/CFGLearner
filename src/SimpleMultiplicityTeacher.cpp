@@ -2,6 +2,7 @@
 #include "MultiplicityTreeAcceptor.h"
 #include "ParseTree.h"
 #include "utility.h"
+#include "Logger.h"
 #include <sstream>
 #include <iostream> //todo:delete
 
@@ -78,14 +79,16 @@ double SimpleMultiplicityTeacher::membership(const ParseTree& tree) const{
 
 ParseTree* SimpleMultiplicityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) const{
     ParseTree* ans = nullptr;
+    Logger& logger = Logger::getLogger();
     int wrong = 0;
     for(auto& tree: trees){
         double calculatedValue = acc.run(*tree);
         if(ABS(calculatedValue-tree->getProb())>epsilon){
             wrong = wrong+1;
             if(!ans){
-                cout << "accVal:" << calculatedValue << endl;
-                cout << "prob:" << tree->getProb() << endl;
+                logger.setLoggingLevel(Logger::LOG_DEBUG);
+                logger << "accVal:" << calculatedValue << logger.endline;
+                //logger << "prob:" << tree->getProb() << logger;
                 ans = new ParseTree(*tree);
             }
         }

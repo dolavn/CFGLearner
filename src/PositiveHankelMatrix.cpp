@@ -1,7 +1,7 @@
 #include "ObservationTable.h"
 #include "ConicCombinationFinder.h"
 #include "MultiplicityTeacher.h"
-
+#include "Logger.h"
 using namespace std;
 using namespace arma;
 
@@ -11,6 +11,7 @@ PositiveHankelMatrix::PositiveHankelMatrix(const MultiplicityTeacher& teacher):H
     if(teacher.getDefaultValue()<0){
         throw std::invalid_argument("Default value must be positive for positive Hankel Matrix");
     }
+    Logger& logger = Logger::getLogger();
     logger.setLoggingLevel(Logger::LOG_DEBUG);
     logger << "Matrix Created";
 }

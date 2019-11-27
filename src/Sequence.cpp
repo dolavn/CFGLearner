@@ -79,11 +79,12 @@ int testCone(){
 }
 
 int testLogger(){
-    Logger l(Logger::LOG_DEBUG, Logger::LOG_DEBUG);
+    Logger& l = Logger::getLogger();
     l.setPrintLevel(Logger::LOG_ERRORS);
     l << "hello, shouldn't print that";
     l.setPrintLevel(Logger::LOG_DEBUG);
-    l << "this should be printed";
+    l << "this should be printed" << l.endline;
+    l << "hello " << 5 << l.endline;
     return 0;
 }
 

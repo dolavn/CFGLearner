@@ -1,5 +1,6 @@
 #include "Learner.h"
 #include "ParseTree.h"
+#include "Logger.h"
 #include "Teacher.h"
 #include "MultiplicityTeacher.h"
 #include "ObservationTable.h"
@@ -37,21 +38,25 @@ void addTransition(ObservationTable& s, TreeAcceptor& acc, const ParseTree& tree
     }
     int targetState = s.getSObsInd(tree);
     rankedChar c{value,(int)(states.size())};
-    /*cout << tree << endl;
-    cout << "adding transition ["; for(auto state: states){cout << state << ",";}
-    cout << "," << c.c << "] -> " << targetState << endl;*/
+    Logger& logger = Logger::getLogger();
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
+    logger << tree << logger.endline;
+    logger << "adding transition ["; for(auto state: states){logger << state << ",";}
+    logger << "," << c.c << "] -> " << targetState << logger.endline;
     acc.addTransition(states,c,targetState);
 }
 
 TreeAcceptor synthesize(ObservationTable& s, const Teacher& teacher, TreeAcceptor* acc){
     //set<rankedChar> alphabet = getAlphabet(s);
     //TreeAcceptor ans(alphabet,(int)(s.getS().size()));
+    Logger& logger = Logger::getLogger();
     TreeAcceptor temp(set<rankedChar>(),0);
     if(!acc){acc=&temp;}
     for(auto tree: s.getSNew()){
         int state = acc->addState();
-        /*cout << "adding state" << state << endl;
-        cout << *tree << endl;*/
+        logger.setLoggingLevel(Logger::LOG_DEBUG);
+        logger << "adding state" << state << logger.endline;
+        logger << *tree << logger.endline;
         acc->setAccepting(state, teacher.membership(*tree));
         for(auto it = tree->getIndexIterator();it.hasNext();++it){
             vector<int> ind = *it;
@@ -95,11 +100,13 @@ contextTreePair decompose(ObservationTable& s, ParseTree& t){
 }
 
 void extend(ObservationTable& s, ParseTree* t, const Teacher& teacher){
+    Logger& logger = Logger::getLogger();
     if(s.treeInS(*t)){
+        logger.setLoggingLevel(Logger::LOG_ERRORS);
         s.printTable();
-        cout << *t << endl;
-        if(!teacher.membership(*t)){cout << "not ";}
-        cout << "in language" << endl;
+        logger << *t << logger.endline;
+        if(!teacher.membership(*t)){logger << "not ";}
+        logger << "in language" << logger.endline;
         throw invalid_argument("Counter example can't be a member of S!");
     }
     contextTreePair pair = decompose(s,*t);
@@ -196,6 +203,7 @@ TreeAcceptor learn(const Teacher& teacher){
 
 MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix& h){
     ofstream myfile;
+    Logger& logger = Logger::getLogger();
     myfile.open("multLearn");
     while(true){
         clock_t begin = clock();
@@ -215,14 +223,15 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
         ParseTree* counterExample = teacher.equivalence(acc);
         end = clock();
         double equivTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
-        cout << "Error:" << teacher.getError() << endl;
-        cout << "c size:" << h.getC().size() << endl;
-        cout << "s size:" << h.getS().size() << endl;
-        cout << "consistentTime:" << consistentTime << endl;
-        cout << "acceptorTime" << acceptorTime << endl;
-        cout << "equivTime:" << equivTime << endl;
+        logger.setLoggingLevel(Logger::LOG_DEBUG);
+        logger << "Error:" << teacher.getError() << logger.endline;
+        logger << "c size:" << h.getC().size() << logger.endline;
+        logger << "s size:" << h.getS().size() << logger.endline;
+        logger << "consistentTime:" << consistentTime << logger.endline;
+        logger << "acceptorTime" << acceptorTime << logger.endline;
+        logger << "equivTime:" << equivTime << logger.endline;
         if(counterExample){
-            cout << *counterExample << endl;
+            logger << *counterExample << logger.endline;
         }
         if(0 && h.getC().size()>35){
             SAFE_DELETE(counterExample);
@@ -238,7 +247,6 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
             cout << h.getR().size() << endl;
             return acc;
         }else{
-            //cout << "counter:" << *counterExample << endl;
             for(auto& context: counterExample->getAllContexts()){
                 if(!h.hasContext(*context)){
                     h.addContext(*context);

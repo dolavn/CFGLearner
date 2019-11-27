@@ -246,17 +246,17 @@ PYBIND11_MODULE(CFGLearner, m) {
     });
     m.def("set_verbose",[](bool verbose){
         PythonModule::verbosity = verbose?Logger::LOG_DEBUG:Logger::LOG_ERRORS;
+        Logger& log = Logger::getLogger();
+        log.setPrintLevel(PythonModule::verbosity);
     });
     m.def("learnMult",[](const MultiplicityTeacher& t) {
         py::gil_scoped_release release;
         HankelMatrix h(t);
-        h.setVerbosity(PythonModule::verbosity);
         return learn(t, h);
     });
     m.def("learnMultPos",[](const MultiplicityTeacher& t) {
         py::gil_scoped_release release;
         PositiveHankelMatrix h(t);
-        h.setVerbosity(PythonModule::verbosity);
         return learn(t, h);
     });
     py::class_<MultiLinearMap> multiLinearMap(m, "MultiLinearMap");

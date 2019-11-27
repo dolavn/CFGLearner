@@ -13,7 +13,6 @@
 #include "IndexArray.h"
 #include "TreeAcceptor.h"
 #include "TreesIterator.h"
-#include "Logger.h"
 
 class Teacher;
 class MultiplicityTeacher;
@@ -36,7 +35,6 @@ public:
     inline const std::vector<ParseTree*>& getR(){return r;}
     inline const std::vector<ParseTree*>& getS(){return s;}
     inline const std::vector<ParseTree*>& getC(){return c;}
-    void setVerbosity(Logger::LoggingLevel level){logger.setPrintLevel(level);}
 protected:
     virtual void completeTree(ParseTree*)=0;
     virtual void completeContextS(ParseTree*)=0;
@@ -49,7 +47,6 @@ protected:
     std::vector<ParseTree*> r;
     std::vector<int> rNew;
     std::vector<ParseTree*> c;
-    mutable Logger logger;
 private:
     void clear();
 };

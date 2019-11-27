@@ -15,21 +15,32 @@ public:
         LOG_WARNING,
         LOG_DEBUG
     };
-    Logger(LoggingLevel, LoggingLevel);
+    static Logger& getLogger(){
+        static Logger log(LOG_DEBUG, LOG_DEBUG);
+        return log;
+    }
 
+    Logger(const Logger&)=delete;
+    Logger& operator=(const Logger&)=delete;
     void setLoggingLevel(LoggingLevel);
     void setPrintLevel(LoggingLevel);
+
 
     template<typename T>
     Logger& operator<< (const T& data)
     {
         if(level<=printLevel){
-            std::cout << data << std::endl;
+            std::cout << data;
         }
+        return *this;
     }
+
+    const char endline = '\n';
 private:
+    Logger(LoggingLevel, LoggingLevel);
     LoggingLevel level;
     LoggingLevel printLevel;
 };
+
 
 #endif //CFGLEARNER_LOGGER_H
