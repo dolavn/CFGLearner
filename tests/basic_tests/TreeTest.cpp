@@ -294,12 +294,12 @@ TEST(tree_test, advanced_topology_test){
         curr->setSubtree(ParseTree(2),1);
         curr2->setSubtree(ParseTree(3),0);
         curr2->setSubtree(ParseTree(4),1);
-        ParseTree* next = curr->getSubtrees()[1];
+        const ParseTree* next = curr->getSubtrees()[1];
         ASSERT_EQ(t.sameTopology(t.getSkeleton()),true);
         ASSERT_EQ(t.sameTopology(t2),true);
         ASSERT_EQ(t.sameTopology(*next),false);
-        curr = curr->getSubtrees()[0];
-        curr2 = curr2->getSubtrees()[0];
+        curr = &(*curr)[{0}];
+        curr2 = &(*curr2)[{0}];
     }
 }
 
@@ -315,8 +315,8 @@ TEST(tree_test, apply_weights_test){
         curr->setSubtree(ParseTree(0),1);
         curr2->setSubtree(ParseTree(rand()%10+1),0);
         curr2->setSubtree(ParseTree(rand()%10+1),1);
-        curr = curr->getSubtrees()[0];
-        curr2 = curr2->getSubtrees()[0];
+        curr = &(*curr)[{0}];
+        curr2 = &(*curr2)[{0}];
     }
     t.applyWeights(t2);
     for(auto it=t.getIndexIterator();it.hasNext();++it){

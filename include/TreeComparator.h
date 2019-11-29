@@ -23,6 +23,9 @@ private:
 class TreeComparator{
 public:
     virtual int compare(const ParseTree&, const ParseTree&)=0;
+protected:
+    typedef std::unordered_map<const ParseTree*, int> treeToIndMap;
+    typedef std::vector<std::vector<int>> alignmentTable;
 };
 
 class TreeAligner: public TreeComparator{
@@ -31,8 +34,6 @@ public:
     TreeAligner(int, int, int);
     int compare(const ParseTree&, const ParseTree&);
 private:
-    typedef std::unordered_map<const ParseTree*, int> treeToIndMap;
-    typedef std::vector<std::vector<int>> alignmentTable;
     int getScore(int, int);
     int alignInnerNodes(const ParseTree&, const ParseTree&, treeToIndMap&, treeToIndMap&, alignmentTable&);
     int indelScore;
@@ -43,8 +44,11 @@ private:
 
 class SwapComparator: public TreeComparator{
 public:
-    SwapComparator();
+    SwapComparator(int, int);
     int compare(const ParseTree&, const ParseTree&);
+private:
+    int replaceScore;
+    int swapScore;
 };
 
 int safeAdd(int, int);

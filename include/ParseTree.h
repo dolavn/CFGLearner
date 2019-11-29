@@ -80,7 +80,7 @@ public:
     inline friend bool operator!=(const ParseTree& lhs, const ParseTree& rhs){return !(lhs==rhs);}
     friend std::ostream& operator<<(std::ostream&,const ParseTree&);
     const ParseTree& getNode(const std::vector<int>&) const;
-    std::vector<ParseTree*> getSubtrees() const;
+    std::vector<const ParseTree*> getSubtrees() const;
     iterator getIterator() const;
     indexIterator getIndexIterator() const;
     indexIterator getLeafIterator();

@@ -106,6 +106,43 @@ int TreeAligner::getScore(int a, int b){
     }
 }
 
+SwapComparator::SwapComparator(int replaceScore, int swapScore):replaceScore(replaceScore),swapScore(swapScore){
+
+}
+
+
+int SwapComparator::compare(const ParseTree& t1, const ParseTree& t2){
+    vector<const ParseTree*> v1 = t1.getInOrderPtrList();
+    vector<const ParseTree*> v2 = t2.getInOrderPtrList();
+    treeToIndMap v1PtrToIndMapping = createMapping(v1);
+    treeToIndMap v2PtrToIndMapping = createMapping(v2);
+    alignmentTable table(v1.size(), vector<int>(v2.size()));
+    for(unsigned int i=0;i<v1.size();++i){
+        for(unsigned int j=0;j<v2.size();++j){
+            const ParseTree* subtree1 = v1[i];
+            const ParseTree* subtree2 = v2[j];
+            if(subtree1->isLeaf() && subtree2->isLeaf()){ //Both are leaves
+                table[i][j] = subtree1->getData()==subtree2->getData()?0:replaceScore;
+            }else{
+                if(subtree1->isLeaf() || subtree2->isLeaf()){ //One is a leaf
+                    table[i][j] = std::numeric_limits<int>::max();
+                    continue;
+                }
+                if(subtree1->getChildrenNum()!=2 || subtree2->getChildrenNum()!=2){
+                    throw std::invalid_argument("Parse Tree must be binary");
+                }
+                vector<const ParseTree*> subtrees1 = subtree1->getSubtrees();
+                vector<const ParseTree*> subtrees2 = subtree2->getSubtrees();
+                int normal = safeAdd(table[v1PtrToIndMapping[subtrees1[0]]][v2PtrToIndMapping[subtrees2[0]]],
+                             table[v1PtrToIndMapping[subtrees1[1]]][v2PtrToIndMapping[subtrees2[1]]]);
+                int swap =   safeAdd(table[v1PtrToIndMapping[subtrees1[0]]][v2PtrToIndMapping[subtrees2[1]]],
+                             table[v1PtrToIndMapping[subtrees1[1]]][v2PtrToIndMapping[subtrees2[0]]])+swapScore;
+                table[i][j] = min(normal, swap);
+            }
+        }
+    }
+    return table[v1.size()-1][v2.size()-1];
+}
 
 int safeAdd(int a, int b){
     if(b>0 && a>numeric_limits<int>::max()-b){

@@ -156,8 +156,12 @@ const ParseTree& ParseTree::getNode(const vector<int>& loc) const{
     return *currTree;
 }
 
-vector<ParseTree*> ParseTree::getSubtrees() const{
-    return subtrees;
+vector<const ParseTree*> ParseTree::getSubtrees() const{
+    vector<const ParseTree*> ans;
+    for(auto ptr: subtrees){
+        ans.push_back(ptr);
+    }
+    return ans;
 }
 
 std::pair<ParseTree*,ParseTree*> ParseTree::makeContext(vector<int> loc) const{

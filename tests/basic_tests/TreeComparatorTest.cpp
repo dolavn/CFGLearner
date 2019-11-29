@@ -59,3 +59,22 @@ TEST(tree_aligner_test,advanced_check){
     TreeAligner c(scores, INDEL);
     ASSERT_EQ(c.compare(t6, t8), 4);
 }
+
+TEST(swap_comparator,basic_check){
+    ParseTree t(0);
+    ParseTree t2(0);
+    ParseTree t3(0);
+    ParseTree t4(0);
+    t.setSubtree(ParseTree(1), 0);
+    t.setSubtree(ParseTree(2), 1);
+    t2.setSubtree(ParseTree(2), 0);
+    t2.setSubtree(ParseTree(1), 1);
+    t3.setSubtree(t, 0);
+    t3.setSubtree(ParseTree(1), 1);
+    t4.setSubtree(ParseTree(1), 0);
+    t4.setSubtree(t2, 1);
+    scoresMap scores = getScores();
+    SwapComparator c(4, 1);
+    ASSERT_EQ(1, c.compare(t, t2));
+    ASSERT_EQ(2, c.compare(t3, t4));
+}
