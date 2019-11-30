@@ -37,10 +37,10 @@ TEST(multilplicity_difference_teacher_test,equivalence_check){
     MultiLinearMap m2(3, 0);
     m2.setParam(1.0,{1});
     MultiLinearMap m0(3, 2);
-    m0.setParam(1.0, {2, 0, 1});
+    m0.setParam(1.0, {2, 0, 1});  m0.setParam(0.4, {2, 1, 0});
     acc.addTransition(m1, rankedChar{1, 0});
     acc.addTransition(m2, rankedChar{2, 0});
-    acc.addTransition(m0, rankedChar{0, 2}); m0.setParam(0.4, {2, 1, 0});
+    acc.addTransition(m0, rankedChar{0, 2});
     ASSERT_EQ(teacher.equivalence(acc), nullptr);
     teacher.membership(t2);
     ParseTree* counterExample = teacher.equivalence(acc);
