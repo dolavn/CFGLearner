@@ -78,3 +78,20 @@ TEST(swap_comparator,basic_check){
     ASSERT_EQ(1, c.compare(t, t2));
     ASSERT_EQ(2, c.compare(t3, t4));
 }
+
+TEST(swap_comparator, exception_test){
+    ParseTree t(0);
+    ParseTree t2(0);
+    t.setSubtree(ParseTree(1), 0);
+    t.setSubtree(ParseTree(1), 1);
+    t.setSubtree(ParseTree(1), 2);
+    t2.setSubtree(ParseTree(1), 0);
+    t2.setSubtree(ParseTree(1), 1);
+    SwapComparator c(4, 1);
+    try{
+        c.compare(t, t2);
+        ASSERT_EQ(1, 0);
+    }catch(exception&){
+
+    }
+}

@@ -12,6 +12,7 @@
 #include "TreesIterator.h"
 
 class ParseTree;
+class TreeComparator;
 class MultiplicityTreeAcceptor;
 
 class MultiplicityTeacher{
@@ -54,6 +55,33 @@ private:
     mutable double error;
     std::set<rankedChar> alphabet;
     std::vector<ParseTree*> trees;
+};
+
+class DifferenceMultiplicityTeacher: public MultiplicityTeacher{
+public:
+    DifferenceMultiplicityTeacher(TreeComparator&, int, double, double);
+    DifferenceMultiplicityTeacher(const DifferenceMultiplicityTeacher&);
+    DifferenceMultiplicityTeacher& operator=(const DifferenceMultiplicityTeacher&)=delete;
+    DifferenceMultiplicityTeacher(DifferenceMultiplicityTeacher&&);
+    DifferenceMultiplicityTeacher& operator=(DifferenceMultiplicityTeacher&&)=delete;
+    ~DifferenceMultiplicityTeacher();
+
+    virtual double membership(const ParseTree&) const;
+    virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
+    virtual double getDefaultValue() const{return 0;}
+    virtual std::set<rankedChar> getAlphabet() const{return alphabet;};
+    virtual double getError() const{return 0;}
+    void addExample(const ParseTree&);
+private:
+    void copy(const DifferenceMultiplicityTeacher&);
+    void clear();
+    std::vector<ParseTree*> trees;
+    std::set<rankedChar> alphabet;
+    mutable std::vector<ParseTree*> cache;
+    TreeComparator& cmp;
+    int maxDiff;
+    double decayFactor;
+    double epsilon;
 };
 
 class FunctionalMultiplicityTeacher: public MultiplicityTeacher{

@@ -36,6 +36,7 @@ SET (SRCS src/ParseTree.cpp
           src/ConicCombinationFinder.cpp
           src/PositiveHankelMatrix.cpp
           src/Logger.cpp
+          src/DifferenceMultiplicityTeacher.cpp
         )
 
 

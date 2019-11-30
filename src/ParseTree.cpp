@@ -28,6 +28,7 @@ ParseTree::ParseTree(int data, vector<ParseTree> v):empty(false),data(data),size
     }
 }
 
+
 ParseTree::ParseTree(int data, bool context, vector<int> contextLoc):empty(false),data(data),size(1),weight(0),prob(0),
                                                                      isContext(context),
                                                                      contextLoc(std::move(contextLoc)),subtrees(){

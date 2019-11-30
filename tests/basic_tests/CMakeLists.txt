@@ -22,6 +22,7 @@ add_executable(runBasicTests
                 TreesIteratorTest.cpp
                 ConicCombinationFinderTest.cpp
                 PositiveHankelMatrixTest.cpp
+                DifferenceMultiplicityTeacherTest.cpp
                 TestHelperFunctions.cpp)
 
 
