@@ -21,11 +21,11 @@ int log_rank(Logger::LoggingLevel value)
     switch (value)
     {
         case Logger::LOG_DEBUG:
+            return 4;
+        case Logger::LOG_DETAILS:
             return 3;
-
         case Logger::LOG_WARNING:
             return 2;
-
         case Logger::LOG_ERRORS:
             return 1;
     }

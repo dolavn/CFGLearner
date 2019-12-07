@@ -50,7 +50,7 @@ void BaseTable::addContext(const ParseTree& context){
     }
     Logger& logger = Logger::getLogger();
     logger.setLoggingLevel(Logger::LOG_DEBUG);
-    logger << "add context";
+    logger << "add context" << logger.endline;
     auto newContext = new ParseTree(context);
     c.push_back(newContext);
     completeContextS(newContext);

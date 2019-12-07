@@ -387,19 +387,27 @@ bool HankelMatrix::hasContext(const ParseTree& context) const{
 }
 
 void HankelMatrix::makeConsistent(){
+    Logger& logger = Logger::getLogger();
+    closeTable();
+    //TODO: Check if consistency is needed, or is being closed enough.
+    return;
     while(true){
         closeTable();
-        MultiplicityTreeAcceptor acc = getAcceptorTemp();
         vector<ParseTree*> newContexts;
+        MultiplicityTreeAcceptor acc = getAcceptorTemp();
         //acc.printDesc();
         for(auto tree: s){
             vector<double> vec = getObs(*tree);
             for(auto it=c.begin();it!=c.end();++it){
                 auto context = *it;
                 ParseTree* merged = context->mergeContext(*tree);
-                if(acc.run(*merged)!=vec[it-c.begin()]){
+                if(ABS(acc.run(*merged)-vec[it-c.begin()])>EPSILON){
+                    logger.setLoggingLevel(Logger::LOG_DETAILS);
+                    logger << *merged << logger.endline;
+                    logger << "acc[c*t]=" << acc.run(*merged) << logger.endline;
+                    logger << "h[c][t]="  << vec[it-c.begin()] << logger.endline;
                     for(auto& suffix: merged->getAllContexts()){
-                        if(!hasContext(*suffix) && c.size() < 20){
+                        if(!hasContext(*suffix)){ // && c.size() < 20){
                             newContexts.push_back(suffix);
                         }else{
                             delete(suffix); suffix=nullptr;

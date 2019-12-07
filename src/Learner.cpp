@@ -204,32 +204,18 @@ TreeAcceptor learn(const Teacher& teacher){
 MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix& h){
     ofstream myfile;
     Logger& logger = Logger::getLogger();
+    MultiplicityTreeAcceptor acc({}, 0);
     myfile.open("multLearn");
     while(true){
-        clock_t begin = clock();
-        h.makeConsistent();
-        clock_t end = clock();
-        double consistentTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
-        begin = clock();
-        MultiplicityTreeAcceptor acc = h.getAcceptor();
-        end = clock();
-        double acceptorTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
         myfile << "Current table:\\\\" << endl;
         myfile << "\\begin{center}" << endl;
         myfile << h.getTableLatex() << endl;
         myfile << "\\end{center}" << endl;
         //acc.printDesc();
-        begin = clock();
+        clock_t begin = clock();
         ParseTree* counterExample = teacher.equivalence(acc);
-        end = clock();
+        clock_t end = clock();
         double equivTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
-        logger.setLoggingLevel(Logger::LOG_DEBUG);
-        logger << "Error:" << teacher.getError() << logger.endline;
-        logger << "c size:" << h.getC().size() << logger.endline;
-        logger << "s size:" << h.getS().size() << logger.endline;
-        logger << "consistentTime:" << consistentTime << logger.endline;
-        logger << "acceptorTime" << acceptorTime << logger.endline;
-        logger << "equivTime:" << equivTime << logger.endline;
         if(counterExample){
             logger << *counterExample << logger.endline;
         }
@@ -255,6 +241,21 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
             }
             SAFE_DELETE(counterExample)
         }
+        begin = clock();
+        h.makeConsistent();
+        end = clock();
+        double consistentTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
+        begin = clock();
+        acc = h.getAcceptor();
+        end = clock();
+        double acceptorTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
+        logger.setLoggingLevel(Logger::LOG_DEBUG);
+        logger << "Error:" << teacher.getError() << logger.endline;
+        logger << "c size:" << h.getC().size() << logger.endline;
+        logger << "s size:" << h.getS().size() << logger.endline;
+        logger << "consistentTime:" << consistentTime << logger.endline;
+        logger << "acceptorTime" << acceptorTime << logger.endline;
+        logger << "equivTime:" << equivTime << logger.endline;
     }
 }
 

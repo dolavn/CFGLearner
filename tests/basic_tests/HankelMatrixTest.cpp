@@ -6,6 +6,7 @@
 #include "../../include/ObservationTable.h"
 #include "../../include/TreesIterator.h"
 #include "../../include/Learner.h"
+#include "../../include/Logger.h"
 
 extern rankedChar a;
 extern rankedChar b;
@@ -312,6 +313,8 @@ TEST(hankel_matrix_test,learner_test3){
 }
 
 TEST(hankel_matrix_test,learner_test4){
+    //Logger& logger = Logger::getLogger();
+    //logger.setPrintLevel(Logger::LOG_DETAILS);
     set<rankedChar> alphabet = getAlphabetProb();
     FunctionalMultiplicityTeacher teacher = getFuncTeacherProb();
     HankelMatrix h(teacher);

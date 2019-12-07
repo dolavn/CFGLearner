@@ -13,6 +13,7 @@ public:
     enum LoggingLevel{
         LOG_ERRORS,
         LOG_WARNING,
+        LOG_DETAILS,
         LOG_DEBUG
     };
     static Logger& getLogger(){

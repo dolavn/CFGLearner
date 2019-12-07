@@ -215,6 +215,8 @@ PYBIND11_MODULE(CFGLearner, m) {
     py::class_<TreeComparator> treeComparator(m, "TreeComparator");
     py::class_<TreeAligner> treeAligner(m, "TreeAligner",treeComparator);
     treeAligner.def(py::init<int, int, int>());
+    py::class_<SwapComparator> swapComparator(m, "SwapComparator", treeComparator);
+    swapComparator.def(py::init<int, int>());
     treeAligner.def("compare", [](TreeComparator& c, py::object nltkTree1, py::object nltkTree2){
         if(!checkType(nltkTree1) || !checkType(nltkTree2)){
             throw std::invalid_argument("Must give an nltk tree");
@@ -232,7 +234,8 @@ PYBIND11_MODULE(CFGLearner, m) {
         t.setTreeComparator(c);
     });
     py::class_<MultiplicityTeacher> multiplicityTeacher(m, "MultiplicityTeacher");
-    py::class_<SimpleMultiplicityTeacher> simpleMultiplicityTeacher(m, "SimpleMultiplicityTeacher",multiplicityTeacher);
+    py::class_<SimpleMultiplicityTeacher> simpleMultiplicityTeacher(m, "SimpleMultiplicityTeacher",
+            multiplicityTeacher);
     simpleMultiplicityTeacher.def(py::init<double,double>(),py::arg("epsilon")=0.1, py::arg("default_val")=-1);
     simpleMultiplicityTeacher.def("addExample",[](SimpleMultiplicityTeacher& t,py::object nltkTree,
             double val){
@@ -245,10 +248,30 @@ PYBIND11_MODULE(CFGLearner, m) {
         t.addExample(*tree);
         delete(tree);
     });
-    m.def("set_verbose",[](bool verbose){
-        PythonModule::verbosity = verbose?Logger::LOG_DEBUG:Logger::LOG_ERRORS;
+    py::class_<DifferenceMultiplicityTeacher> differenceMultiplicityTeacher(m, "DifferenceMultiplicityTeacher",
+            multiplicityTeacher);
+    differenceMultiplicityTeacher.def(py::init<TreeComparator&,int,double,double>());
+    differenceMultiplicityTeacher.def("addExample",[](DifferenceMultiplicityTeacher& t, py::object nltkTree,
+            double val){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        tree->setProb(val);
+        t.addExample(*tree);
+        delete(tree);
+    });
+    py::enum_<Logger::LoggingLevel >(m, "LoggingLevel")
+            .value("LOG_ERRORS", Logger::LoggingLevel::LOG_ERRORS)
+            .value("LOG_WARNING", Logger::LoggingLevel::LOG_WARNING)
+            .value("LOG_DETAILS", Logger::LoggingLevel::LOG_DETAILS)
+            .value("LOG_DEBUG", Logger::LoggingLevel::LOG_DEBUG)
+            .export_values();
+    m.def("set_verbose",[](Logger::LoggingLevel lvl){
+        //Logger::LoggingLevel logArr[] = {Logger::LOG_ERRORS, Logger::LOG_WARNING, Logger::LOG_DEBUG};
         Logger& log = Logger::getLogger();
-        log.setPrintLevel(PythonModule::verbosity);
+        log.setPrintLevel(lvl);
     });
     m.def("learnMult",[](const MultiplicityTeacher& t) {
         py::gil_scoped_release release;
