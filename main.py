@@ -73,23 +73,17 @@ class Checklist(Frame):
 MAIN_FRAME_WIDTH = 1200
 MAIN_FRAME_HEIGHT = 800
 TITLE = 'CFG Learner'
-mla = open('output_mla_manual2.txt')
-mla_list = json.load(mla)
-d = mla_list['cogs_dict']['reverse_dict']
-d = {int(key): d[key] for key in d}
-mla_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in mla_list['trees']]
+MLA_PATH = 'output_mla_manual2.txt'
+TREES_LIST = None
 
-top = tkinter.Tk()
-top.geometry('{0}x{1}'.format(MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT))
-top.title(TITLE)
-text = Label(top, width=20)
-myFont = Font(family="Arial", size=16)
-text.configure(font=myFont)
-text.grid(column=0, row=1)
-listbox = Listbox(top, selectmode=tkinter.SINGLE)
-listbox.grid(column=0, row=0)
-for ind, item in enumerate(mla_list):
-    listbox.insert(ind, 'tree{}'.format(ind+1))
+
+def get_trees_list(file_path):
+    file = open(file_path)
+    trees_list = json.load(file)
+    d = trees_list['cogs_dict']['reverse_dict']
+    d = {int(key): d[key] for key in d}
+    trees_list = [(Tree.fromstring(tup[0]), tup[1]) for tup in trees_list['trees']]
+    return trees_list, d
 
 
 def onFrameConfigure(event, canvas):
@@ -97,8 +91,8 @@ def onFrameConfigure(event, canvas):
     canvas.configure(scrollregion=canvas.bbox("all"))
 
 
-def learn_cmd(indices):
-    trees = [mla_list[ind][0] for ind in indices]
+def learn_cmd(indices, tree_list, d):
+    trees = [tree_list[ind][0] for ind in indices]
     teacher = SimpleTeacher()
     for tree in trees:
         teacher.addPositiveExample(tree)
@@ -106,21 +100,18 @@ def learn_cmd(indices):
     print(cfg)
 
 
-
-out_frame = Frame(top)
-out_frame.grid(column=0, row=2)
-c = Checklist(range(len(mla_list)), out_frame)
-c.pack()
-b = Button(out_frame, pady=10, text='OK', command=lambda: learn_cmd(c.get_selected()))
-b.pack()
-tree_frame = Frame(top)
-tree_frame.grid(column=1, row=0, rowspan=2)
-cf = CanvasFrame(tree_frame)
-cf.canvas()['width'] = 1000
-cf.pack()
+def init_GUI(width, height, title=TITLE):
+    top = tkinter.Tk()
+    top.geometry('{0}x{1}'.format(width, height))
+    top.title(title)
+    text = Label(top, width=20)
+    myFont = Font(family="Arial", size=16)
+    text.configure(font=myFont)
+    text.grid(column=0, row=1)
+    return top
 
 
-def draw_tree(tree, cf):
+def draw_tree(tree, cf, text_box, d):
     cf.canvas().delete('all')
     tc = TreeWidget(cf.canvas(), tree, xspace=50, yspace=50,
                     line_width=2, node_font=('helvetica', -28))
@@ -128,17 +119,43 @@ def draw_tree(tree, cf):
     def show_description(sth):
         t = sth.__repr__()
         t = int(t[t.find('\'')+1:t.find(']')-1])
-        text['text'] = d[t]
+        text_box['text'] = d[t]
     tc.bind_click_nodes(show_description, button=1)
     cf.add_widget(tc, 200, 0)
 
 
-def onselect(evt):
+def onselect(evt, trees_list, cf, text_box, d):
     w = evt.widget
     index = int(w.curselection()[0])
-    tree = mla_list[index][0]
-    draw_tree(tree, cf)
+    tree = trees_list[index][0]
+    draw_tree(tree, cf, text_box, d)
 
 
-listbox.bind('<<ListboxSelect>>', onselect)
-top.mainloop()
+def add_trees_list(top, trees_list, d):
+    listbox = Listbox(top, selectmode=tkinter.SINGLE)
+    listbox.grid(column=0, row=0)
+    for ind, item in enumerate(trees_list):
+        listbox.insert(ind, 'tree{}'.format(ind+1))
+    out_frame = Frame(top)
+    out_frame.grid(column=0, row=2)
+    c = Checklist(range(len(trees_list)), out_frame)
+    c.pack()
+    b = Button(out_frame, pady=10, text='OK', command=lambda: learn_cmd(c.get_selected(), trees_list, d))
+    b.pack()
+    tree_frame = Frame(top)
+    tree_frame.grid(column=1, row=0, rowspan=2)
+    cf = CanvasFrame(tree_frame)
+    cf.canvas()['width'] = 1000
+    cf.pack()
+    text = Label(top, width=20)
+    myFont = Font(family="Arial", size=16)
+    text.configure(font=myFont)
+    text.grid(column=0, row=1)
+    listbox.bind('<<ListboxSelect>>', lambda e: onselect(e, trees_list, cf, text, d))
+
+
+if __name__ == '__main__':
+    top = init_GUI(MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT)
+    trees_list, d = get_trees_list(MLA_PATH)
+    add_trees_list(top, trees_list, d)
+    top.mainloop()
