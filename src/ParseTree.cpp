@@ -359,6 +359,20 @@ std::string ParseTree::latexTreeRecursive() const{
     return "[." + labelStream.str() + stream.str() + " ]";
 }
 
+std::string ParseTree::getNltkTreeStr()  const{
+    stringstream stream;
+    stream << "(" << this->data << " ";
+    for(unsigned int i=0;i<subtrees.size();++i){
+        auto t = subtrees[i];
+        stream << t->getNltkTreeStr();
+        if(i<subtrees.size()-1) {
+            stream << " ";
+        }
+    }
+    stream << ")";
+    return stream.str();
+}
+
 std::string ParseTree::getLatexTree() const{
     return "\\Tree " + this->latexTreeRecursive();
 }

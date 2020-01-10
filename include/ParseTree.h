@@ -101,6 +101,7 @@ public:
     int getData() const{return this->data;}
     std::size_t getHash() const;
     std::string getLatexTree() const;
+    std::string getNltkTreeStr() const;
     std::vector<int> getContextLoc() const{return this->contextLoc;}
     std::vector<const ParseTree*> getInOrderPtrList() const;
     std::vector<ParseTree*> getAllContexts() const;

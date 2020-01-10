@@ -23,11 +23,11 @@ add_executable(runBasicTests
                 ConicCombinationFinderTest.cpp
                 PositiveHankelMatrixTest.cpp
                 DifferenceMultiplicityTeacherTest.cpp
-                TestHelperFunctions.cpp)
+                TestHelperFunctions.cpp
+                TreeConstructorTest.cpp)
 
 
-include_directories(include venv/include/site/python3.6/ /users/studs/bsc/2016/dolavn/CFGLearner/venv/include/site/python3.6 ${PYTHON_INCLUDE_DIRS})
-include_directories(${PYTHON_INCLUDE_DIRS})
+include_directories(include ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(runBasicTests ${PYTHON_LIBRARIES})
 target_link_libraries(runBasicTests gtest gtest_main)
 target_link_libraries(runBasicTests mainProg)

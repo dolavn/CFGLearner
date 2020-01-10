@@ -11,6 +11,7 @@
 #include "Matrix.h"
 #include "ObservationTable.h"
 #include "Logger.h"
+#include "TreeConstructor.h"
 #include <algorithm>
 #include <vector>
 #include <stack>
@@ -232,6 +233,18 @@ PYBIND11_MODULE(CFGLearner, m) {
     });
     differenceTeacher.def("setTreeComparator", [](DifferenceTeacher& t, TreeComparator& c){
         t.setTreeComparator(c);
+    });
+    py::class_<TreeConstructor> treeConstructor(m, "TreeConstructor");
+    treeConstructor.def(py::init<std::map<std::vector<int>,int>>());
+    treeConstructor.def("construct_tree",[](TreeConstructor& c, std::vector<int> v){
+        Sequence seq(v);
+        c.createTree(seq);
+        ParseTree tree = c.getTree();
+        py::object nltk = py::module::import("nltk");
+        py::object nltkTree = nltk.attr("Tree");
+        py::object nltkTreeFromString = nltkTree.attr("fromstring");
+        return nltkTreeFromString(tree.getNltkTreeStr());
+
     });
     py::class_<MultiplicityTeacher> multiplicityTeacher(m, "MultiplicityTeacher");
     py::class_<SimpleMultiplicityTeacher> simpleMultiplicityTeacher(m, "SimpleMultiplicityTeacher",

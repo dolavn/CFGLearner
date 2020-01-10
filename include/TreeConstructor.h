@@ -46,7 +46,7 @@ class TreeConstructor{
 public:
     explicit TreeConstructor(scoreTable);
     int createTree(const Sequence&);
-    ParseTree* getTree();
+    ParseTree getTree();
 private:
     scoreTable table;
     Trees::dpTable dpTable;

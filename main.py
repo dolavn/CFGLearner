@@ -1,12 +1,15 @@
 import tkinter
 from tkinter import Listbox, Frame, Canvas,\
-    Scrollbar, Label, VERTICAL, Checkbutton, IntVar, Button
+    Scrollbar, Label, VERTICAL, Checkbutton, IntVar, Button, Toplevel
 from tkinter.font import Font
 import json
 from nltk import Tree
 from nltk.draw.util import CanvasFrame
 from nltk.draw import TreeWidget
-from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator
+from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, \
+    SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose, SwapComparator, DifferenceMultiplicityTeacher, \
+    LoggingLevel, TreeConstructor
+from WCFG import load_trees_from_file, convert_pmta_to_pcfg
 
 
 class Checklist(Frame):
@@ -74,10 +77,15 @@ MAIN_FRAME_WIDTH = 1200
 MAIN_FRAME_HEIGHT = 800
 TITLE = 'CFG Learner'
 MLA_PATH = 'output_mla_manual2.txt'
+FILE_PATH = 'michalTrees'
+WEIGHTED = True
 TREES_LIST = None
 
 
-def get_trees_list(file_path):
+def get_trees_list(file_path, weighted=False):
+    if weighted:
+        trees_list, labels_dict, reverse_dict = load_trees_from_file(file_path)
+        return trees_list, reverse_dict
     file = open(file_path)
     trees_list = json.load(file)
     d = trees_list['cogs_dict']['reverse_dict']
@@ -100,6 +108,16 @@ def learn_cmd(indices, tree_list, d):
     print(cfg)
 
 
+def learn_cmd_prob(indices, tree_list, reverse_dict):
+    trees = [tree_list[ind] for ind in indices]
+    teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
+    for tree in trees:
+        teacher.addExample(*tree)
+    acc = learnMultPos(teacher)
+    g = convert_pmta_to_pcfg(acc, reverse_dict)
+    print(g)
+
+
 def init_GUI(width, height, title=TITLE):
     top = tkinter.Tk()
     top.geometry('{0}x{1}'.format(width, height))
@@ -118,20 +136,21 @@ def draw_tree(tree, cf, text_box, d):
 
     def show_description(sth):
         t = sth.__repr__()
-        t = int(t[t.find('\'')+1:t.find(']')-1])
+        t = int(t[t.find('Text:')+len('Text: '):t.find(']')])
         text_box['text'] = d[t]
     tc.bind_click_nodes(show_description, button=1)
     cf.add_widget(tc, 200, 0)
 
 
-def onselect(evt, trees_list, cf, text_box, d):
+def onselect(evt, trees_list, cf, text_box, d, weight_text=None):
     w = evt.widget
     index = int(w.curselection()[0])
     tree = trees_list[index][0]
+    weight_text['text'] = 'Probability:{0:.4f}'.format(trees_list[index][1])
     draw_tree(tree, cf, text_box, d)
 
 
-def add_trees_list(top, trees_list, d):
+def add_trees_list(top, trees_list, d, weighted=False):
     listbox = Listbox(top, selectmode=tkinter.SINGLE)
     listbox.grid(column=0, row=0)
     for ind, item in enumerate(trees_list):
@@ -140,22 +159,40 @@ def add_trees_list(top, trees_list, d):
     out_frame.grid(column=0, row=2)
     c = Checklist(range(len(trees_list)), out_frame)
     c.pack()
-    b = Button(out_frame, pady=10, text='OK', command=lambda: learn_cmd(c.get_selected(), trees_list, d))
+    cmd = lambda: learn_cmd(c.get_selected(), trees_list, d)
+    if weighted:
+        cmd = lambda: learn_cmd_prob(c.get_selected(), trees_list, d)
+    b = Button(out_frame, pady=10, text='OK', command=cmd)
     b.pack()
     tree_frame = Frame(top)
     tree_frame.grid(column=1, row=0, rowspan=2)
     cf = CanvasFrame(tree_frame)
     cf.canvas()['width'] = 1000
     cf.pack()
-    text = Label(top, width=20)
     myFont = Font(family="Arial", size=16)
+    text = Label(top, width=20)
     text.configure(font=myFont)
     text.grid(column=0, row=1)
-    listbox.bind('<<ListboxSelect>>', lambda e: onselect(e, trees_list, cf, text, d))
+    weight_text = None
+    if weighted:
+        weight_text = Label(top, width=20)
+        weight_text.configure(font=myFont)
+        weight_text.grid(column=1, row=1)
+    listbox.bind('<<ListboxSelect>>', lambda e: onselect(e, trees_list, cf, text, d,
+                                                         weight_text=weight_text))
+
+
+def create_window(root):
+    window = Toplevel(root)
+    window.geometry('{0}x{1}'.format(400, 400))
+    b = Button(window, text='close', command=lambda: print('hello'))
+    b.grid(column=0, row=0)
 
 
 if __name__ == '__main__':
     top = init_GUI(MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT)
-    trees_list, d = get_trees_list(MLA_PATH)
-    add_trees_list(top, trees_list, d)
+    trees_list, d = get_trees_list(FILE_PATH, weighted=WEIGHTED)
+    add_trees_list(top, trees_list, d, weighted=WEIGHTED)
+    b = Button(top, text="Create new window", command=lambda: create_window(top))
+    b.grid(column=0, row=4)
     top.mainloop()

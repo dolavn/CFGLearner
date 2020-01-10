@@ -390,7 +390,7 @@ void HankelMatrix::makeConsistent(){
     Logger& logger = Logger::getLogger();
     closeTable();
     //TODO: Check if consistency is needed, or is being closed enough.
-    return;
+    //return;
     while(true){
         closeTable();
         vector<ParseTree*> newContexts;

@@ -12,6 +12,7 @@
 
 using namespace std;
 
+/*
 Teacher* getTeacher(){
     ParseTree t(1,{ParseTree(0),ParseTree(0)});
     ParseTree t2(1,{ParseTree(0),ParseTree(1)});
@@ -46,7 +47,7 @@ Teacher* getTeacher2(){
     teacher->addNegativeExample(t6);
     return teacher;
 }
-
+*/
 
 ostream& operator<<(ostream& stream, const Sequence& seq){
     stream << seq.toString();
@@ -57,8 +58,8 @@ vector<int> Sequence::subseq(int begin, int end) const{
     return vector<int>(seq.begin()+begin, seq.begin()+end);
 }
 
+/*
 using namespace arma;
-
 int testCone(){
     static int dim = 5;
     static int vec_num = 1000;
@@ -87,9 +88,10 @@ int testLogger(){
     l << "hello " << 5 << l.endline;
     return 0;
 }
-
-
+*/
+/*
 int main(int argc, char** argv){
+    return 0;
     return testLogger();
     return testCone();
     Teacher* t = getTeacher2();
@@ -100,3 +102,4 @@ int main(int argc, char** argv){
     delete(t);
     return 0;
 }
+ */

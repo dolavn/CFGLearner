@@ -68,8 +68,11 @@ ParseTree* TreeConstructor::traceback(const Trees::dpTable& table, const Sequenc
     return root;
 }
 
-ParseTree* TreeConstructor::getTree(){
-    return traceback(dpTable, seq);
+ParseTree TreeConstructor::getTree(){
+    ParseTree* root = traceback(dpTable, seq);
+    ParseTree ans(*root);
+    delete(root);
+    return ans;
 }
 
 namespace Trees{

@@ -41,8 +41,9 @@ SET (SRCS src/ParseTree.cpp
 
 
 add_library(mainProg
-        ${SRCS})
+            ${SRCS})
+
 link_libraries(mainProg)
-add_executable(CFGLearnerExec
-        ${SRCS})
+#add_executable(CFGLearnerExec
+#               ${SRCS})
 pybind11_add_module(CFGLearner src/PythonModule.cpp)
