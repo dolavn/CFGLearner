@@ -13,12 +13,16 @@ TEST(constructor_test,basic_check){
     TreeConstructor c(t);
     Sequence s1({1, 2, 2});
     Sequence s2({2, 1, 2});
-    c.createTree(s1);
+    int score = c.createTree(s1);
+    ASSERT_EQ(score, 5);
     ParseTree ans1(0, {ParseTree(0, {ParseTree(1), ParseTree(2)}), ParseTree(2)});
     ParseTree ans2(0, {ParseTree(2), ParseTree(0, {ParseTree(1), ParseTree(2)})});
     ParseTree tree = c.getTree();
     ASSERT_EQ(tree, ans1);
-    c.createTree(s2);
+    score = c.createTree(s2);
+    ASSERT_EQ(score, 5);
     tree = c.getTree();
     ASSERT_EQ(tree, ans2);
 }
+
+

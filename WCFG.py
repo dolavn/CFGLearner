@@ -11,7 +11,8 @@ from nltk import Tree
 import re
 from nltk.parse import ViterbiParser
 from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, test_arma, \
-    SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose
+    SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose, SwapComparator, DifferenceMultiplicityTeacher,\
+    LoggingLevel
 
 
 lengths = [2, 4]
@@ -82,21 +83,22 @@ def get_productions(multi_map, terminal=None):
     return ans
 
 
-def get_leaves(nltk_tree, reverse_dict):
+def get_leaves(nltk_tree, reverse_dict=None):
     leaves = []
+    func = lambda a: a if not reverse_dict else reverse_dict[a]
     for child in nltk_tree:
         if not isinstance(child, Tree):
-            leaves.append(reverse_dict[child])
+            leaves.append(func(child))
         else:
             if len(child) > 0:
                 leaves.extend(get_leaves(child, reverse_dict))
             else:
-                leaves.append(reverse_dict[child.label()])
+                leaves.append(func(child.label()))
     return leaves
 
 
 
-def get_grammar(acc, reverse_dict):
+def get_grammar(acc, reverse_dict=None):
     prods = []
     g = {'prod': [], 'nt': ['S'], 'terminals': []}
     for ind, weight in enumerate(acc.get_lambda()):
@@ -108,7 +110,10 @@ def get_grammar(acc, reverse_dict):
         if rank == 0:
             terminals = acc.get_alphabet(rank)
             for terminal_ind in terminals:
-                terminal = reverse_dict[terminal_ind]
+                if reverse_dict:
+                    terminal = reverse_dict[terminal_ind]
+                else:
+                    terminal = terminal_ind
                 g['terminals'].append(terminal)
                 g['prod'] = g['prod'] + get_productions(acc.get_map_terminal(terminal_ind),
                                                         terminal=str(terminal))
@@ -140,13 +145,12 @@ def calc_partition_functions(variables):
                                                       [1 if nt not in variables else variables[
                                                           nt]['value'] for nt in prod.get_rhs()]) for prod in equation])
             new_values[variable] = new_value
-            print(variable, new_value)
             conv[variable].append(new_value)
         for variable in variables.keys():
             variables[variable]['value'] = new_values[variable]
-    for variable in variables.keys():
+    """for variable in variables.keys():
         plt.plot(conv[variable])
-    plt.show()
+    plt.show()"""
     return variables
 
 
@@ -164,7 +168,7 @@ def normalize_grammar(g):
 
 def get_nltk_pcfg(g):
     prod_lists = [[prod for prod in g['prod'] if prod.get_lhs() == nt] for nt in g['nt']]
-    print([len(p) for p in prod_lists])
+    #print([len(p) for p in prod_lists])
     strings = ['{0} -> {1}'.format(prod_list[0].get_lhs(),
                                    ('{} [{}] | '*(len(prod_list)-1)+'{} [{}]').format(
                                        *sum([[' '.join(prod.get_rhs()), prod.get_weight()] for prod in prod_list],
@@ -174,7 +178,7 @@ def get_nltk_pcfg(g):
     return PCFG.fromstring(strings)
 
 
-def convert_pmta_to_pcfg(pmta, reverse_dict):
+def convert_pmta_to_pcfg(pmta, reverse_dict=None):
     g = get_grammar(pmta, reverse_dict)
     g = normalize_grammar(g)
     return get_nltk_pcfg(g)
@@ -185,6 +189,21 @@ def get_subset(lst, indices):
     for index in indices:
         ans.append(lst[index])
     return ans
+
+
+def calc_dist_pcfg(trees, pcfg, reverse_dict):
+    if trees is None:
+        return
+    parser = ViterbiParser(pcfg)
+    all_parses = []
+    total_dist = 0
+    for tree, prob in trees:
+        leaves = get_leaves(tree, reverse_dict=reverse_dict)
+        parses = parser.parse_all(leaves)
+        all_parses.append((parses[0], parses[0].prob()))
+        total_dist = total_dist + abs(parses[0].prob()-prob)
+    draw_trees(all_parses, 'parses', print_prob=True)
+    print(total_dist)
 
 
 def test_pcfg(trees, pcfg, reverse_dict):
@@ -242,49 +261,56 @@ def load_trees_from_file(path, indices=None):
     return new_trees_list, labels_dict, reverse_dict
 
 
-subset = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-trees_list, labels_dict, reverse_dict = load_trees_from_file('michalTrees', indices=subset)
-draw_trees(trees_list, 'treesNumbers', print_prob=True)
-print(trees_list)
-print(reverse_dict)
-#exit()
-# gen_iter = lambda : tree_list_cfg1
-p, q, r, s = 0.6, 0.8, 0.3, 0.9
-toy_grammar = {'prod': [WeightedProduction('A', ['a', 'A'], p),
-                        WeightedProduction('A', ['B'], r),
-                        WeightedProduction('B', ['B', 'b'], q),
-                        WeightedProduction('B', ['b'], s)],
-               'nt': ['A', 'B'], 'terminals': ['a', 'b']}
-#g = normalize_grammar(toy_grammar)
-#g = get_nltk_pcfg(g)
-lin = [0.25]
-#def_vals = np.linspace(0.0001, 0.0005, 10)
-kls = []
-kls2 = []
-dims = []
-dims_pos = []
-#total_prob = 0.5
-set_verbose(False)
-prods = []
-for total_prob in lin:
-    trees = []
-    def_val = 0
-    teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=def_val)
-    teacher2 = SimpleTeacher()
-    #iterator = gen_iter()
-    iterator = get_trees_swap_test(swap_prob=0.5)
+def test():
+    subset = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    trees_list, labels_dict, reverse_dict = load_trees_from_file('michalTrees')
+    draw_trees(trees_list, 'treesNumbers', print_prob=True)
     print(trees_list)
-    for tree, prob in trees_list:
-        print(tree, prob)
-        teacher.addExample(tree, prob)
-        teacher2.addPositiveExample(tree)
-        trees.append(tree)
-    print('learning')
-    acc = learnMultPos(teacher)
-    acc.print_desc()
-    g = convert_pmta_to_pcfg(acc, reverse_dict)
-    cfg = learn(teacher2, reverse_dict)
-    print(cfg)
-    print(g)
-test_pcfg(trees_list, g, reverse_dict)
-draw_trees(trees_list, 'treesMichalDraw', reverse_dict=reverse_dict, print_prob=True)
+    print(reverse_dict)
+    #exit()
+    # gen_iter = lambda : tree_list_cfg1
+    p, q, r, s = 0.6, 0.8, 0.3, 0.9
+    toy_grammar = {'prod': [WeightedProduction('A', ['a', 'A'], p),
+                            WeightedProduction('A', ['B'], r),
+                            WeightedProduction('B', ['B', 'b'], q),
+                            WeightedProduction('B', ['b'], s)],
+                   'nt': ['A', 'B'], 'terminals': ['a', 'b']}
+    #g = normalize_grammar(toy_grammar)
+    #g = get_nltk_pcfg(g)
+    lin = [0.25]
+    swap_prices = [1]
+    #def_vals = np.linspace(0.0001, 0.0005, 10)
+    kls = []
+    kls2 = []
+    dims = []
+    dims_pos = []
+    total_prob = 0.25
+    set_verbose(LoggingLevel.LOG_DETAILS)
+    prods = []
+    for swap_price in swap_prices:
+        cmp = SwapComparator(4, swap_price)
+        trees = []
+        def_val = 0
+        teacher = DifferenceMultiplicityTeacher(cmp, 1, 0.25, 0.0001)
+        teacher2 = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=def_val)
+        teacher2 = SimpleTeacher()
+        #iterator = gen_iter()
+        #iterator = get_trees_swap_test(swap_prob=0.5)
+        print(trees_list)
+        for tree, prob in trees_list:
+            print(tree, prob)
+            teacher.addExample(tree, prob)
+            teacher2.addPositiveExample(tree)
+            trees.append(tree)
+        print('learning')
+        acc = learnMultPos(teacher)
+        acc.print_desc()
+        g = convert_pmta_to_pcfg(acc, reverse_dict)
+        #cfg = learn(teacher2, reverse_dict)
+        #print(cfg)
+        print(g)
+        print(calc_dist_pcfg(trees_list, g, reverse_dict))
+    draw_trees(trees_list, 'treesMichalDraw', reverse_dict=reverse_dict, print_prob=True)
+
+if __name__ == '__main__':
+    test()

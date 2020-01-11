@@ -10,7 +10,7 @@ from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teach
     SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose, SwapComparator, DifferenceMultiplicityTeacher, \
     LoggingLevel, TreeConstructor
 from WCFG import load_trees_from_file, convert_pmta_to_pcfg
-
+from test import draw_trees
 
 class Checklist(Frame):
 
@@ -136,6 +136,7 @@ def draw_tree(tree, cf, text_box, d):
 
     def show_description(sth):
         t = sth.__repr__()
+        t = t.replace('\'', '')
         t = int(t[t.find('Text:')+len('Text: '):t.find(']')])
         text_box['text'] = d[t]
     tc.bind_click_nodes(show_description, button=1)
@@ -189,7 +190,67 @@ def create_window(root):
     b.grid(column=0, row=0)
 
 
+def convert_string(curr_str, alphabet, alphabet_rev, last_ind):
+    for ind, elem in enumerate(curr_str):
+        if elem not in alphabet:
+            alphabet[elem] = last_ind[0]
+            alphabet_rev[last_ind[0]] = elem
+            last_ind[0] += 1
+        curr_str[ind] = alphabet[elem]
+
+
+def get_score_table(sequences):
+    table = {}
+    for seq, occ in sequences:
+        for i in range(0, len(seq)-2):
+            subseq = seq[i: i+2]
+            if subseq not in table:
+                table[subseq] = occ
+            else:
+                table[subseq] += occ
+    return table
+
+
+def read_strings(file_path):
+    seq_dict = {}
+    alphabet = {}
+    alphabet_rev = {}
+    curr_ind = [0]
+    with open(file_path) as file:
+        data = json.load(file)
+        for seq, occ in data:
+            convert_string(seq, alphabet, alphabet_rev, curr_ind)
+            s = tuple(seq)
+            if s not in seq_dict:
+                seq_dict[s] = occ
+            else:
+                seq_dict[s] += occ
+    sequences = []
+    for seq in seq_dict.keys():
+        sequences.append((seq, seq_dict[seq]))
+    table = get_score_table(sequences)
+    return sequences, alphabet, alphabet_rev, table
+
+
+def normalize_trees(trees):
+    total_sum = sum([occ for _, occ in trees])
+    for ind, tup in enumerate(trees):
+        trees[ind] = (tup[0], tup[1]/total_sum)
+
+
+def create_trees(sequences, table):
+    ans = []
+    constructor = TreeConstructor(table)
+    for seq, occ in sequences:
+        curr_tree = constructor.construct_tree(seq)
+        ans.append((curr_tree, occ))
+    normalize_trees(ans)
+    return ans
+
+
 if __name__ == '__main__':
+    sequences, alphabet, alphabet_rev, table = read_strings('michalStrings')
+    trees = create_trees(sequences, table)
     top = init_GUI(MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT)
     trees_list, d = get_trees_list(FILE_PATH, weighted=WEIGHTED)
     add_trees_list(top, trees_list, d, weighted=WEIGHTED)
