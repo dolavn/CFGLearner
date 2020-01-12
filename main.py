@@ -3,7 +3,10 @@ from tkinter import Listbox, Frame, Canvas,\
     Scrollbar, Label, VERTICAL, Checkbutton, IntVar, Button, Toplevel
 from tkinter.font import Font
 import json
+import sys
+from time import time
 from nltk import Tree
+from nltk import treetransforms
 from nltk.draw.util import CanvasFrame
 from nltk.draw import TreeWidget
 from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, \
@@ -11,6 +14,8 @@ from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teach
     LoggingLevel, TreeConstructor
 from WCFG import load_trees_from_file, convert_pmta_to_pcfg
 from test import draw_trees
+from threading import Thread
+
 
 class Checklist(Frame):
 
@@ -113,9 +118,16 @@ def learn_cmd_prob(indices, tree_list, reverse_dict):
     teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
     for tree in trees:
         teacher.addExample(*tree)
-    acc = learnMultPos(teacher)
-    g = convert_pmta_to_pcfg(acc, reverse_dict)
-    print(g)
+
+    def thread_task():
+        print('starting')
+        t = time()
+        acc = learnMultPos(teacher)
+        g = convert_pmta_to_pcfg(acc, reverse_dict)
+        print(g)
+        print('took {}'.format(time()-t))
+    thread = Thread(target=thread_task)
+    thread.start()
 
 
 def init_GUI(width, height, title=TITLE):
@@ -129,6 +141,13 @@ def init_GUI(width, height, title=TITLE):
     return top
 
 
+def convert_tree(tree, d):
+    for ind in tree.treepositions():
+        t = tree[ind]
+        if len(t) == 0:
+            t.set_label(d[int(tree[ind].label())])
+
+
 def draw_tree(tree, cf, text_box, d):
     cf.canvas().delete('all')
     tc = TreeWidget(cf.canvas(), tree, xspace=50, yspace=50,
@@ -140,7 +159,7 @@ def draw_tree(tree, cf, text_box, d):
         t = int(t[t.find('Text:')+len('Text: '):t.find(']')])
         text_box['text'] = d[t]
     tc.bind_click_nodes(show_description, button=1)
-    cf.add_widget(tc, 200, 0)
+    cf.add_widget(tc, 400, 0)
 
 
 def onselect(evt, trees_list, cf, text_box, d, weight_text=None):
@@ -211,6 +230,37 @@ def get_score_table(sequences):
     return table
 
 
+def pre_process_seq(seq):
+    pairs = []
+    ans = []
+    last_ind = 0
+    for i in range(len(seq)):
+        if seq[last_ind] != seq[i]:
+            pairs.append((last_ind, i-1))
+            last_ind = i
+    pairs.append((last_ind, len(seq)-1))
+    pairs = list(filter(lambda p: p[0] != p[1], pairs))
+    last = 0
+    for i1, i2 in pairs:
+        ans = ans + seq[last:i1] + ['{}${}'.format(seq[i1], (i2-i1+1))]
+        last = i2+1
+    ans = ans + seq[last:]
+    return ans
+
+
+def pre_process_tree(tree, rev_map, alphabet):
+    for ind in tree.treepositions():
+        t = tree[ind]
+        if len(t) == 0:
+            lbl = rev_map[int(tree[ind].label())]
+            if '$' in lbl:
+                lbl = lbl.split('$')
+                lbl, occ = lbl
+                occ = int(occ)
+                tree[ind] = Tree(0, [Tree(alphabet[lbl], [])]*occ)
+    return tree
+
+
 def read_strings(file_path):
     seq_dict = {}
     alphabet = {}
@@ -219,6 +269,7 @@ def read_strings(file_path):
     with open(file_path) as file:
         data = json.load(file)
         for seq, occ in data:
+            seq = pre_process_seq(seq)
             convert_string(seq, alphabet, alphabet_rev, curr_ind)
             s = tuple(seq)
             if s not in seq_dict:
@@ -232,28 +283,45 @@ def read_strings(file_path):
     return sequences, alphabet, alphabet_rev, table
 
 
+def convert_tree_to_cnf(tree):
+    treetransforms.chomsky_normal_form(tree)
+    for ind in tree.treepositions():
+        t = tree[ind]
+        if len(t) != 0:
+            tree[ind].set_label('0')
+
+
 def normalize_trees(trees):
     total_sum = sum([occ for _, occ in trees])
     for ind, tup in enumerate(trees):
         trees[ind] = (tup[0], tup[1]/total_sum)
 
 
-def create_trees(sequences, table):
+def create_trees(sequences, table, alphabet_rev, alphabet, contract=False):
     ans = []
     constructor = TreeConstructor(table)
+    constructor.set_contract(contract)
     for seq, occ in sequences:
         curr_tree = constructor.construct_tree(seq)
+        if contract:
+            convert_tree_to_cnf(curr_tree)
         ans.append((curr_tree, occ))
     normalize_trees(ans)
+    for ind, tree in enumerate(ans):
+        ans[ind] = (pre_process_tree(tree[0], alphabet_rev, alphabet), tree[1])
     return ans
 
 
 if __name__ == '__main__':
-    sequences, alphabet, alphabet_rev, table = read_strings('michalStrings')
-    trees = create_trees(sequences, table)
+    args = sys.argv
+    if len(args) < 2:
+        print('Not enough arguments')
+        exit()
+    sequences, alphabet, alphabet_rev, table = read_strings(args[1])
+    trees = create_trees(sequences, table, alphabet_rev, alphabet)
     top = init_GUI(MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT)
     trees_list, d = get_trees_list(FILE_PATH, weighted=WEIGHTED)
-    add_trees_list(top, trees_list, d, weighted=WEIGHTED)
+    add_trees_list(top, trees, alphabet_rev, weighted=WEIGHTED)
     b = Button(top, text="Create new window", command=lambda: create_window(top))
     b.grid(column=0, row=4)
     top.mainloop()
