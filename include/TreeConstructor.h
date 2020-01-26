@@ -16,9 +16,9 @@ namespace Trees{
         public:
             dpRow(const dpTable& table, int ind1);
 
-            int& operator[](int ind2);
+            float& operator[](int ind2);
         private:
-            int* table;
+            float* table;
             int start;
         };
         dpTable();
@@ -31,10 +31,10 @@ namespace Trees{
         void printTable();
         dpRow operator[](int ind);
 
-        int getVal(int, int) const;
+        float getVal(int, int) const;
         int getTrace(int, int) const;
     private:
-        int* table;
+        float* table;
         int len1;
         int len2;
         void clear();
@@ -45,13 +45,15 @@ namespace Trees{
 class TreeConstructor{
 public:
     explicit TreeConstructor(scoreTable);
-    int createTree(const Sequence&);
+    float createTree(const Sequence&);
     ParseTree getTree();
+    void setLambda(float);
+
 private:
     scoreTable table;
     Trees::dpTable dpTable;
     Sequence seq;
-
+    float lambda;
     ParseTree* traceback(const Trees::dpTable&, const Sequence&);
 };
 

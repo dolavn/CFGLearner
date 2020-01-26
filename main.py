@@ -1,6 +1,5 @@
 import tkinter
-from tkinter import Listbox, Frame, Canvas,\
-    Scrollbar, Label, VERTICAL, Checkbutton, IntVar, Button, Toplevel
+from tkinter import *
 from tkinter.font import Font
 import json
 import sys
@@ -15,6 +14,53 @@ from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teach
 from WCFG import load_trees_from_file, convert_pmta_to_pcfg
 from test import draw_trees
 from threading import Thread
+import itertools
+
+class Table(Frame):
+
+    def FrameWidth(self, event):
+        canvas_width = event.width
+        self.canvas.itemconfig(self.canvas_frame, width = canvas_width)
+
+    def OnFrameConfigure(self, event):
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
+
+    def __init__(self, rows, cols, *args, **kwargs):
+        Frame.__init__(self, *args, **kwargs)
+        self.rows_num = len(rows)
+        self.cols_num = len(cols)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        sensorsFrame = Frame(self)
+        sensorsFrame.grid(row=0, sticky="nsew")
+        sensorsFrame.grid_rowconfigure(0, weight=1)
+        sensorsFrame.grid_columnconfigure(0, weight=1)
+
+        self.canvas = Canvas(sensorsFrame)
+        self.sensorsStatsFrame = Frame(self.canvas)
+        self.canvas.grid_columnconfigure(0, weight=1)
+        self.sensorsStatsFrame.grid_columnconfigure(0, weight=1)
+
+        verticalscrollbar = Scrollbar(sensorsFrame, orient=VERTICAL, command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=verticalscrollbar.set)
+        self.canvas.grid(column=0, sticky="nsew")
+        verticalscrollbar.grid(row=0, column=1, sticky="nsew")
+        horizontalscrollbar = Scrollbar(sensorsFrame, orient=HORIZONTAL, command=self.canvas.xview)
+        self.canvas.configure(xscrollcommand=horizontalscrollbar.set)
+        horizontalscrollbar.grid(row=1, column=0, sticky="nsew")
+        for ind, col in enumerate(cols):
+            b = Label(self.sensorsStatsFrame, text=col,
+                      font='Helvetica 18 bold')
+            b.grid(row=0, column=ind)
+        for row, col in itertools.product(range(self.rows_num), range(self.cols_num)):
+            if len(rows[row]) != self.cols_num:
+                raise BaseException("Columns number in row {} don't match".format(row))
+            b = Label(self.sensorsStatsFrame, text=rows[row][col])
+            b.grid(row=row+1, column=col)
+
+        self.canvas_frame = self.canvas.create_window((0, 0), window=self.sensorsStatsFrame, anchor='nw')
+        self.sensorsStatsFrame.bind("<Configure>", self.OnFrameConfigure)
 
 
 class Checklist(Frame):
@@ -50,7 +96,7 @@ class Checklist(Frame):
         self.canvas.grid(column=0, sticky="nsew")
         myscrollbar.grid(row=0, column=1, sticky="nsew")
         for ind, elem in enumerate(elements):
-            b = Checkbutton(self.sensorsStatsFrame, text="Tree {}".format(elem),
+            b = Checkbutton(self.sensorsStatsFrame, text=str(elem),
                             var=self.elem_bools[ind])
             b.grid(column=0, row=ind+1)
             self.checkbuttons.append(b)
@@ -60,7 +106,7 @@ class Checklist(Frame):
                           var=self.selected_all)
         all.grid(column=0, row=0)
 
-        self.canvas_frame = self.canvas.create_window((0,0),window=self.sensorsStatsFrame,anchor='nw')
+        self.canvas_frame = self.canvas.create_window((0,0),window=self.sensorsStatsFrame, anchor='nw')
         self.sensorsStatsFrame.bind("<Configure>", self.OnFrameConfigure)
         self.canvas.bind('<Configure>', self.FrameWidth)
 
@@ -85,6 +131,7 @@ MLA_PATH = 'output_mla_manual2.txt'
 FILE_PATH = 'michalTrees'
 WEIGHTED = True
 TREES_LIST = None
+GUI_Attributes = {'Tree_Frame': None, 'Secondary_Tree_Frame': None}
 
 
 def get_trees_list(file_path, weighted=False):
@@ -148,9 +195,24 @@ def convert_tree(tree, d):
             t.set_label(d[int(tree[ind].label())])
 
 
+def copy_tree(tree):
+    if len(tree) == 0:
+        return Tree(tree.label(), [])
+    ans = Tree(tree.label(), [copy_tree(child) for child in tree])
+    return ans
+
+
 def draw_tree(tree, cf, text_box, d):
     cf.canvas().delete('all')
-    tc = TreeWidget(cf.canvas(), tree, xspace=50, yspace=50,
+    copy = copy_tree(tree)
+    for ind in copy.treepositions():
+        if len(copy[ind]) != 0:
+            continue
+        lbl = int(copy[ind].label())
+        if lbl not in d:
+            continue
+        copy[ind].set_label(d[lbl])
+    tc = TreeWidget(cf.canvas(), copy, xspace=50, yspace=50,
                     line_width=2, node_font=('helvetica', -28))
 
     def show_description(sth):
@@ -164,42 +226,84 @@ def draw_tree(tree, cf, text_box, d):
 
 def onselect(evt, trees_list, cf, text_box, d, weight_text=None):
     w = evt.widget
+    if len(w.curselection()) == 0:
+        return
     index = int(w.curselection()[0])
     tree = trees_list[index][0]
     weight_text['text'] = 'Probability:{0:.4f}'.format(trees_list[index][1])
     draw_tree(tree, cf, text_box, d)
 
 
+def create_trees_command(lambda_val, sequences, alphabet, alphabet_rev, table):
+    try:
+        val = float(lambda_val)
+    except Exception:
+        tkinter.messagebox.showerror("Create Trees", "Invalid value of lambda")
+        return
+    secondary_tree_frame = GUI_Attributes['Secondary_Tree_Frame']
+    tree_frame = GUI_Attributes['Tree_Frame']
+    GUI_Attributes['Secondary_Tree_Frame'] = None
+    secondary_tree_frame.destroy()
+    trees = create_trees(sequences, table, alphabet_rev, alphabet, lambda_val=val)
+    add_trees_list(tree_frame, trees, alphabet_rev, weighted=WEIGHTED)
+
+
+def create_sequences_list(top, sequences, alphabet_dict, alphabet_rev_dict, table):
+    out_frame = Frame(top)
+    out_frame.grid(column=0, row=0, rowspan=2)
+    sequences_copy = sequences.copy()
+    for ind, seq in enumerate(sequences):
+        sequences_copy[ind] = (tuple([alphabet_rev_dict[elem] for elem in seq[0]]), seq[1])
+    t = Table(sequences_copy, ['Sequence', 'Occurrences'], out_frame)
+    input_frame = Frame(top)
+    input_frame.grid(column=1, row=0)
+    lambda_label = Label(input_frame, text='Lambda val:')
+    lambda_label.grid(column=0, row=0)
+    lambda_text = Text(input_frame, height=1, width=10)
+    lambda_text.grid(column=1, row=0)
+    create_trees_button = Button(input_frame, text='Create Trees',
+                                 command=lambda :create_trees_command(lambda_text.get('1.0', END),
+                                                                      sequences, alphabet_dict,
+                                                                      alphabet_rev_dict, table))
+    create_trees_button.grid(column=0, row=1, columnspan=2)
+    t.pack()
+
+
 def add_trees_list(top, trees_list, d, weighted=False):
-    listbox = Listbox(top, selectmode=tkinter.SINGLE)
+    secondary_frame = Frame(top)
+    secondary_frame.pack()
+    listbox = Listbox(secondary_frame, selectmode=tkinter.SINGLE)
     listbox.grid(column=0, row=0)
     for ind, item in enumerate(trees_list):
         listbox.insert(ind, 'tree{}'.format(ind+1))
-    out_frame = Frame(top)
+    out_frame = Frame(secondary_frame)
     out_frame.grid(column=0, row=2)
-    c = Checklist(range(len(trees_list)), out_frame)
+    c = Checklist(['Tree {}'.format(ind) for ind in range(len(trees_list))], out_frame)
     c.pack()
     cmd = lambda: learn_cmd(c.get_selected(), trees_list, d)
     if weighted:
         cmd = lambda: learn_cmd_prob(c.get_selected(), trees_list, d)
     b = Button(out_frame, pady=10, text='OK', command=cmd)
     b.pack()
-    tree_frame = Frame(top)
-    tree_frame.grid(column=1, row=0, rowspan=2)
+    tree_frame = Frame(secondary_frame)
+    tree_frame.grid(column=1, row=0, rowspan=3)
     cf = CanvasFrame(tree_frame)
     cf.canvas()['width'] = 1000
+    cf.canvas()['height'] = 400
     cf.pack()
     myFont = Font(family="Arial", size=16)
-    text = Label(top, width=20)
+    text = Label(secondary_frame, width=20)
     text.configure(font=myFont)
     text.grid(column=0, row=1)
     weight_text = None
     if weighted:
-        weight_text = Label(top, width=20)
+        weight_text = Label(secondary_frame, width=20)
         weight_text.configure(font=myFont)
-        weight_text.grid(column=1, row=1)
+        weight_text.grid(column=1, row=4)
     listbox.bind('<<ListboxSelect>>', lambda e: onselect(e, trees_list, cf, text, d,
                                                          weight_text=weight_text))
+    GUI_Attributes['Tree_Frame'] = top
+    GUI_Attributes['Secondary_Tree_Frame'] = secondary_frame
 
 
 def create_window(root):
@@ -220,13 +324,14 @@ def convert_string(curr_str, alphabet, alphabet_rev, last_ind):
 
 def get_score_table(sequences):
     table = {}
-    for seq, occ in sequences:
-        for i in range(0, len(seq)-2):
-            subseq = seq[i: i+2]
-            if subseq not in table:
-                table[subseq] = occ
-            else:
-                table[subseq] += occ
+    for ngram_len in range(2, len(sequences)):
+        for seq, occ in sequences:
+            for i in range(0, len(seq)-ngram_len):
+                subseq = seq[i: i+ngram_len]
+                if subseq not in table:
+                    table[subseq] = occ
+                else:
+                    table[subseq] += occ
     return table
 
 
@@ -269,7 +374,7 @@ def read_strings(file_path):
     with open(file_path) as file:
         data = json.load(file)
         for seq, occ in data:
-            seq = pre_process_seq(seq)
+            #seq = pre_process_seq(seq)
             convert_string(seq, alphabet, alphabet_rev, curr_ind)
             s = tuple(seq)
             if s not in seq_dict:
@@ -297,11 +402,11 @@ def normalize_trees(trees):
         trees[ind] = (tup[0], tup[1]/total_sum)
 
 
-def create_trees(sequences, table, alphabet_rev, alphabet, contract=False):
+def create_trees(sequences, table, alphabet_rev, alphabet, contract=False, lambda_val=0.0):
     ans = []
     constructor = TreeConstructor(table)
-    constructor.set_contract(contract)
     for seq, occ in sequences:
+        constructor.set_lambda(lambda_val)
         curr_tree = constructor.construct_tree(seq)
         if contract:
             convert_tree_to_cnf(curr_tree)
@@ -318,10 +423,14 @@ if __name__ == '__main__':
         print('Not enough arguments')
         exit()
     sequences, alphabet, alphabet_rev, table = read_strings(args[1])
-    trees = create_trees(sequences, table, alphabet_rev, alphabet)
     top = init_GUI(MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT)
-    trees_list, d = get_trees_list(FILE_PATH, weighted=WEIGHTED)
-    add_trees_list(top, trees, alphabet_rev, weighted=WEIGHTED)
-    b = Button(top, text="Create new window", command=lambda: create_window(top))
-    b.grid(column=0, row=4)
+    seqFrame = Frame(top)
+    seqFrame.grid(row=0, column=0)
+    treeFrame = Frame(top)
+    treeFrame.grid(row=1, column=0)
+    trees = []
+    add_trees_list(treeFrame, trees, alphabet_rev, weighted=WEIGHTED)
+    create_sequences_list(seqFrame, sequences, alphabet, alphabet_rev, table)
+    #trees = create_trees(sequences, table, alphabet_rev, alphabet)
+    #trees_list, d = get_trees_list(FILE_PATH, weighted=WEIGHTED)
     top.mainloop()

@@ -246,6 +246,9 @@ PYBIND11_MODULE(CFGLearner, m) {
         return nltkTreeFromString(tree.getNltkTreeStr());
 
     });
+    treeConstructor.def("set_lambda", [](TreeConstructor& c, float lambda){
+       c.setLambda(lambda);
+    });
     py::class_<MultiplicityTeacher> multiplicityTeacher(m, "MultiplicityTeacher");
     py::class_<SimpleMultiplicityTeacher> simpleMultiplicityTeacher(m, "SimpleMultiplicityTeacher",
             multiplicityTeacher);

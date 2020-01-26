@@ -12,7 +12,7 @@ TreeConstructor::TreeConstructor(scoreTable table):table(std::move(table)), dpTa
 
 }
 
-int TreeConstructor::createTree(const Sequence& seq){
+float TreeConstructor::createTree(const Sequence& seq){
     this->seq = seq;
     dpTable = Trees::dpTable(seq.getLength(), seq.getLength());
     for(int i=0;i<seq.getLength();++i){    /*Table initialization*/
@@ -24,20 +24,24 @@ int TreeConstructor::createTree(const Sequence& seq){
     for(int currLength=3;currLength<=seq.getLength();currLength++){
         for(int i=0;i<seq.getLength()-currLength+1;++i){
             int j = i + currLength - 1;
-            int max = numeric_limits<int>::min();
+            float max = numeric_limits<float>::min();
             int argmax = -1;
             for(int k=i;k<j;k++){
-                int curr = dpTable[i][k] + dpTable[k+1][j];
+                float curr = dpTable[i][k] + dpTable[k+1][j];
                 if(curr>max){
                     max = curr;
                     argmax = k;
                 }
             }
             dpTable[j][i] = argmax;
-            dpTable[i][j] = max;
+            dpTable[i][j] = max+lambda*table[seq.subseq(i, j+1)];
         }
     }
     return dpTable[0][seq.getLength()-1];
+}
+
+void TreeConstructor::setLambda(float lambda) {
+    this->lambda = lambda;
 }
 
 ParseTree* TreeConstructor::traceback(const Trees::dpTable& table, const Sequence& seq){
@@ -78,7 +82,7 @@ ParseTree TreeConstructor::getTree(){
 namespace Trees{
     dpTable::dpTable():table(nullptr),len1(0),len2(0){}
     dpTable::dpTable(int len1, int len2):table(nullptr),len1(len1),len2(len2){
-        table = new int[len1*len2];
+        table = new float[len1*len2];
     }
 
     dpTable::dpTable(const dpTable& other):table(nullptr),len1(other.len1),len2(other.len2){copy(other);}
@@ -120,18 +124,18 @@ namespace Trees{
     }
 
     void dpTable::copy(const Trees::dpTable &other) {
-        table = new int[other.len1*other.len2];
+        table = new float[other.len1*other.len2];
         len1 = other.len1;
         len2 = other.len2;
         for(int i=0;i<len1*len2;++i){table[i] = other.table[i];}
     }
 
-    int dpTable::getVal(int i, int j) const{
+    float dpTable::getVal(int i, int j) const{
         return table[i*len2 + j];
     }
 
     int dpTable::getTrace(int i, int j) const{
-        return table[j*len2 + i];
+        return int(table[j*len2 + i]);
     }
 
     void dpTable::printTable(){
@@ -148,7 +152,7 @@ namespace Trees{
 
     }
 
-    int& dpTable::dpRow::operator[](int ind2) {
+    float& dpTable::dpRow::operator[](int ind2) {
         return table[start+ind2];
     }
 
