@@ -16,6 +16,30 @@ from test import draw_trees
 from threading import Thread
 import itertools
 
+
+class popupWindow(object):
+
+    def __init__(self, master, title=''):
+        top = self.top = Toplevel(master)
+        self.l = Label(top, text=title)
+        self.l.grid(row=0, columnspan=2)
+        self.e = Entry(top)
+        self.e.grid(row=1, columnspan=2)
+        self.b_commit = Button(top, text='Save', command=self.commit)
+        self.b_cancel = Button(top, text='Cancel', command=self.cleanup)
+        self.b_commit.grid(row=2, column=0)
+        self.b_cancel.grid(row=2, column=1)
+
+
+    def commit(self):
+        self.value = self.e.get()
+        self.top.destroy()
+
+    def cleanup(self):
+        self.value = None
+        self.top.destroy()
+
+
 class Table(Frame):
 
     def FrameWidth(self, event):
@@ -110,7 +134,6 @@ class Checklist(Frame):
         self.sensorsStatsFrame.bind("<Configure>", self.OnFrameConfigure)
         self.canvas.bind('<Configure>', self.FrameWidth)
 
-
     def select_all(self):
         if self.selected_all.get() == 1:
             for b in self.checkbuttons:
@@ -131,7 +154,8 @@ MLA_PATH = 'output_mla_manual2.txt'
 FILE_PATH = 'michalTrees'
 WEIGHTED = True
 TREES_LIST = None
-GUI_Attributes = {'Tree_Frame': None, 'Secondary_Tree_Frame': None}
+GUI_Attributes = {'Tree_Frame': None, 'Secondary_Tree_Frame': None,
+                  'top': None}
 
 
 def get_trees_list(file_path, weighted=False):
@@ -202,16 +226,22 @@ def copy_tree(tree):
     return ans
 
 
-def draw_tree(tree, cf, text_box, d):
-    cf.canvas().delete('all')
+def get_drawable_tree(tree, d):
     copy = copy_tree(tree)
     for ind in copy.treepositions():
         if len(copy[ind]) != 0:
+            copy[ind].set_label('?')
             continue
         lbl = int(copy[ind].label())
         if lbl not in d:
             continue
         copy[ind].set_label(d[lbl])
+    return copy
+
+
+def draw_tree(tree, cf, text_box, d, prob=None):
+    cf.canvas().delete('all')
+    copy = get_drawable_tree(tree, d)
     tc = TreeWidget(cf.canvas(), copy, xspace=50, yspace=50,
                     line_width=2, node_font=('helvetica', -28))
 
@@ -222,6 +252,9 @@ def draw_tree(tree, cf, text_box, d):
         text_box['text'] = d[t]
     tc.bind_click_nodes(show_description, button=1)
     cf.add_widget(tc, 400, 0)
+    if prob is not None:
+        tp = TreeWidget(cf.canvas(), prob)
+        cf.add_widget(tp, 0, 400)
 
 
 def onselect(evt, trees_list, cf, text_box, d, weight_text=None):
@@ -230,8 +263,9 @@ def onselect(evt, trees_list, cf, text_box, d, weight_text=None):
         return
     index = int(w.curselection()[0])
     tree = trees_list[index][0]
+    prob = trees_list[index][1]
     weight_text['text'] = 'Probability:{0:.4f}'.format(trees_list[index][1])
-    draw_tree(tree, cf, text_box, d)
+    draw_tree(tree, cf, text_box, d, prob=prob)
 
 
 def create_trees_command(lambda_val, sequences, alphabet, alphabet_rev, table):
@@ -259,14 +293,46 @@ def create_sequences_list(top, sequences, alphabet_dict, alphabet_rev_dict, tabl
     input_frame.grid(column=1, row=0)
     lambda_label = Label(input_frame, text='Lambda val:')
     lambda_label.grid(column=0, row=0)
-    lambda_text = Text(input_frame, height=1, width=10)
+    lambda_text = Entry(input_frame, width=10)
     lambda_text.grid(column=1, row=0)
     create_trees_button = Button(input_frame, text='Create Trees',
-                                 command=lambda :create_trees_command(lambda_text.get('1.0', END),
+                                 command=lambda :create_trees_command(lambda_text.get(),
                                                                       sequences, alphabet_dict,
                                                                       alphabet_rev_dict, table))
     create_trees_button.grid(column=0, row=1, columnspan=2)
     t.pack()
+
+
+def save_tree(tree, d, name):
+    drawable_tree = get_drawable_tree(tree[0], d)
+    cf = CanvasFrame()
+    tc = TreeWidget(cf.canvas(), drawable_tree)
+    tc['node_font'] = 'arial 22 bold'
+    tc['leaf_font'] = 'arial 22'
+    tc['node_color'] = '#005990'
+    tc['leaf_color'] = '#3F8F57'
+    tc['line_color'] = '#175252'
+    tc['xspace'] = 20
+    tc['yspace'] = 20
+    cf.add_widget(tc, 0, 0)
+    cf.print_to_file('{0}.png'.format(name))
+    cf.destroy()
+
+
+def save_trees_popup(trees, d, button):
+    top = GUI_Attributes['top']
+    w = popupWindow(top, 'Choose file name')
+    button["state"] = "disabled"
+    top.wait_window(w.top)
+    button["state"] = "normal"
+    if w.value is None:
+        print('none')
+    else:
+        if len(trees) == 1:
+            save_tree(trees[0], d, w.value)
+        else:
+            for ind, tree in enumerate(trees):
+                save_tree(tree, d, '{}{}'.format(w.value, ind))
 
 
 def add_trees_list(top, trees_list, d, weighted=False):
@@ -283,8 +349,16 @@ def add_trees_list(top, trees_list, d, weighted=False):
     cmd = lambda: learn_cmd(c.get_selected(), trees_list, d)
     if weighted:
         cmd = lambda: learn_cmd_prob(c.get_selected(), trees_list, d)
-    b = Button(out_frame, pady=10, text='OK', command=cmd)
-    b.pack()
+    learn_button = Button(secondary_frame, pady=10, text='Learn', command=cmd)
+    learn_button.grid(column=0, row=3)
+    save_frame = Frame(secondary_frame)
+    save_frame.grid(column=1, row=3)
+    save_tree_button = Button(save_frame, pady=10, text='Save tree',
+                              command=lambda: save_trees_popup([trees_list[0]], d, save_tree_button))
+    save_tree_button.grid(column=0, row=0)
+    save_all_trees_button = Button(save_frame, pady=10, text='Save all trees',
+                                   command=lambda: save_trees_popup(trees_list, d, save_tree_button))
+    save_all_trees_button.grid(column=1, row=0)
     tree_frame = Frame(secondary_frame)
     tree_frame.grid(column=1, row=0, rowspan=3)
     cf = CanvasFrame(tree_frame)
@@ -424,6 +498,7 @@ if __name__ == '__main__':
         exit()
     sequences, alphabet, alphabet_rev, table = read_strings(args[1])
     top = init_GUI(MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT)
+    GUI_Attributes['top'] = top
     seqFrame = Frame(top)
     seqFrame.grid(row=0, column=0)
     treeFrame = Frame(top)
