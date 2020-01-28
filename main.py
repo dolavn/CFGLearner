@@ -15,7 +15,7 @@ from WCFG import load_trees_from_file, convert_pmta_to_pcfg
 from test import draw_trees
 from threading import Thread
 import itertools
-
+from tkinter.filedialog import askopenfilename
 
 class PopupWindow(object):
     def __init__(self, master, title=''):
@@ -72,6 +72,7 @@ class Table(Frame):
         for widget in widget_list:
             widget.destroy()
         self._rows[row] = None
+        self.selected = None
 
     def save_command(self):
         top = self
@@ -82,6 +83,25 @@ class Table(Frame):
             rows = [row for row in self._rows if row is not None]
             with open(f_name, 'w') as jsonOutput:
                 json.dump(rows, jsonOutput)
+
+    def load_from_file(self, file_name):
+        with open(file_name) as json_file:
+            new_rows = json.load(json_file)
+            for row in new_rows:
+                if len(row) != self.cols_num:
+                    raise BaseException("Invalid json file")
+            self._rows = new_rows
+            self.rows_num = len(new_rows)
+            self.fill_table(self._rows)
+
+    def load_command(self):
+        filename = askopenfilename()
+        try:
+            self.empty_table()
+            self.load_from_file(filename)
+        except Exception:
+            print(sys.exc_info()[0])
+            tkinter.messagebox.showerror("Load from file", "Invalid file")
 
     def select_row(self, e):
         defaultbg = self.cget('bg')
@@ -164,6 +184,17 @@ class Table(Frame):
         ind = self._print_cols.index(col)
         return self._print_funcs[ind]
 
+    def empty_table(self):
+        for row in self.row_to_widgets_map.keys():
+            row_widgets = self.row_to_widgets_map[row]
+            for widget in row_widgets:
+                widget.destroy()
+        self.row_to_widgets_map = {}
+        self.widget_to_rows_map = {}
+        self.rows_num = 0
+        self.selected = None
+        self.entries = {}
+
     def fill_table(self, rows):
         for col in range(self.cols_num):
             if self._mutable_cols[col]:
@@ -192,7 +223,7 @@ class Table(Frame):
         delete_button.grid(row=0, column=1)
         save_button = Button(self.buttonFrame, text='Save', command=lambda: self.save_command())
         save_button.grid(row=0, column=2)
-        load_button = Button(self.buttonFrame, text='Load')
+        load_button = Button(self.buttonFrame, text='Load', command=lambda: self.load_command())
         load_button.grid(row=0, column=3)
         if any(self._mutable_cols):
             change_button = Button(self.buttonFrame, text='Update', command=lambda: self.update_command_wrapper())
@@ -468,6 +499,7 @@ def normalize_trees(trees):
 def create_trees(sequences, table, alphabet_rev, alphabet, contract=False, lambda_val=0.0):
     ans = []
     constructor = TreeConstructor(table)
+    sequences = filter(lambda a: a is not None, sequences)
     for seq, occ in sequences:
         constructor.set_lambda(lambda_val)
         curr_tree = constructor.construct_tree(seq)
