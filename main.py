@@ -53,63 +53,150 @@ class Table(Frame):
             mutable_row = list(row)
             for col_ind, col in enumerate(row):
                 if col_ind in self.entries:
-                    mutable_row[col_ind] = self.entries[col_ind][row_ind].get()
+                    col_type = type(row[col_ind])
+                    try:
+                        val = col_type(self.entries[col_ind][row_ind].get())
+                    except Exception:
+                        tkinter.messagebox.showerror("Table update",
+                                                     "Invalid value entered, only {} is accepted.".format(col_type))
+                        return
+                    mutable_row[col_ind] = col_type(val)
             self._rows[row_ind] = tuple(mutable_row)
         self._update_cmd(self._rows)
 
+    def delete_row(self):
+        if self.selected is None:
+            return
+        row = self.selected
+        widget_list = self.row_to_widgets_map[row]
+        for widget in widget_list:
+            widget.destroy()
+        self._rows[row] = None
+
+    def save_command(self):
+        top = self
+        w = PopupWindow(top, 'Choose file name')
+        top.wait_window(w.top)
+        if w.value is not None:
+            f_name = w.value
+            rows = [row for row in self._rows if row is not None]
+            with open(f_name, 'w') as jsonOutput:
+                json.dump(rows, jsonOutput)
+
+    def select_row(self, e):
+        defaultbg = self.cget('bg')
+        row = self.widget_to_rows_map[e.widget]
+        widget_list = self.row_to_widgets_map[row]
+        if row == self.selected:
+            for widget in widget_list:
+                widget.configure(background=defaultbg)
+            self.selected = None
+            return
+        for widget in widget_list:
+            widget.configure(background="lightblue")
+        if self.selected is not None:
+            former_selected_row = self.row_to_widgets_map[self.selected]
+            for widget in former_selected_row:
+                widget.configure(background=defaultbg)
+        self.selected = row
+
     def __init__(self, rows, cols, mutable_cols, *args, **kwargs):
         self._update_cmd = None
+        self._print_funcs = None
+        self._print_cols = None
         if 'update_cmd' in kwargs:
             self._update_cmd = kwargs['update_cmd']
             del kwargs['update_cmd']  # Must delete since superclass constructor would throw an exception otherwise
+        if 'print_funcs' in kwargs:
+            self._print_funcs = kwargs['print_funcs']
+            self._print_cols = kwargs['print_cols']
+            del kwargs['print_funcs']
+            del kwargs['print_cols']
         Frame.__init__(self, *args, **kwargs)
         self.rows_num = len(rows)
         self.cols_num = len(cols)
+        self.selected = None
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self._rows = rows
+        self.deleted_rows = []
         self._mutable_cols = mutable_cols
-        sensorsFrame = Frame(self)
-        sensorsFrame.grid(row=0, sticky="nsew")
-        sensorsFrame.grid_rowconfigure(0, weight=1)
-        sensorsFrame.grid_columnconfigure(0, weight=1)
+        self.buttonFrame = None
+        self.canvas = None
+        self.sensorsStatsFrame = None
+        self.canvas_frame = None
+        self.widget_to_rows_map = {}
+        self.row_to_widgets_map = {}
+        self.entries = {}
+        self.create_scroll_bars()
+        self.create_header(cols)
+        self.fill_table(rows)
+        self.create_button_frame()
 
-        self.canvas = Canvas(sensorsFrame)
+    def create_scroll_bars(self):
+        sensors_frame = Frame(self)
+        sensors_frame.grid(row=0, rowspan=5, sticky="nsew")
+        sensors_frame.grid_rowconfigure(0, weight=1)
+        sensors_frame.grid_columnconfigure(0, weight=1)
+        self.canvas = Canvas(sensors_frame)
         self.sensorsStatsFrame = Frame(self.canvas)
         self.canvas.grid_columnconfigure(0, weight=1)
         self.sensorsStatsFrame.grid_columnconfigure(0, weight=1)
-
-        verticalscrollbar = Scrollbar(sensorsFrame, orient=VERTICAL, command=self.canvas.yview)
+        verticalscrollbar = Scrollbar(sensors_frame, orient=VERTICAL, command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=verticalscrollbar.set)
         self.canvas.grid(column=0, sticky="nsew")
         verticalscrollbar.grid(row=0, column=1, sticky="nsew")
-        horizontalscrollbar = Scrollbar(sensorsFrame, orient=HORIZONTAL, command=self.canvas.xview)
+        horizontalscrollbar = Scrollbar(sensors_frame, orient=HORIZONTAL, command=self.canvas.xview)
         self.canvas.configure(xscrollcommand=horizontalscrollbar.set)
         horizontalscrollbar.grid(row=1, column=0, sticky="nsew")
+        self.canvas_frame = self.canvas.create_window((0, 0), window=self.sensorsStatsFrame, anchor='nw')
+        self.sensorsStatsFrame.bind("<Configure>", self.OnFrameConfigure)
+
+    def create_header(self, cols):
         for ind, col in enumerate(cols):
             header_label = Label(self.sensorsStatsFrame, text=col,
                                  font='Helvetica 18 bold')
             header_label.grid(row=0, column=ind)
-        self.entries = {}
+
+    def print_func(self, col):
+        if self._print_funcs is None or col not in self._print_cols:
+            return lambda s: s
+        ind = self._print_cols.index(col)
+        return self._print_funcs[ind]
+
+    def fill_table(self, rows):
         for col in range(self.cols_num):
             if self._mutable_cols[col]:
                 self.entries[col] = []
         for row, col in itertools.product(range(self.rows_num), range(self.cols_num)):
+            print_func = self.print_func(col)
+            if row not in self.row_to_widgets_map:
+                self.row_to_widgets_map[row] = []
             if len(rows[row]) != self.cols_num:
                 raise BaseException("Columns number in row {} don't match".format(row))
-            cell_label = None
             if self._mutable_cols[col]:
                 cell_label = Entry(self.sensorsStatsFrame)
-                cell_label.insert(END, rows[row][col])
+                cell_label.insert(END, print_func(rows[row][col]))
                 self.entries[col].append(cell_label)
             else:
-                cell_label = Label(self.sensorsStatsFrame, text=rows[row][col])
+                cell_label = Label(self.sensorsStatsFrame, text=print_func(rows[row][col]))
             cell_label.grid(row=row+1, column=col)
+            cell_label.bind("<Button-1>", lambda e: self.select_row(e))
+            self.widget_to_rows_map[cell_label] = row
+            self.row_to_widgets_map[row].append(cell_label)
+
+    def create_button_frame(self):
+        self.buttonFrame = Frame(self)
+        self.buttonFrame.grid(row=6)
+        delete_button = Button(self.buttonFrame, text='Delete', command=lambda: self.delete_row())
+        delete_button.grid(row=0, column=1)
+        save_button = Button(self.buttonFrame, text='Save', command=lambda: self.save_command())
+        save_button.grid(row=0, column=2)
+        load_button = Button(self.buttonFrame, text='Load')
+        load_button.grid(row=0, column=3)
         if any(self._mutable_cols):
-            change_button = Button(self.sensorsStatsFrame, text='Update', command=lambda: self.update_command_wrapper())
-            change_button.grid(row=self.rows_num+1, columnspan=self.cols_num)
-        self.canvas_frame = self.canvas.create_window((0, 0), window=self.sensorsStatsFrame, anchor='nw')
-        self.sensorsStatsFrame.bind("<Configure>", self.OnFrameConfigure)
+            change_button = Button(self.buttonFrame, text='Update', command=lambda: self.update_command_wrapper())
+            change_button.grid(row=0, column=0)
 
 
 class Checklist(Frame):
@@ -135,7 +222,7 @@ class Checklist(Frame):
         sensorsFrame.grid_rowconfigure(0, weight=1)
         sensorsFrame.grid_columnconfigure(0, weight=1)
 
-        self.canvas = Canvas(sensorsFrame, bg="blue")
+        self.canvas = Canvas(sensorsFrame)
         self.sensorsStatsFrame = Frame(self.canvas)
         self.canvas.grid_columnconfigure(0, weight=1)
         self.sensorsStatsFrame.grid_columnconfigure(0, weight=1)
@@ -282,22 +369,6 @@ def save_tree(tree, d, name):
     cf.destroy()
 
 
-def save_trees_popup(trees, d, button):
-    top = GUI_Attributes['top']
-    w = PopupWindow(top, 'Choose file name')
-    button["state"] = "disabled"
-    top.wait_window(w.top)
-    button["state"] = "normal"
-    if w.value is None:
-        print('none')
-    else:
-        if len(trees) == 1:
-            save_tree(trees[0], d, w.value)
-        else:
-            for ind, tree in enumerate(trees):
-                save_tree(tree, d, '{}{}'.format(w.value, ind))
-
-
 def create_window(root):
     window = Toplevel(root)
     window.geometry('{0}x{1}'.format(400, 400))
@@ -366,7 +437,7 @@ def read_strings(file_path):
     with open(file_path) as file:
         data = json.load(file)
         for seq, occ in data:
-            seq = pre_process_seq(seq)
+            #seq = pre_process_seq(seq)
             convert_string(seq, alphabet, alphabet_rev, curr_ind)
             s = tuple(seq)
             if s not in seq_dict:
@@ -421,7 +492,6 @@ def update_table(table, alphabet, list):
     for key, val in list:
         key_new = tuple([alphabet[k] for k in key])
         table[key_new] = val
-    print(table)
 
 
 class MainGUI():
@@ -439,7 +509,7 @@ class MainGUI():
         self._top = tkinter.Tk()
         self._top.geometry('{0}x{1}'.format(self._width, self._height))
         self._top.title(self._title)
-        self._table = table
+        self._scoring_table = table
         seqFrame = Frame(self._top)
         seqFrame.grid(row=0, column=0)
         treeFrame = Frame(self._top)
@@ -451,28 +521,26 @@ class MainGUI():
         self._top.mainloop()
 
     def add_trees_list(self, top, trees_list, d, weighted=False):
-        secondary_frame = Frame(top)
+        secondary_frame = Frame(top)  # To be able to delete this frame.
         secondary_frame.pack()
         listbox = Listbox(secondary_frame, selectmode=tkinter.SINGLE)
         listbox.grid(column=0, row=0)
         for ind, item in enumerate(trees_list):
             listbox.insert(ind, 'tree{}'.format(ind+1))
-        out_frame = Frame(secondary_frame)
-        out_frame.grid(column=0, row=2)
-        c = Checklist(['Tree {}'.format(ind) for ind in range(len(trees_list))], out_frame)
-        c.pack()
-        cmd = lambda: learn_cmd(c.get_selected(), trees_list, d)
+        trees_check_list = Checklist(['Tree {}'.format(ind) for ind in range(len(trees_list))], secondary_frame)
+        trees_check_list.grid(column=0, row=2)
+        learn_func = lambda: learn_cmd(trees_check_list.get_selected(), trees_list, d)
         if weighted:
-            cmd = lambda: learn_cmd_prob(c.get_selected(), trees_list, d)
-        learn_button = Button(secondary_frame, pady=10, text='Learn', command=cmd)
+            learn_func = lambda: learn_cmd_prob(c.get_selected(), trees_list, d)
+        learn_button = Button(secondary_frame, pady=10, text='Learn', command=learn_func)
         learn_button.grid(column=0, row=3)
         save_frame = Frame(secondary_frame)
         save_frame.grid(column=1, row=3)
         save_tree_button = Button(save_frame, pady=10, text='Save tree',
-                                  command=lambda: save_trees_popup([trees_list[0]], d, save_tree_button))
+                                  command=lambda: self.save_trees_popup([trees_list[0]], d, save_tree_button))
         save_tree_button.grid(column=0, row=0)
         save_all_trees_button = Button(save_frame, pady=10, text='Save all trees',
-                                       command=lambda: save_trees_popup(trees_list, d, save_tree_button))
+                                       command=lambda: self.save_trees_popup(trees_list, d, save_tree_button))
         save_all_trees_button.grid(column=1, row=0)
         tree_frame = Frame(secondary_frame)
         tree_frame.grid(column=1, row=0, rowspan=3)
@@ -500,7 +568,7 @@ class MainGUI():
         except Exception:
             tkinter.messagebox.showerror("Create Trees", "Invalid value of lambda")
             return
-        table = self._table
+        table = self._scoring_table
         secondary_tree_frame = self._secondary_tree_frame
         tree_frame = self._tree_frame
         self._secondary_tree_frame = None
@@ -508,19 +576,17 @@ class MainGUI():
         trees = create_trees(sequences, table, alphabet_rev, alphabet, lambda_val=val)
         self.add_trees_list(tree_frame, trees, alphabet_rev, weighted=WEIGHTED)
 
+    @staticmethod
+    def convert_sequence(sequence, alphabet_rev_dict):
+        return [alphabet_rev_dict[elem] for elem in sequence]
+
     def create_sequences_list(self, top, sequences, alphabet_dict, alphabet_rev_dict):
-        table = self._table
-        out_frame = Frame(top)
-        out_frame.grid(column=1, row=0)
-        sequences_copy = sequences.copy()
-        for ind, seq in enumerate(sequences):
-            sequences_copy[ind] = (tuple([alphabet_rev_dict[elem] for elem in seq[0]]), seq[1])
-        t = Table(sequences_copy, ['Sequence', 'Occurrences'], [False, False], out_frame)
-        out_frame2 = Frame(top)
-        out_frame2.grid(column=0, row=0)
+        table = self._scoring_table
+        t = Table(sequences, ['Sequence', 'Occurrences'], [False, False], top, print_cols=[0],
+                  print_funcs=[lambda s: self.convert_sequence(s, alphabet_rev_dict)])
         t2 = Table(get_table_as_list(table, alphabet_rev_dict), ['Subseq', 'Score'],
-                   [False, True], out_frame2, update_cmd=lambda a: update_table(table, alphabet_dict, a))
-        t2.pack()
+                   [False, True], top, update_cmd=lambda a: update_table(table, alphabet_dict, a))
+        t2.grid(column=0, row=0)
         input_frame = Frame(top)
         input_frame.grid(column=2, row=0)
         lambda_label = Label(input_frame, text='Lambda val:')
@@ -532,7 +598,20 @@ class MainGUI():
                                                                                sequences, alphabet_dict,
                                                                                alphabet_rev_dict))
         create_trees_button.grid(column=0, row=1, columnspan=2)
-        t.pack()
+        t.grid(column=1, row=0)
+
+    def save_trees_popup(self, trees, d, button):
+        top = self._top
+        w = PopupWindow(top, 'Choose file name')
+        button["state"] = "disabled"
+        top.wait_window(w.top)
+        button["state"] = "normal"
+        if w.value is not None:
+            if len(trees) == 1:
+                save_tree(trees[0], d, w.value)
+            else:
+                for ind, tree in enumerate(trees):
+                    save_tree(tree, d, '{}{}'.format(w.value, ind))
 
 
 def get_trees_list(file_path, weighted=False):
