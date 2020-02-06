@@ -26,6 +26,23 @@ class PopupWindow(object):
         self.top.destroy()
 
 
+class TableData:
+
+    def __init__(self, rows, cols, col_dicts=None):
+        self._rows = rows
+        self._cols = cols
+        self._col_dicts = col_dicts if col_dicts is not None else [None for _ in cols]
+
+
+class TableMap(TableData):
+
+    def __init__(self, map, key_dict=None, val_dict=None, key_name='key', val_name='value'):
+        rows = [(k, map[k]) for k in map.keys()]
+        cols = [key_name, val_name]
+        col_dicts = [key_dict, val_dict]
+        TableData.__init__(self, rows, cols, col_dicts)
+
+
 class Table(Frame):
 
     @staticmethod

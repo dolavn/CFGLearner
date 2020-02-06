@@ -115,6 +115,8 @@ class MainGUI():
                   print_funcs=[lambda s: self.convert_sequence(s, alphabet_rev_dict)])
         t2 = MapTable(table, alphabet_rev_dict, top, cols=['Subseq', 'Score'])
         t2.grid(column=0, row=0)
+        calculate_map_button = Button(top, text='Calculate scores')
+        calculate_map_button.grid(column=0, row=1)
         input_frame = Frame(top)
         input_frame.grid(column=2, row=0)
         lambda_label = Label(input_frame, text='Lambda val:')
