@@ -5,25 +5,59 @@ from tkinter import *
 from tkinter.font import Font
 from time import time
 from nltk import Tree
+from itertools import product
+from nltk import PCFG
+from nltk.parse.viterbi import ViterbiParser
 from nltk import treetransforms
 from nltk.draw.util import CanvasFrame
 from nltk.draw import TreeWidget
 from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, \
     SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose, SwapComparator, DifferenceMultiplicityTeacher, \
-    LoggingLevel, TreeConstructor
-from WCFG import load_trees_from_file, convert_pmta_to_pcfg
+    LoggingLevel, TreeConstructor, LOG_DETAILS, LOG_DEBUG
+from WCFG import load_trees_from_file, convert_pmta_to_pcfg, compress_grammar
 from threading import Thread
-from GUI import Table, MapTable, Checklist, PopupWindow
+from GUI import Table, MapTable, Checklist, PopupWindow, load_object_window
+from PIL import Image, ImageFont, ImageDraw
+import os
 
 MAIN_FRAME_WIDTH = 1200
-MAIN_FRAME_HEIGHT = 800
+MAIN_FRAME_HEIGHT = 1000
 TITLE = 'CFG Learner'
 MLA_PATH = 'output_mla_manual2.txt'
 FILE_PATH = 'michalTrees'
 WEIGHTED = True
 
 
-class MainGUI():
+with open('michalTest') as testData:
+    seq = json.load(testData)
+
+for s in seq:
+    print(s)
+
+
+def get_nonterminals(pcfg):
+    prods = pcfg.productions()
+    alphabet = set()
+    for prod in prods:
+        for r in prod.rhs():
+            if type(r) is str:
+                alphabet.add(r)
+    return list(alphabet)
+
+
+UNKNOWN = 'UNKNOWN'
+
+
+def get_parse_options(seq, alphabet):
+    unknown_indices = [ind for ind, s in enumerate(seq) if s==UNKNOWN]
+    for tup in product(*[alphabet]*len(unknown_indices)):
+        curr_seq = [s for s in seq]
+        for ind, token in zip(unknown_indices, tup):
+            curr_seq[ind] = token
+        yield curr_seq
+
+
+class MainGUI:
 
     def __init__(self, title, width, height):
         self._top = None
@@ -33,6 +67,32 @@ class MainGUI():
         self._width = width
         self._height = height
         self._table = None
+        self._parse_button = None
+        self._pcfg = None
+        self._parsed_trees = []
+
+    def set_pcfg(self, pcfg):
+        self._pcfg = pcfg
+        self._parse_button['state'] = 'normal'
+
+    def parse_command(self, seqs):
+        non_terminals = get_nonterminals(self._pcfg)
+        viterbi = ViterbiParser(self._pcfg)
+        for seq, id in seqs:
+            for parse_option in get_parse_options(seq, non_terminals):
+                for t in viterbi.parse(parse_option):
+                    self._parsed_trees.append((parse_option, t, id))
+        trees = [(tree[1], tree[2]) for tree in self._parsed_trees]
+        for i, (tree, ind) in enumerate(trees):
+            save_tree(tree, None, 'parse{}'.format(i), prob=tree.prob(), csb_id=ind)
+
+
+
+    def load_grammar(self):
+        grammar = load_object_window()
+        grammar = PCFG.fromstring(grammar)
+        self.set_pcfg(grammar)
+
 
     def init_GUI(self, sequences, alphabet, alphabet_rev, table):
         self._top = tkinter.Tk()
@@ -52,17 +112,6 @@ class MainGUI():
     def add_trees_list(self, top, trees_list, d, weighted=False):
         secondary_frame = Frame(top)  # To be able to delete this frame.
         secondary_frame.pack()
-        listbox = Listbox(secondary_frame, selectmode=tkinter.SINGLE)
-        listbox.grid(column=0, row=0)
-        for ind, item in enumerate(trees_list):
-            listbox.insert(ind, 'tree{}'.format(ind+1))
-        trees_check_list = Checklist(['Tree {}'.format(ind) for ind in range(len(trees_list))], secondary_frame)
-        trees_check_list.grid(column=0, row=2)
-        learn_func = lambda: learn_cmd(trees_check_list.get_selected(), trees_list, d)
-        if weighted:
-            learn_func = lambda: learn_cmd_prob(trees_check_list.get_selected(), trees_list, d)
-        learn_button = Button(secondary_frame, pady=10, text='Learn', command=learn_func)
-        learn_button.grid(column=0, row=3)
         save_frame = Frame(secondary_frame)
         save_frame.grid(column=1, row=3)
         save_tree_button = Button(save_frame, pady=10, text='Save tree',
@@ -86,9 +135,24 @@ class MainGUI():
             weight_text = Label(secondary_frame, width=20)
             weight_text.configure(font=myFont)
             weight_text.grid(column=1, row=4)
-        listbox.bind('<<ListboxSelect>>', lambda e: onselect(e, trees_list, cf, text, d,
-                                                             weight_text=weight_text))
+        trees_check_list = Checklist(['Tree {}'.format(ind) for ind in range(len(trees_list))], secondary_frame,
+                                     command=lambda ind: onselect2(ind, trees_list, cf, text, d,
+                                                                   weight_text=weight_text))
+        trees_check_list.grid(column=0, row=0)
+        learn_func = lambda: learn_cmd(trees_check_list.get_selected(), trees_list, d)
+        if weighted:
+            learn_func = lambda: learn_cmd_prob(trees_check_list.get_selected(), trees_list, d, gui=self)
+        grammar_frame = Frame(secondary_frame)
+        grammar_frame.grid(column=0, row=1)
+        learn_button = Button(grammar_frame, pady=10, text='Learn', command=learn_func)
+        learn_button.grid(column=0, row=0)
+        load_grammar_button = Button(grammar_frame, text='Load Grammar', command=self.load_grammar)
+        load_grammar_button.grid(column=1, row=0)
+        parse_button = Button(grammar_frame, text='Parse', command=lambda: self.parse_command(seq))
+        parse_button.grid(column=0, row=1)
+        parse_button['state'] = 'disabled'
         self._tree_frame = top
+        self._parse_button = parse_button
         self._secondary_tree_frame = secondary_frame
 
     def create_trees_command(self, lambda_val, sequences, alphabet, alphabet_rev):
@@ -153,7 +217,16 @@ def learn_cmd(indices, tree_list, d):
     print(cfg)
 
 
-def learn_cmd_prob(indices, tree_list, reverse_dict):
+def convert_pcfg_to_str(pcfg):
+    lst = str(pcfg).split('\n')
+    lst = lst[1:]
+    for i, l in enumerate(lst):
+        lst[i] = l.strip()
+    ans = '\n'.join(lst)
+    return ans
+
+
+def learn_cmd_prob(indices, tree_list, reverse_dict, gui=None):
     trees = [tree_list[ind] for ind in indices]
     teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
     for tree in trees:
@@ -162,9 +235,14 @@ def learn_cmd_prob(indices, tree_list, reverse_dict):
     def thread_task():
         print('starting')
         t = time()
+        set_verbose(LOG_DETAILS)
         acc = learnMultPos(teacher)
         g = convert_pmta_to_pcfg(acc, reverse_dict)
-        print(g)
+        g = compress_grammar(g)
+        gui.set_pcfg(g)
+        g = convert_pcfg_to_str(g)
+        with open('grammar.json', 'w') as json_file:
+            json.dump(g, json_file)
         print('took {}'.format(time()-t))
     thread = Thread(target=thread_task)
     thread.start()
@@ -226,8 +304,15 @@ def onselect(evt, trees_list, cf, text_box, d, weight_text=None):
     draw_tree(tree, cf, text_box, d, prob=prob)
 
 
-def save_tree(tree, d, name):
-    drawable_tree = get_drawable_tree(tree[0], d)
+def onselect2(index, trees_list, cf, text_box, d, weight_text=None):
+    tree = trees_list[index][0]
+    prob = trees_list[index][1]
+    weight_text['text'] = 'Probability:{0:.4f}'.format(trees_list[index][1])
+    draw_tree(tree, cf, text_box, d, prob=prob)
+
+
+def save_tree(tree, d, name, prob=None, csb_id=None):
+    drawable_tree = tree if d is None else get_drawable_tree(tree[0], d)
     cf = CanvasFrame()
     tc = TreeWidget(cf.canvas(), drawable_tree)
     tc['node_font'] = 'arial 22 bold'
@@ -239,7 +324,16 @@ def save_tree(tree, d, name):
     tc['yspace'] = 20
     cf.add_widget(tc, 0, 0)
     cf.print_to_file('{0}.png'.format(name))
+    image1 = Image.open('{0}.png'.format(name))
+    im1 = image1.convert('RGB')
+    if prob is not None:
+        font = ImageFont.truetype("/fonts/Ubuntu-L.ttf", 24)
+        draw = ImageDraw.Draw(im1)
+        draw.text((10, 10), 'p={0:.4f}'.format(prob), (0, 0, 0), font)
+        draw.text((10, 40), 'csb_id={}'.format(csb_id), (0, 0, 0), font)
+    im1.save('{}.pdf'.format(name))
     cf.destroy()
+    os.remove('{}.png'.format(name))
 
 
 def create_window(root):
@@ -258,16 +352,37 @@ def convert_string(curr_str, alphabet, alphabet_rev, last_ind):
         curr_str[ind] = alphabet[elem]
 
 
-def get_score_table(sequences):
+def get_all_score_tuples(seq, alphabet, alphabet_rev):
+    non_duplicates = [alphabet_rev[seq[ind]] for ind in range(len(seq))]
+    non_duplicates = [dup if '$' not in dup else dup[:dup.index('$')] for dup in non_duplicates]
+    yield seq
+    return
+    for tup in product(*[[0, 2, 3, 4]]*len(seq)):
+        new_tup = []
+        for non_dup, dup_factor in zip(non_duplicates, tup):
+            if dup_factor == 0:
+                duplicated = non_dup
+            else:
+                duplicated = '{}${}'.format(non_dup, dup_factor)
+            if duplicated not in alphabet:
+                continue
+            new_tup.append(duplicated)
+        if len(new_tup) == 0:
+            continue
+        yield tuple([alphabet[t] for t in new_tup])
+
+
+def get_score_table(sequences, alphabet, alphabet_rev):
     table = {}
     for ngram_len in range(2, len(sequences)):
         for seq, occ in sequences:
-            for i in range(0, len(seq)-ngram_len):
+            for i in range(0, len(seq)-ngram_len+1):
                 subseq = seq[i: i+ngram_len]
-                if subseq not in table:
-                    table[subseq] = occ
-                else:
-                    table[subseq] += occ
+                for tup in get_all_score_tuples(subseq, alphabet, alphabet_rev):
+                    if tup not in table:
+                        table[tup] = occ
+                    else:
+                        table[tup] += occ
     return table
 
 
@@ -310,7 +425,7 @@ def read_strings(file_path):
     with open(file_path) as file:
         data = json.load(file)
         for seq, occ in data:
-            #seq = pre_process_seq(seq)
+            # seq = pre_process_seq(seq)
             convert_string(seq, alphabet, alphabet_rev, curr_ind)
             s = tuple(seq)
             if s not in seq_dict:
@@ -320,7 +435,16 @@ def read_strings(file_path):
     sequences = []
     for seq in seq_dict.keys():
         sequences.append((seq, seq_dict[seq]))
-    table = get_score_table(sequences)
+    sequences = sorted(sequences, key=lambda a: a[1])
+    if False:
+        seq_l = []
+        for seq in sequences:
+            seq2 = [alphabet_rev[i] for i in seq[0]]
+            seq_l.append((seq2, seq[1]))
+        for s in seq_l:
+            print(s)
+        exit()
+    table = get_score_table(sequences, alphabet, alphabet_rev)
     return sequences, alphabet, alphabet_rev, table
 
 

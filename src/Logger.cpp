@@ -32,5 +32,6 @@ int log_rank(Logger::LoggingLevel value)
 }
 
 bool operator<=(Logger::LoggingLevel left, Logger::LoggingLevel right)
-{ return log_rank(left) <= log_rank(right); }
+{
+    return log_rank(left) <= log_rank(right); }
 

@@ -5,6 +5,13 @@ import json
 import itertools
 
 
+def load_object_window():
+    filename = askopenfilename()
+    with open(filename) as file:
+        ans = json.load(file)
+    return ans
+
+
 class PopupWindow(object):
     def __init__(self, master, title=''):
         top = self.top = Toplevel(master)
@@ -105,8 +112,6 @@ class Table(Frame):
             for row in new_rows:
                 if len(row) != self.cols_num:
                     raise BaseException("Invalid json file")
-            self._rows = new_rows
-            self.rows_num = len(new_rows)
             self.fill_table(self._rows)
 
     def load_command(self):
@@ -115,7 +120,7 @@ class Table(Frame):
             self.empty_table()
             self.load_from_file(filename)
         except Exception:
-            print(sys.exc_info()[0])
+            print(sys.exc_info())
             tkinter.messagebox.showerror("Load from file", "Invalid file")
 
     def select_row(self, e):
@@ -211,6 +216,8 @@ class Table(Frame):
         self.entries = {}
 
     def fill_table(self, rows):
+        self._rows = rows
+        self.rows_num = len(rows)
         for col in range(self.cols_num):
             if self._mutable_cols[col]:
                 self.entries[col] = []
@@ -252,7 +259,13 @@ class MapTable(Table):
         if 'cols' in kwargs:
             cols = kwargs['cols']
             del kwargs['cols']
+        self.map = self.keys = self.reverse_dict = self.repr_to_key_dict = self.values = self.actual_rows = \
+            self.keys_to_repr = None
         self.map = map
+        rows = self.init_maps(map, reverse_dict)
+        Table.__init__(self, rows, cols, [False, True], *args, **kwargs)
+
+    def init_maps(self, map, reverse_dict):
         self.keys = map.keys()
         self.reverse_dict = reverse_dict
         self.repr_to_key_dict = {tuple(self.remap_list(k, reverse_dict)): k for k in self.keys}
@@ -260,7 +273,7 @@ class MapTable(Table):
         self.actual_rows = [(k, v) for k, v in zip(self.keys, self.values)]
         self.keys_to_repr = {tuple(self.remap_list(k, reverse_dict)): k for k in self.keys}
         rows = [(self.remap_list(k, reverse_dict), v) for k, v in self.actual_rows]
-        Table.__init__(self, rows, cols, [False, True], *args, **kwargs)
+        return rows
 
     def remove_keys_from_map(self):
         deleted_keys = []
@@ -270,6 +283,26 @@ class MapTable(Table):
                 deleted_keys.append(key)
         for key in deleted_keys:
             del self.map[key]
+
+    def load_from_file(self, file_name):
+        with open(file_name) as json_file:
+            new_map = json.load(json_file)
+            new_map = {tuple(k): v for k, v in new_map}
+            for k in new_map.keys():
+                self.map[k] = new_map[k]
+            rows = self.init_maps(new_map, self.reverse_dict)
+            self.fill_table(rows)
+
+    def save_command(self):
+        top = self
+        w = PopupWindow(top, 'Choose file name')
+        top.wait_window(w.top)
+        if w.value is not None:
+            f_name = w.value
+            self.update_command_wrapper()
+            output = [(k, self.map[k]) for k in self.map.keys()]
+            with open('{}.json'.format(f_name), 'w') as jsonOutput:
+                json.dump(output, jsonOutput)
 
     def update_keys_in_map(self):
         for row in self.get_rows_without_nones():
@@ -286,20 +319,28 @@ class Checklist(Frame):
 
     def FrameWidth(self, event):
         canvas_width = event.width
-        self.canvas.itemconfig(self.canvas_frame, width = canvas_width)
+        self.canvas.itemconfig(self.canvas_frame, width=canvas_width)
 
     def OnFrameConfigure(self, event):
         self.canvas.config(scrollregion=self.canvas.bbox("all"))
 
+    def on_click(self, e):
+        row = self.widget_to_row[e.widget]
+        self.command(row)
+
     def __init__(self, elements, *args, **kwargs):
+        self.command = lambda i: print(i)
+        if 'command' in kwargs:
+            self.command = kwargs['command']
+            del kwargs['command']
         Frame.__init__(self, *args, **kwargs)
         self.elements = elements
-        self.elem_bools = [IntVar() for elem in elements]
+        self.elem_bools = [IntVar() for _ in elements]
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self.checkbuttons = []
         self.selected_all = IntVar()
-
+        self.widget_to_row = {}
         sensorsFrame = Frame(self)
         sensorsFrame.grid(row=0, sticky="nsew")
         sensorsFrame.grid_rowconfigure(0, weight=1)
@@ -308,24 +349,29 @@ class Checklist(Frame):
         self.canvas = Canvas(sensorsFrame)
         self.sensorsStatsFrame = Frame(self.canvas)
         self.canvas.grid_columnconfigure(0, weight=1)
-        self.sensorsStatsFrame.grid_columnconfigure(0, weight=1)
+        #self.sensorsStatsFrame.grid_columnconfigure(0, weight=1)
 
         myscrollbar = Scrollbar(sensorsFrame, orient=VERTICAL, command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=myscrollbar.set)
         self.canvas.grid(column=0, sticky="nsew")
         myscrollbar.grid(row=0, column=1, sticky="nsew")
         for ind, elem in enumerate(elements):
-            b = Checkbutton(self.sensorsStatsFrame, text=str(elem),
+            b = Checkbutton(self.sensorsStatsFrame,
                             var=self.elem_bools[ind])
-            b.grid(column=0, row=ind+1)
+            lbl = Label(self.sensorsStatsFrame, text=str(elem))
+            lbl.bind("<Button-1>", lambda e: self.on_click(e))
+            self.widget_to_row[lbl] = ind
+            b.grid(column=0, row=ind+1, padx=(100, 0))
+            lbl.grid(column=1, row=ind+1)
             self.checkbuttons.append(b)
 
-
-        all = Checkbutton(self.sensorsStatsFrame, text="Select all", command=self.select_all,
+        all_label = Label(self.sensorsStatsFrame, text="Select all")
+        all = Checkbutton(self.sensorsStatsFrame, command=self.select_all,
                           var=self.selected_all)
         all.grid(column=0, row=0)
+        all_label.grid(column=1, row=0)
 
-        self.canvas_frame = self.canvas.create_window((0,0),window=self.sensorsStatsFrame, anchor='nw')
+        self.canvas_frame = self.canvas.create_window((0, 0), window=self.sensorsStatsFrame, anchor='nw')
         self.sensorsStatsFrame.bind("<Configure>", self.OnFrameConfigure)
         self.canvas.bind('<Configure>', self.FrameWidth)
 

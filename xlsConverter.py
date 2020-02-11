@@ -45,11 +45,38 @@ def parseTree(string):
     return root
 
 
+def get_least_frequent_cogs(csb_list, k=5):
+    alphabet = {}
+    for l, occ in csb_list:
+        curr_lst = []
+        for c in l:
+            curr_lst.append(c)
+        curr_lst = set(curr_lst)
+        for c in curr_lst:
+            if c not in alphabet:
+                alphabet[c] = occ
+            else:
+                alphabet[c] = alphabet[c] + occ
+    sorted_set = sorted([(k, alphabet[k]) for k in alphabet.keys()], key=lambda a: a[1])
+    print(len(sorted_set))
+    return [cog[0] for cog in sorted_set[:k]]
+
+
+def remove_csbs_with_cogs(csb_list, cog_list):
+    return list(filter(lambda csb: not any([cog in cog_list for cog in csb[0]]), csb_list))
+
+
+def keep_csbs_with_cogs(csb_list, cog_list):
+    return list(filter(lambda csb: all([cog in cog_list for cog in csb[0]]), csb_list))
+
+
 def read_xls(instance_dict=None):
     TREES_OUTPUT = False
     KEEP_STRAND_INFO = False
     fname = 'dataset_relabeled_strand_aligned_by_MF_TF.xlsx'
     fname = 'atp_ion_transport.xlsx'
+    fname = 'dataset.xlsx'
+    fname = 'test_data2.xlsx'
     lst = []
     xl_workbook = xlrd.open_workbook(fname)
     xl_sheet = xl_workbook.sheet_by_index(0)
@@ -91,17 +118,26 @@ def read_xls(instance_dict=None):
             elem = value.split(',')
             if revFlag:
                 elem = elem[::-1]
-        lst.append((elem, count))
-
+        lst.append((elem, id_obj))
+    cog_list = ['COG5002', 'COG0745', 'COG0704', 'COG1117', 'COG0581', 'COG0573', 'COG0226']
+    cog_names = {'COG5002': 'VicK', 'COG0745': 'OmpR', 'COG0704': 'PhoU', 'COG1117': 'PstB',
+                 'COG0581': 'PstA', 'COG0573': 'PstC', 'COG0226': 'PstS'}
+    #lst = keep_csbs_with_cogs(lst, cog_list)
+    for l in lst:
+        for i, e in enumerate(l[0]):
+            if e in cog_names:
+                l[0][i] = cog_names[e]
+            else:
+                l[0][i] = 'UNKNOWN'
+    #lst = list(filter(lambda a: a[1] >= 10, lst))
+    output = 'michalTrees' if TREES_OUTPUT else 'michalTest'
     print(lst)
-    output = 'michalTrees' if TREES_OUTPUT else 'michalAtpIonStrings'
-
     with open(output, 'w') as jsonOutput:
         json.dump(lst, jsonOutput)
 
 
 def read_instances():
-    PATH = 'instances.txt'
+    PATH = 'test_data_instances.fasta'
     ans = {}
     curr_cog = None
     with open(PATH) as file:
@@ -128,4 +164,4 @@ def read_instances():
 
 instance_count = read_instances()
 print(instance_count)
-read_xls(instance_dict=instance_count)
+read_xls(instance_dict=None)

@@ -9,6 +9,7 @@ from test import draw_trees
 from functools import reduce
 from nltk import Tree
 import re
+from nltk.grammar import ProbabilisticProduction
 from nltk.parse import ViterbiParser
 from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, test_arma, \
     SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose, SwapComparator, DifferenceMultiplicityTeacher,\
@@ -130,7 +131,27 @@ def get_equations(g):
     return variables
 
 
-MAX_ITER = 10
+def get_compress_dict(grammar):
+    comp_dict = {}
+    for p in grammar.productions():
+        nt_type = type(p.lhs())
+        if all([type(elem) is not nt_type for elem in p.rhs()]) and p.prob() == 1.0:
+            comp_dict[p.lhs()] = p.rhs()[0]
+    return comp_dict
+
+
+def compress_grammar(grammar):
+    comp_dict = get_compress_dict(grammar)
+    grammar._productions = list(filter(lambda p: p.lhs() not in comp_dict, grammar._productions))
+    for ind, prod in enumerate(grammar._productions):
+        rhs = [r if r not in comp_dict else comp_dict[r] for r in prod.rhs()]
+        new_prod = ProbabilisticProduction(prod.lhs(), rhs)
+        new_prod.prob = prod.prob
+        grammar._productions[ind] = new_prod
+    return grammar
+
+
+MAX_ITER = 50
 
 
 def calc_partition_functions(variables):

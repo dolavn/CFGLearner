@@ -249,10 +249,11 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
         acc = h.getAcceptor();
         end = clock();
         double acceptorTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
-        logger.setLoggingLevel(Logger::LOG_DEBUG);
-        logger << "Error:" << teacher.getError() << logger.endline;
+        logger.setLoggingLevel(Logger::LOG_DETAILS);
         logger << "c size:" << h.getC().size() << logger.endline;
         logger << "s size:" << h.getS().size() << logger.endline;
+        logger.setLoggingLevel(Logger::LOG_DEBUG);
+        logger << "Error:" << teacher.getError() << logger.endline;
         logger << "consistentTime:" << consistentTime << logger.endline;
         logger << "acceptorTime" << acceptorTime << logger.endline;
         logger << "equivTime:" << equivTime << logger.endline;
