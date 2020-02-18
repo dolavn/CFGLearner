@@ -235,7 +235,7 @@ PYBIND11_MODULE(CFGLearner, m) {
         t.setTreeComparator(c);
     });
     py::class_<TreeConstructor> treeConstructor(m, "TreeConstructor");
-    treeConstructor.def(py::init<std::map<std::vector<int>,int>>());
+    treeConstructor.def(py::init<std::map<std::vector<int>,float>>());
     treeConstructor.def("construct_tree",[](TreeConstructor& c, std::vector<int> v){
         Sequence seq(v);
         c.createTree(seq);

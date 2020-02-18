@@ -153,8 +153,13 @@ class Table(Frame):
             del kwargs['print_funcs']
             del kwargs['print_cols']
         Frame.__init__(self, *args, **kwargs)
+        self.is_dict = len(rows) > 0 and isinstance(rows[0], dict)
+        if self.is_dict:
+            cols = rows[0].keys()
+            mutable_cols = [False]*len(cols)
         self.rows_num = len(rows)
         self.cols_num = len(cols)
+        self.cols = cols
         self.selected = None
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -221,18 +226,19 @@ class Table(Frame):
         for col in range(self.cols_num):
             if self._mutable_cols[col]:
                 self.entries[col] = []
-        for row, col in itertools.product(range(self.rows_num), range(self.cols_num)):
+        for row, (col, col_name) in itertools.product(range(self.rows_num), enumerate(self.cols)):
             print_func = self.print_func(col)
+            key = col if not self.is_dict else col_name
             if row not in self.row_to_widgets_map:
                 self.row_to_widgets_map[row] = []
             if len(rows[row]) != self.cols_num:
                 raise BaseException("Columns number in row {} don't match".format(row))
             if self._mutable_cols[col]:
                 cell_label = Entry(self.sensorsStatsFrame)
-                cell_label.insert(END, print_func(rows[row][col]))
+                cell_label.insert(END, print_func(rows[row][key]))
                 self.entries[col].append(cell_label)
             else:
-                cell_label = Label(self.sensorsStatsFrame, text=print_func(rows[row][col]))
+                cell_label = Label(self.sensorsStatsFrame, text=print_func(rows[row][key]))
             cell_label.grid(row=row+1, column=col)
             cell_label.bind("<Button-1>", lambda e: self.select_row(e))
             self.widget_to_rows_map[cell_label] = row

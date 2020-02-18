@@ -7,7 +7,7 @@
 
 class ParseTree;
 
-typedef std::map<std::vector<int>, int> scoreTable;
+typedef std::map<std::vector<int>, float> scoreTable;
 
 namespace Trees{
     struct dpTable{

@@ -18,6 +18,7 @@ from WCFG import load_trees_from_file, convert_pmta_to_pcfg, compress_grammar
 from threading import Thread
 from GUI import Table, MapTable, Checklist, PopupWindow, load_object_window
 from PIL import Image, ImageFont, ImageDraw
+from PyPDF2 import PdfFileReader, PdfFileWriter
 import os
 
 MAIN_FRAME_WIDTH = 1200
@@ -27,12 +28,6 @@ MLA_PATH = 'output_mla_manual2.txt'
 FILE_PATH = 'michalTrees'
 WEIGHTED = True
 
-
-with open('michalTest') as testData:
-    seq = json.load(testData)
-
-for s in seq:
-    print(s)
 
 
 def get_nonterminals(pcfg):
@@ -46,6 +41,26 @@ def get_nonterminals(pcfg):
 
 
 UNKNOWN = 'UNKNOWN'
+
+
+def merge_pdfs(input, output):
+    if len(input) == 1:
+        return
+    input_streams = []
+    with open(output, 'w+b') as output_stream:
+        try:
+            for input_file in input:
+                input_streams.append(open(input_file, 'rb'))
+            writer = PdfFileWriter()
+            for reader in map(PdfFileReader, input_streams):
+                writer.addPage(reader.getPage(0))
+            writer.write(output_stream)
+        finally:
+            for f in input_streams:
+                f.close()
+            for name in input:
+                os.remove(name)
+
 
 
 def get_parse_options(seq, alphabet):
@@ -86,15 +101,12 @@ class MainGUI:
         for i, (tree, ind) in enumerate(trees):
             save_tree(tree, None, 'parse{}'.format(i), prob=tree.prob(), csb_id=ind)
 
-
-
     def load_grammar(self):
         grammar = load_object_window()
         grammar = PCFG.fromstring(grammar)
         self.set_pcfg(grammar)
 
-
-    def init_GUI(self, sequences, alphabet, alphabet_rev, table):
+    def init_GUI(self, sequences, alphabet, alphabet_rev, annotations, annotations_rev, table, tree_construct='ANNOT'):
         self._top = tkinter.Tk()
         self._top.geometry('{0}x{1}'.format(self._width, self._height))
         self._top.title(self._title)
@@ -103,7 +115,8 @@ class MainGUI:
         seqFrame.grid(row=0, column=0)
         treeFrame = Frame(self._top)
         treeFrame.grid(row=1, column=0)
-        self.create_sequences_list(seqFrame, sequences, alphabet, alphabet_rev)
+        self.create_sequences_list(seqFrame, sequences, alphabet, alphabet_rev, annotations, annotations_rev,
+                                   tree_construct=tree_construct)
         self.add_trees_list(treeFrame, [], alphabet_rev, weighted=WEIGHTED)
 
     def main_loop(self):
@@ -155,7 +168,7 @@ class MainGUI:
         self._parse_button = parse_button
         self._secondary_tree_frame = secondary_frame
 
-    def create_trees_command(self, lambda_val, sequences, alphabet, alphabet_rev):
+    def create_trees_command(self, lambda_val, sequences, alphabet, alphabet_rev, post_process_func=None):
         try:
             val = float(lambda_val)
         except Exception:
@@ -166,17 +179,26 @@ class MainGUI:
         tree_frame = self._tree_frame
         self._secondary_tree_frame = None
         secondary_tree_frame.destroy()
-        trees = create_trees(sequences, table, alphabet_rev, alphabet, lambda_val=val)
+        trees = create_trees(sequences, table, alphabet_rev, alphabet, lambda_val=val,
+                             post_process_func=post_process_func)
         self.add_trees_list(tree_frame, trees, alphabet_rev, weighted=WEIGHTED)
 
     @staticmethod
     def convert_sequence(sequence, alphabet_rev_dict):
         return [alphabet_rev_dict[elem] for elem in sequence]
 
-    def create_sequences_list(self, top, sequences, alphabet_dict, alphabet_rev_dict):
+    def create_sequences_list(self, top, sequences, cogs_dict, cogs_rev_dict,
+                              annotations_dict, annotations_rev_dict, tree_construct='ANNOT'):
+        if tree_construct not in ['ANNOT', 'COGS']:
+            raise BaseException("Invalid option for tree_construct")
+        alphabet_dict, alphabet_rev_dict = (cogs_dict,
+                                            cogs_rev_dict) if tree_construct == 'COGS' else (annotations_dict,
+                                                                                             annotations_rev_dict)
         table = self._scoring_table
-        t = Table(sequences, ['Sequence', 'Occurrences'], [False, False], top, print_cols=[0],
-                  print_funcs=[lambda s: self.convert_sequence(s, alphabet_rev_dict)])
+        self.sequences = sequences
+        t = Table(sequences, ['Sequence', 'Occurrences'], [False, False], top, print_cols=[0, 1],
+                  print_funcs=[lambda s: s, lambda s: self.convert_sequence(s, cogs_rev_dict),
+                               lambda s: self.convert_sequence(s, annotations_rev_dict)])
         t2 = MapTable(table, alphabet_rev_dict, top, cols=['Subseq', 'Score'])
         t2.grid(column=0, row=0)
         calculate_map_button = Button(top, text='Calculate scores')
@@ -190,22 +212,27 @@ class MainGUI:
         create_trees_button = Button(input_frame, text='Create Trees',
                                      command=lambda: self.create_trees_command(lambda_text.get(),
                                                                                sequences, alphabet_dict,
-                                                                               alphabet_rev_dict))
+                                                                               cogs_rev_dict,
+                                                                               post_process_func=lambda a: a))
         create_trees_button.grid(column=0, row=1, columnspan=2)
         t.grid(column=1, row=0)
 
     def save_trees_popup(self, trees, d, button):
         top = self._top
+        seq = self.sequences
         w = PopupWindow(top, 'Choose file name')
         button["state"] = "disabled"
         top.wait_window(w.top)
         button["state"] = "normal"
+        file_names = []
         if w.value is not None:
             if len(trees) == 1:
                 save_tree(trees[0], d, w.value)
             else:
                 for ind, tree in enumerate(trees):
-                    save_tree(tree, d, '{}{}'.format(w.value, ind))
+                    file_names.append(save_tree(tree, d, '{}{}'.format(w.value, ind), csb_id=seq[ind]['csb_id'],
+                                                instances=seq[ind]['instances'], p=tree[1]))
+            merge_pdfs(file_names, '{}.pdf'.format(w.value))
 
 
 def learn_cmd(indices, tree_list, d):
@@ -240,6 +267,7 @@ def learn_cmd_prob(indices, tree_list, reverse_dict, gui=None):
         g = convert_pmta_to_pcfg(acc, reverse_dict)
         g = compress_grammar(g)
         gui.set_pcfg(g)
+        print(g)
         g = convert_pcfg_to_str(g)
         with open('grammar.json', 'w') as json_file:
             json.dump(g, json_file)
@@ -253,6 +281,21 @@ def convert_tree(tree, d):
         t = tree[ind]
         if len(t) == 0:
             t.set_label(d[int(tree[ind].label())])
+
+
+def remap_tree(tree, seq):
+    positions = tree.treepositions()
+    positions = [pos for pos in positions if not isinstance(tree[pos], Tree) or len(tree[pos]) == 0]
+    assert(len(positions) == len(seq))
+    for ind, token in zip(positions, seq):
+        if isinstance(token, tuple):
+            sub_tree = Tree(0, [Tree(t, []) for t in token])
+            if ind == ():
+                return sub_tree
+            tree[ind] = sub_tree
+        else:
+            tree[ind].set_label(token)
+    return tree
 
 
 def copy_tree(tree):
@@ -311,7 +354,7 @@ def onselect2(index, trees_list, cf, text_box, d, weight_text=None):
     draw_tree(tree, cf, text_box, d, prob=prob)
 
 
-def save_tree(tree, d, name, prob=None, csb_id=None):
+def save_tree(tree, d, name, **kwargs):
     drawable_tree = tree if d is None else get_drawable_tree(tree[0], d)
     cf = CanvasFrame()
     tc = TreeWidget(cf.canvas(), drawable_tree)
@@ -322,18 +365,27 @@ def save_tree(tree, d, name, prob=None, csb_id=None):
     tc['line_color'] = '#175252'
     tc['xspace'] = 20
     tc['yspace'] = 20
-    cf.add_widget(tc, 0, 0)
+    curr_y = 40*len(kwargs)
+    cf.add_widget(tc, 0, curr_y)
     cf.print_to_file('{0}.png'.format(name))
-    image1 = Image.open('{0}.png'.format(name))
-    im1 = image1.convert('RGB')
-    if prob is not None:
+    im1 = Image.open('{0}.png'.format(name))
+    im1 = im1.convert('RGB')
+    curr_y = 10
+    for key in kwargs:
         font = ImageFont.truetype("/fonts/Ubuntu-L.ttf", 24)
         draw = ImageDraw.Draw(im1)
-        draw.text((10, 10), 'p={0:.4f}'.format(prob), (0, 0, 0), font)
-        draw.text((10, 40), 'csb_id={}'.format(csb_id), (0, 0, 0), font)
+        val = kwargs[key]
+        format_str = '{0}'
+        if isinstance(val, float):
+            format_str = format_str+'={1:.4f}'
+        else:
+            format_str = format_str+'=  {1}'
+        draw.text((10, curr_y), format_str.format(key, val), (0, 0, 0), font)
+        curr_y = curr_y + 40
     im1.save('{}.pdf'.format(name))
     cf.destroy()
     os.remove('{}.png'.format(name))
+    return '{}.pdf'.format(name)
 
 
 def create_window(root):
@@ -353,10 +405,10 @@ def convert_string(curr_str, alphabet, alphabet_rev, last_ind):
 
 
 def get_all_score_tuples(seq, alphabet, alphabet_rev):
-    non_duplicates = [alphabet_rev[seq[ind]] for ind in range(len(seq))]
-    non_duplicates = [dup if '$' not in dup else dup[:dup.index('$')] for dup in non_duplicates]
     yield seq
     return
+    non_duplicates = [alphabet_rev[seq[ind]] for ind in range(len(seq))]
+    non_duplicates = [dup if '$' not in dup else dup[:dup.index('$')] for dup in non_duplicates]
     for tup in product(*[[0, 2, 3, 4]]*len(seq)):
         new_tup = []
         for non_dup, dup_factor in zip(non_duplicates, tup):
@@ -372,10 +424,21 @@ def get_all_score_tuples(seq, alphabet, alphabet_rev):
         yield tuple([alphabet[t] for t in new_tup])
 
 
-def get_score_table(sequences, alphabet, alphabet_rev):
+def get_score_table(sequences, alphabet, alphabet_rev, key='seq'):
+    with open('csb_scores') as json_file:
+        table = json.load(json_file)
+        for ind, t in enumerate(table):
+            table[ind] = ([alphabet[e] for e in t[0]], t[1])
+    table = {tuple(t[0]): t[1] for t in table}
+    for key in table.keys():
+        disp_key = tuple([alphabet_rev[k] for k in key])
+        print('{}={}'.format(disp_key, table[key]))
+    return table
     table = {}
     for ngram_len in range(2, len(sequences)):
-        for seq, occ in sequences:
+        for row in sequences:
+            seq, _ = concat_duplications(row[key])
+            occ = int(row['instances'])
             for i in range(0, len(seq)-ngram_len+1):
                 subseq = seq[i: i+ngram_len]
                 for tup in get_all_score_tuples(subseq, alphabet, alphabet_rev):
@@ -383,6 +446,9 @@ def get_score_table(sequences, alphabet, alphabet_rev):
                         table[tup] = occ
                     else:
                         table[tup] += occ
+    for key in table.keys():
+        disp_key = tuple([alphabet_rev[k] for k in key])
+        print('{}={}'.format(disp_key,table[key]))
     return table
 
 
@@ -417,35 +483,47 @@ def pre_process_tree(tree, rev_map, alphabet):
     return tree
 
 
-def read_strings(file_path):
+def read_strings(file_path, tree_construct='ANNOT'):
+    if tree_construct not in ['ANNOT', 'COGS']:
+        raise BaseException("Invalid option for tree construct")
+    key = 'seq' if tree_construct == 'COGS' else 'annot'
     seq_dict = {}
-    alphabet = {}
-    alphabet_rev = {}
-    curr_ind = [0]
+    seq_to_annot = {}
+    cogs = {}
+    cogs_rev = {}
+    annotations = {}
+    annotations_rev = {}
+    ids = {}
+    alphabet, alphabet_rev = (cogs, cogs_rev) if tree_construct == 'COGS' else (annotations, annotations_rev)
+    curr_ind_seq = [0]
+    curr_ind_annot = [0]
     with open(file_path) as file:
         data = json.load(file)
-        for seq, occ in data:
+        for row in data:
             # seq = pre_process_seq(seq)
-            convert_string(seq, alphabet, alphabet_rev, curr_ind)
-            s = tuple(seq)
+            convert_string(row['seq'], cogs, cogs_rev, curr_ind_seq)
+            convert_string(row['annotation'], annotations, annotations_rev, curr_ind_annot)
+            s = tuple(row['seq'])
+            ids[s] = row['csb_id']
             if s not in seq_dict:
-                seq_dict[s] = occ
+                seq_dict[s] = int(row['instances'])
+                seq_to_annot[s] = tuple(row['annotation'])
             else:
-                seq_dict[s] += occ
+                seq_dict[s] += row['instances']
     sequences = []
     for seq in seq_dict.keys():
-        sequences.append((seq, seq_dict[seq]))
-    sequences = sorted(sequences, key=lambda a: a[1])
+        sequences.append({'csb_id': ids[seq], 'seq': seq, 'annot': seq_to_annot[seq], 'instances': seq_dict[seq]})
+    sequences = sorted(sequences, key=lambda a: a['instances'])
     if False:
         seq_l = []
         for seq in sequences:
-            seq2 = [alphabet_rev[i] for i in seq[0]]
+            seq2 = [cogs_rev[i] for i in seq[0]]
             seq_l.append((seq2, seq[1]))
         for s in seq_l:
             print(s)
         exit()
-    table = get_score_table(sequences, alphabet, alphabet_rev)
-    return sequences, alphabet, alphabet_rev, table
+    table = get_score_table(sequences, alphabet, alphabet_rev, key=key)
+    return sequences, cogs, cogs_rev, annotations, annotations_rev, table
 
 
 def convert_tree_to_cnf(tree):
@@ -462,19 +540,64 @@ def normalize_trees(trees):
         trees[ind] = (tup[0], tup[1]/total_sum)
 
 
-def create_trees(sequences, table, alphabet_rev, alphabet, contract=False, lambda_val=0.0):
+def concat_duplications(seq):
     ans = []
+    indices = []
+    last_char = None
+    last_ind = -1
+    for ind, s in enumerate(seq):
+        if s == last_char:
+            continue
+        if ind-last_ind > 1:
+            indices.append((last_ind, ind))
+        last_ind = ind
+        last_char = s
+        ans.append(s)
+    if len(seq)-last_ind > 1:
+        indices.append((last_ind, len(seq)))
+    return tuple(ans), indices
+
+
+def create_seq(seq, indices):
+    if len(indices) == 0:
+        return seq
+    ans = []
+    ind = 0
+    while ind < len(seq):
+        if len(indices) == 0:
+            ans = ans + list(seq[ind:])
+            break
+        if ind == indices[0][0]:
+            tup = indices[0]
+            ans.append(tuple(seq[tup[0]: tup[1]]))
+            indices = indices[1:]
+            ind = tup[1]
+        else:
+            ans.append(seq[ind])
+            ind = ind + 1
+    return ans
+
+
+def create_trees(sequences, table, alphabet_rev, alphabet, contract=False, lambda_val=0.0, key='annot',
+                 post_process_func=None):
+    ans = []
+    seqs = []
     constructor = TreeConstructor(table)
     sequences = filter(lambda a: a is not None, sequences)
-    for seq, occ in sequences:
+    for row in sequences:
         constructor.set_lambda(lambda_val)
-        curr_tree = constructor.construct_tree(seq)
+        input_to_constructor, indices = concat_duplications(row[key])
+        curr_tree = constructor.construct_tree(input_to_constructor)
         if contract:
             convert_tree_to_cnf(curr_tree)
-        ans.append((curr_tree, occ))
+        ans.append((curr_tree, row['instances']))
+        seqs.append(create_seq(row['seq'], indices))
     normalize_trees(ans)
-    for ind, tree in enumerate(ans):
-        ans[ind] = (pre_process_tree(tree[0], alphabet_rev, alphabet), tree[1])
+    for ind, (tree, instances) in enumerate(ans):
+        if post_process_func is None:
+            ans[ind] = (pre_process_tree(tree, alphabet_rev, alphabet), instances)
+        else:
+            ans[ind] = remap_tree(tree, seqs[ind]), instances
     return ans
 
 
@@ -509,7 +632,9 @@ if __name__ == '__main__':
     if len(args) < 2:
         print('Not enough arguments')
         exit()
-    sequences, alphabet, alphabet_rev, table = read_strings(args[1])
+    tree_construct = 'ANNOT'
+    sequences, alphabet, alphabet_rev, annotations, annotations_rev, table = read_strings(args[1],
+                                                                                          tree_construct=tree_construct)
     gui = MainGUI(TITLE, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT)
-    gui.init_GUI(sequences, alphabet, alphabet_rev, table)
+    gui.init_GUI(sequences, alphabet, alphabet_rev, annotations, annotations_rev, table, tree_construct=tree_construct)
     gui.main_loop()
