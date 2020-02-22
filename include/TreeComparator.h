@@ -22,20 +22,22 @@ private:
 
 class TreeComparator{
 public:
-    virtual int compare(const ParseTree&, const ParseTree&)=0;
+    virtual float compare(const ParseTree&, const ParseTree&)=0;
 protected:
     typedef std::unordered_map<const ParseTree*, int> treeToIndMap;
-    typedef std::vector<std::vector<int>> alignmentTable;
+    //typedef std::vector<std::vector<int>> alignmentTable;
+    template <typename T>
+    using alignmentTable = std::vector<std::vector<T>>;
 };
 
 class TreeAligner: public TreeComparator{
 public:
     TreeAligner(scoresMap, int);
     TreeAligner(int, int, int);
-    int compare(const ParseTree&, const ParseTree&);
+    float compare(const ParseTree&, const ParseTree&);
 private:
     int getScore(int, int);
-    int alignInnerNodes(const ParseTree&, const ParseTree&, treeToIndMap&, treeToIndMap&, alignmentTable&);
+    int alignInnerNodes(const ParseTree&, const ParseTree&, treeToIndMap&, treeToIndMap&, alignmentTable<int>&);
     int indelScore;
     int innerNode;
     int replaceScore;
@@ -45,12 +47,23 @@ private:
 class SwapComparator: public TreeComparator{
 public:
     SwapComparator(int, int);
-    int compare(const ParseTree&, const ParseTree&);
+    float compare(const ParseTree&, const ParseTree&);
 private:
     int replaceScore;
     int swapScore;
 };
 
-int safeAdd(int, int);
+typedef std::unordered_map<int, float> duplicationsProbMap;
+
+class DuplicationComparator: public TreeComparator{
+public:
+    DuplicationComparator();
+    float compare(const ParseTree&, const ParseTree&);
+private:
+    std::vector<std::pair<int,int>> getDupIndices(const ParseTree&);
+};
+
+template <typename T>
+T safeAdd(T, T);
 
 #endif //CFGLEARNER_TREECOMPARATOR_H

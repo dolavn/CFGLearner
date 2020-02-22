@@ -57,14 +57,14 @@ private:
     std::vector<ParseTree*> trees;
 };
 
-class DifferenceMultiplicityTeacher: public MultiplicityTeacher{
+class ComparatorTeacher: public MultiplicityTeacher{
 public:
-    DifferenceMultiplicityTeacher(TreeComparator&, int, double, double);
-    DifferenceMultiplicityTeacher(const DifferenceMultiplicityTeacher&);
-    DifferenceMultiplicityTeacher& operator=(const DifferenceMultiplicityTeacher&)=delete;
-    DifferenceMultiplicityTeacher(DifferenceMultiplicityTeacher&&);
-    DifferenceMultiplicityTeacher& operator=(DifferenceMultiplicityTeacher&&)=delete;
-    ~DifferenceMultiplicityTeacher();
+    ComparatorTeacher(TreeComparator&, double);
+    ComparatorTeacher(const ComparatorTeacher&);
+    ComparatorTeacher& operator=(const ComparatorTeacher&)=delete;
+    ComparatorTeacher(ComparatorTeacher&&);
+    ComparatorTeacher& operator=(ComparatorTeacher&&)=delete;
+    virtual ~ComparatorTeacher();
 
     virtual double membership(const ParseTree&) const;
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
@@ -72,16 +72,42 @@ public:
     virtual std::set<rankedChar> getAlphabet() const{return alphabet;};
     virtual double getError() const{return 0;}
     void addExample(const ParseTree&);
+protected:
+    virtual double calcNewProb(const ParseTree&, const ParseTree&, TreeComparator& cmp) const=0;
 private:
-    void copy(const DifferenceMultiplicityTeacher&);
+    void copy(const ComparatorTeacher&);
     void clear();
     std::vector<ParseTree*> trees;
     std::set<rankedChar> alphabet;
     mutable std::vector<ParseTree*> cache;
     TreeComparator& cmp;
+    double epsilon;
+};
+
+class DifferenceMultiplicityTeacher: public ComparatorTeacher{
+public:
+    DifferenceMultiplicityTeacher(TreeComparator&, int, double, double);
+    DifferenceMultiplicityTeacher(const DifferenceMultiplicityTeacher&);
+    DifferenceMultiplicityTeacher(DifferenceMultiplicityTeacher&&);
+    DifferenceMultiplicityTeacher& operator=(const DifferenceMultiplicityTeacher&)=delete;
+    DifferenceMultiplicityTeacher& operator=(DifferenceMultiplicityTeacher&&)=delete;
+private:
+    virtual double calcNewProb(const ParseTree&, const ParseTree&, TreeComparator&) const;
     int maxDiff;
     double decayFactor;
-    double epsilon;
+};
+
+class ProbabilityTeacher: public ComparatorTeacher{
+public:
+    ProbabilityTeacher(TreeComparator&, double, std::function<int(float)>, double);
+    ProbabilityTeacher(const ProbabilityTeacher&);
+    ProbabilityTeacher(ProbabilityTeacher&&);
+    ProbabilityTeacher& operator=(const ProbabilityTeacher&)=delete;
+    ProbabilityTeacher& operator=(ProbabilityTeacher&&)=delete;
+private:
+    virtual double calcNewProb(const ParseTree&, const ParseTree&, TreeComparator&) const;
+    double decayFactor;
+    std::function<int(float)> countingFunc;
 };
 
 class FunctionalMultiplicityTeacher: public MultiplicityTeacher{
