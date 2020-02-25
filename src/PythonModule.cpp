@@ -216,6 +216,8 @@ PYBIND11_MODULE(CFGLearner, m) {
     py::class_<TreeComparator> treeComparator(m, "TreeComparator");
     py::class_<TreeAligner> treeAligner(m, "TreeAligner",treeComparator);
     treeAligner.def(py::init<int, int, int>());
+    py::class_<DuplicationComparator> duplicationComparator(m, "DuplicationComparator", treeComparator);
+    duplicationComparator.def(py::init<>());
     py::class_<SwapComparator> swapComparator(m, "SwapComparator", treeComparator);
     swapComparator.def(py::init<int, int>());
     treeAligner.def("compare", [](TreeComparator& c, py::object nltkTree1, py::object nltkTree2){
@@ -269,6 +271,18 @@ PYBIND11_MODULE(CFGLearner, m) {
     differenceMultiplicityTeacher.def(py::init<TreeComparator&,int,double,double>());
     differenceMultiplicityTeacher.def("addExample",[](DifferenceMultiplicityTeacher& t, py::object nltkTree,
             double val){
+        if(!checkType(nltkTree)){
+            throw std::invalid_argument("Must give an nltk tree");
+        }
+        string str = py::str(nltkTree);
+        ParseTree* tree = parseTree(str);
+        tree->setProb(val);
+        t.addExample(*tree);
+        delete(tree);
+    });
+    py::class_<ProbabilityTeacher> probabilityTeacher(m, "ProbabilityTeacher", multiplicityTeacher);
+    probabilityTeacher.def(py::init<TreeComparator&,double,double>());
+    probabilityTeacher.def("addExample",[](ProbabilityTeacher& t, py::object nltkTree, double val){
         if(!checkType(nltkTree)){
             throw std::invalid_argument("Must give an nltk tree");
         }

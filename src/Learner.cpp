@@ -217,6 +217,8 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
         clock_t end = clock();
         double equivTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
         if(counterExample){
+            logger << counterExample->getProb() << logger.endline;
+            logger << acc.run(*counterExample) << logger.endline;
             logger << *counterExample << logger.endline;
         }
         if(0 && h.getC().size()>35){

@@ -39,6 +39,7 @@ SET (SRCS src/ParseTree.cpp
           src/DifferenceMultiplicityTeacher.cpp
           src/ComparatorTeacher.cpp
           src/ProbabilityTeacher.cpp
+          src/DuplicationsGenerator.cpp
         )
 
 

@@ -502,3 +502,14 @@ TEST(tree_test,hash_test){
     t9.setSubtree(t,1);
     ASSERT_EQ(t8.getHash()==t9.getHash(),true);
 }
+
+TEST(tree_test, leaves_num_test){
+    ParseTree t(2);
+    ASSERT_EQ(t.getLeavesNum(), 1);
+    ParseTree t2(0, {t, t});
+    ASSERT_EQ(t2.getLeavesNum(), 2);
+    ParseTree t3(0, {t, t2});
+    ASSERT_EQ(t3.getLeavesNum(), 3);
+    ParseTree t4(0, {t3, t2});
+    ASSERT_EQ(t4.getLeavesNum(), 5);
+}

@@ -88,7 +88,7 @@ ParseTree::indexIterator ParseTree::getIndexIterator() const{
     return ParseTree::indexIterator(*this);
 }
 
-ParseTree::indexIterator ParseTree::getLeafIterator(){
+ParseTree::indexIterator ParseTree::getLeafIterator() const{
     return ParseTree::indexIterator(*this,true);
 }
 
@@ -314,6 +314,12 @@ ParseTree ParseTree::getSkeleton() const{
     return ans;
 }
 
+int ParseTree::getLeavesNum() const{
+    int ans=0;
+    for(auto it = this->getLeafIterator();it.hasNext();++it,++ans);
+    return ans;
+}
+
 vector<ParseTree*> ParseTree::getAllContexts() const{
     auto it = getIndexIterator();
     vector<ParseTree*> ans;
@@ -411,7 +417,7 @@ ParseTree::indexIterator::indexIterator(const ParseTree& tree):currNode(&tree),c
 
 }
 
-ParseTree::indexIterator::indexIterator(ParseTree& tree,bool leaves):currNode(&tree),currLoc(),leaves(leaves){
+ParseTree::indexIterator::indexIterator(const ParseTree& tree,bool leaves):currNode(&tree),currLoc(),leaves(leaves){
     if(leaves){
         if(!currNode->isLeaf()){
             operator++();

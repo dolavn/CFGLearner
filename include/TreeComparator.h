@@ -53,7 +53,6 @@ private:
     int swapScore;
 };
 
-typedef std::unordered_map<int, float> duplicationsProbMap;
 
 class DuplicationComparator: public TreeComparator{
 public:

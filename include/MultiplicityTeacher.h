@@ -73,15 +73,15 @@ public:
     virtual double getError() const{return 0;}
     void addExample(const ParseTree&);
 protected:
+    double epsilon;
+    std::vector<ParseTree*> trees;
+    mutable std::vector<ParseTree*> cache;
     virtual double calcNewProb(const ParseTree&, const ParseTree&, TreeComparator& cmp) const=0;
 private:
     void copy(const ComparatorTeacher&);
     void clear();
-    std::vector<ParseTree*> trees;
     std::set<rankedChar> alphabet;
-    mutable std::vector<ParseTree*> cache;
     TreeComparator& cmp;
-    double epsilon;
 };
 
 class DifferenceMultiplicityTeacher: public ComparatorTeacher{
@@ -99,15 +99,21 @@ private:
 
 class ProbabilityTeacher: public ComparatorTeacher{
 public:
-    ProbabilityTeacher(TreeComparator&, double, std::function<int(float)>, double);
+    typedef std::function<int(float,int)> countingFunction;
+
+    ProbabilityTeacher(TreeComparator&, double, double);
+    ProbabilityTeacher(TreeComparator&, double, countingFunction, double);
     ProbabilityTeacher(const ProbabilityTeacher&);
     ProbabilityTeacher(ProbabilityTeacher&&);
     ProbabilityTeacher& operator=(const ProbabilityTeacher&)=delete;
     ProbabilityTeacher& operator=(ProbabilityTeacher&&)=delete;
+
+    virtual double membership(const ParseTree&) const;
+    virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
 private:
     virtual double calcNewProb(const ParseTree&, const ParseTree&, TreeComparator&) const;
     double decayFactor;
-    std::function<int(float)> countingFunc;
+    countingFunction countingFunc;
 };
 
 class FunctionalMultiplicityTeacher: public MultiplicityTeacher{

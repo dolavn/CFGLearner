@@ -24,7 +24,8 @@ add_executable(runBasicTests
                 PositiveHankelMatrixTest.cpp
                 DifferenceMultiplicityTeacherTest.cpp
                 TestHelperFunctions.cpp
-                TreeConstructorTest.cpp)
+                TreeConstructorTest.cpp
+                ProbabilityTeacherTest.cpp)
 
 
 include_directories(include ${PYTHON_INCLUDE_DIRS})

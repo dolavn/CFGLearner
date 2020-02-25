@@ -50,7 +50,7 @@ public:
     class indexIterator{
     public:
         explicit indexIterator(const ParseTree&);
-        indexIterator(ParseTree&,bool);
+        indexIterator(const ParseTree&,bool);
         bool hasNext();
         std::vector<int> operator*() const;
         indexIterator& operator++();
@@ -83,7 +83,7 @@ public:
     std::vector<const ParseTree*> getSubtrees() const;
     iterator getIterator() const;
     indexIterator getIndexIterator() const;
-    indexIterator getLeafIterator();
+    indexIterator getLeafIterator() const;
     void setPointer(ParseTree* ptr, unsigned int ind){while(subtrees.size()<=ind){subtrees.push_back(nullptr);}subtrees[ind]=ptr;}
     void setSubtree(const ParseTree&, unsigned int ind);
     bool hasSubtree(unsigned int ind) const{return subtrees.size()>=ind+1 && subtrees[ind]!=nullptr;}
@@ -97,6 +97,7 @@ public:
     bool sameTopology(const ParseTree&);
     inline bool getIsContext() const{return isContext;}
     inline int getChildrenNum() const{return (int)(subtrees.size());}
+    int getLeavesNum() const;
     inline bool isEmpty() const{return empty;}
     int getData() const{return this->data;}
     std::size_t getHash() const;

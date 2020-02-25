@@ -162,6 +162,7 @@ vector<pair<int,int>> DuplicationComparator::getDupIndices(const ParseTree& tree
         }
         int indChildren[] = {indMap[ptrVec[i]->getSubtrees()[0]], indMap[ptrVec[i]->getSubtrees()[1]]};
         if(ans[indChildren[0]].first==ans[indChildren[1]].first){
+            //TODO: change here to allow duplications only on left child
             ans[i] = pair<int,int>(ans[indChildren[0]].first,ans[indChildren[0]].second+ans[indChildren[1]].second);
         }
     }
@@ -197,6 +198,7 @@ float DuplicationComparator::compare(const ParseTree& t1, const ParseTree& t2){
                 if(subtree1->getChildrenNum()!=2 || subtree2->getChildrenNum()!=2){
                     throw std::invalid_argument("Parse Tree must be binary");
                 } //neither is a leaf
+                //TODO: change here to allow duplications only on left child.
                 vector<const ParseTree*> subtrees1 = subtree1->getSubtrees();
                 vector<const ParseTree*> subtrees2 = subtree2->getSubtrees();
                 float normal = safeAdd(table[v1PtrToIndMapping[subtrees1[0]]][v2PtrToIndMapping[subtrees2[0]]],

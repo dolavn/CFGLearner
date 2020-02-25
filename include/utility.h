@@ -7,4 +7,21 @@
 #define MAX(x,y) ((x>=y)?(x):(y))
 #define SAFE_DELETE(ptr)  if(ptr){delete(ptr);ptr=nullptr;}
 
+#include <vector>
+#include <functional>
+
+template<typename T>
+inline void clear_vec(std::vector<T*>& v){
+    for(auto elem: v){
+        SAFE_DELETE(elem)
+    }
+}
+
+template<typename T>
+inline void deep_copy_vec(const std::vector<T*>& orig, std::vector<T*>& dest, std::function<T*(const T&)> copy_func){
+    for(auto elem: orig){
+        dest.push_back(copy_func(*elem));
+    }
+}
+
 #endif //CFGLEARNER_UTILITY_H

@@ -2,6 +2,7 @@
 #include "TreeComparator.h"
 #include "ParseTree.h"
 #include "MultiplicityTreeAcceptor.h"
+#include "Logger.h"
 #include <math.h>
 #include <functional>
 
@@ -65,6 +66,7 @@ double ComparatorTeacher::membership(const ParseTree& tree) const{
 
 
 ParseTree* ComparatorTeacher::equivalence(const MultiplicityTreeAcceptor& acc) const{
+    Logger& logger = Logger::getLogger();
     std::function<bool(const ParseTree&)> testFunc = [&acc,this](const ParseTree& t1){
         double val = acc.run(t1);
         double prob = t1.getProb();
