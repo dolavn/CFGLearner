@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <ParseTree.h>
+#include "utility.h"
 
 #define IS_NULL(A)  (A==nullptr)
 
@@ -115,12 +116,7 @@ void ParseTree::copy(const ParseTree& other){
 }
 
 void ParseTree::clear(){
-    for(auto& tree: subtrees){
-        if(tree) {
-            delete (tree);
-            tree = nullptr;
-        }
-    }
+    clear_vec(subtrees);
 }
 
 ParseTree* ParseTree::getSubtree(const vector<int>& loc){

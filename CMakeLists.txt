@@ -40,6 +40,7 @@ SET (SRCS src/ParseTree.cpp
           src/ComparatorTeacher.cpp
           src/ProbabilityTeacher.cpp
           src/DuplicationsGenerator.cpp
+          src/PartitionsIterator.cpp
         )
 
 

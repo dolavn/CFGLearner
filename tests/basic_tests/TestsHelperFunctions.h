@@ -21,11 +21,23 @@ FunctionalMultiplicityTeacher getFuncTeacherProb();
 FunctionalMultiplicityTeacher getFuncTeacherNeg();
 FunctionalMultiplicityTeacher getFuncTeacher();
 
+
 extern rankedChar l;
 extern rankedChar a;
 extern rankedChar b;
 extern rankedChar inner;
 extern rankedChar l1;
 extern rankedChar l2;
+
+
+#define TEST_VEC(it, vec, ind) \
+        ASSERT_TRUE(it.hasNext()); \
+        for(ind=0;it.hasNext();++it){ \
+            ASSERT_TRUE(ind<vec.size()); \
+            ASSERT_EQ(*it, vec[ind++]); \
+        } \
+        ASSERT_EQ(ind, vec.size()); \
+        ASSERT_FALSE(it.hasNext())
+
 
 #endif //CFGLEARNER_TESTSHELPERFUNCTIONS_H

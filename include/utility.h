@@ -18,10 +18,11 @@ inline void clear_vec(std::vector<T*>& v){
 }
 
 template<typename T>
-inline void deep_copy_vec(const std::vector<T*>& orig, std::vector<T*>& dest, std::function<T*(const T&)> copy_func){
+inline void deep_copy_vec(const std::vector<T*>& orig, std::vector<T*>& dest){
     for(auto elem: orig){
-        dest.push_back(copy_func(*elem));
+        dest.push_back(new T(*elem));
     }
 }
+
 
 #endif //CFGLEARNER_UTILITY_H
