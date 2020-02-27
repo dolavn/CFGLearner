@@ -161,9 +161,9 @@ vector<pair<int,int>> DuplicationComparator::getDupIndices(const ParseTree& tree
             throw std::invalid_argument("Parse Tree must be binary");
         }
         int indChildren[] = {indMap[ptrVec[i]->getSubtrees()[0]], indMap[ptrVec[i]->getSubtrees()[1]]};
-        if(ans[indChildren[0]].first==ans[indChildren[1]].first){
-            //TODO: change here to allow duplications only on left child
-            ans[i] = pair<int,int>(ans[indChildren[0]].first,ans[indChildren[0]].second+ans[indChildren[1]].second);
+        //duplications only allowed on left child
+        if(ans[indChildren[0]].first==ptrVec[i]->getSubtrees()[1]->getData()){
+            ans[i] = pair<int,int>(ans[indChildren[0]].first,ans[indChildren[0]].second+1);
         }
     }
     return ans;

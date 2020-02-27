@@ -100,9 +100,11 @@ TEST(duplication_comparator, basic_check){
     ParseTree t(1);
     ParseTree t2(0, {t, t});
     ParseTree t3(0, {t2, t});
+    ParseTree t3r(0, {t, t2});
     ParseTree t4(0, {ParseTree(2), t2});
     ParseTree t5(0, {ParseTree(2), t});
     ParseTree t6(0, {ParseTree(2), t3});
+    ParseTree t6r(0, {ParseTree(2), t3r});
     ParseTree t7(0, {t4, t4});
     ParseTree t8(0, {t5, t4});
     ParseTree s(0, {ParseTree(1), ParseTree(2)});
@@ -113,10 +115,14 @@ TEST(duplication_comparator, basic_check){
     ASSERT_EQ(c.compare(t2, t2), 0);
     ASSERT_EQ(c.compare(t, t2), 1);
     ASSERT_EQ(c.compare(t2, t3), 1);
+    ASSERT_EQ(c.compare(t2, t3r), 1);
+    ASSERT_EQ(c.compare(t, t3r), numeric_limits<float>::max());
     ASSERT_EQ(c.compare(t, t3), 2);
     ASSERT_EQ(c.compare(t4, t5), 1);
     ASSERT_EQ(c.compare(t4, t6), 1);
+    ASSERT_EQ(c.compare(t4, t6r), 1);
     ASSERT_EQ(c.compare(t5, t6), 2);
+    ASSERT_EQ(c.compare(t5, t6r), numeric_limits<float>::max());
     ASSERT_EQ(c.compare(t4, t2), numeric_limits<float>::max());
     ASSERT_EQ(c.compare(t4, t7), numeric_limits<float>::max());
     ASSERT_EQ(c.compare(t7, t8), 1);
