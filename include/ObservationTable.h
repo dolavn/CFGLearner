@@ -108,10 +108,10 @@ private:
     arma::vec getObsVec(const ParseTree&) const;
     arma::mat getSInv() const;
     MultiplicityTreeAcceptor getAcceptorTemp() const;
-    void completeTree(ParseTree*);
+    virtual void completeTree(ParseTree*);
     void updateTransition(MultiLinearMap&, const ParseTree&, const std::vector<rankedChar>&, const arma::mat&) const;
-    void completeContextS(ParseTree*);
-    void completeContextR(ParseTree*);
+    virtual void completeContextS(ParseTree*);
+    virtual void completeContextR(ParseTree*);
     bool checkTableComplete(ParseTree*);
     std::vector<rankedChar> getAlphabetVec() const;
 };

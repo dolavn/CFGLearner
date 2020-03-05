@@ -47,14 +47,22 @@ void ComparatorTeacher::addExample(const ParseTree& tree){
 }
 
 double ComparatorTeacher::membership(const ParseTree& tree) const{
+    Logger& logger = Logger::getLogger();
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
+    logger << "prob membership" << logger.endline;
     double maxVal=0;
     for(auto& currTree: trees){
+        logger << "currTree:" << *currTree << logger.endline;
         if(*currTree==tree){
+            logger << "if" << logger.endline;
             return currTree->getProb();
         }else{
+            logger << "else" << logger.endline;
+            logger << &cmp << logger.endline;
             double p = calcNewProb(tree, *currTree, cmp);
             if(p>maxVal){maxVal=p;}
         }
+        logger << "maxVal:" << maxVal << logger.endline;
     }
     if(maxVal!=0){
         auto treeCopy = new ParseTree(tree);

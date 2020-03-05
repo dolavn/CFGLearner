@@ -321,6 +321,43 @@ class MapTable(Table):
         self.update_keys_in_map()
 
 
+class HidableFrame(Frame):
+
+    def __init__(self, text, *args, **kwargs):
+        Frame.__init__(self, *args, **kwargs)
+        self.text = text
+        self.visible = IntVar()
+        self.vars = {}
+        self.frame = None
+        self.create_frame()
+
+    def add_var(self, name, desc=None):
+        if name in self.vars:
+            raise BaseException("Already has this variable")
+        if desc is None:
+            desc = name
+        label = Label(self.frame, text=desc)
+        entry = Entry(self.frame)
+        label.grid(row=len(self.vars), column=0)
+        entry.grid(row=len(self.vars), column=1)
+        self.vars[name] = 0
+
+    def create_frame(self):
+        self.frame = Frame(self)
+        self.frame.grid(row=2, column=0)
+        self.frame.grid_remove()
+
+        def toggle_dup_frame():
+            if self.visible.get() == 1:
+                self.frame.grid()
+            else:
+                self.frame.grid_remove()
+
+        dup_check = Checkbutton(self, text=self.text, variable=self.visible,
+                                command=toggle_dup_frame)
+        dup_check.grid(row=1, column=0)
+
+
 class Checklist(Frame):
 
     def FrameWidth(self, event):

@@ -17,6 +17,8 @@ PositiveHankelMatrix::PositiveHankelMatrix(const MultiplicityTeacher& teacher):H
 }
 
 void PositiveHankelMatrix::completeTree(ParseTree* tree){
+    Logger& logger = Logger::getLogger();
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
     obs[tree] = vector<double>();
     for(auto it=c.begin();it!=c.end();it++){
         ParseTree* context = *it;
@@ -33,6 +35,7 @@ void PositiveHankelMatrix::completeTree(ParseTree* tree){
         obs[tree][it-c.begin()]=val;
         delete(merged);
     }
+    logger << "finish complete" << logger.endline;
 }
 
 void PositiveHankelMatrix::completeContextR(ParseTree* context){

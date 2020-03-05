@@ -2,8 +2,10 @@
 #include "TreeComparator.h"
 #include "ParseTree.h"
 #include "MultiplicityTreeAcceptor.h"
+#include "Logger.h"
 #include <math.h>
 #include <functional>
+#include <iostream>
 
 
 DifferenceMultiplicityTeacher::DifferenceMultiplicityTeacher(TreeComparator& cmp, int maxDiff, double decayFactor,

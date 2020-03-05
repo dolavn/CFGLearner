@@ -13,10 +13,10 @@ from nltk.draw.util import CanvasFrame
 from nltk.draw import TreeWidget
 from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, \
     SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose, SwapComparator, DifferenceMultiplicityTeacher, \
-    LoggingLevel, TreeConstructor, LOG_DETAILS, LOG_DEBUG
+    LoggingLevel, TreeConstructor, LOG_DETAILS, LOG_DEBUG, DuplicationComparator, ProbabilityTeacher
 from WCFG import load_trees_from_file, convert_pmta_to_pcfg, compress_grammar
 from threading import Thread
-from GUI import Table, MapTable, Checklist, PopupWindow, load_object_window
+from GUI import Table, MapTable, Checklist, PopupWindow, load_object_window, HidableFrame
 from PIL import Image, ImageFont, ImageDraw
 from PyPDF2 import PdfFileReader, PdfFileWriter
 import os
@@ -164,6 +164,16 @@ class MainGUI:
         parse_button = Button(grammar_frame, text='Parse', command=lambda: self.parse_command(seq))
         parse_button.grid(column=0, row=1)
         parse_button['state'] = 'disabled'
+        oracle_frame = Frame(secondary_frame)
+        oracle_frame.grid(column=0, row=2)
+        edit_dist_label = Label(oracle_frame, text='Edit distance options')
+        edit_dist_label.grid(row=0, column=0)
+        duplications_frame = HidableFrame("Allow duplications", oracle_frame)
+        duplications_frame.grid(row=1, column=0)
+        duplications_frame.add_var('prob', desc='Duplication Probability')
+        swap_frame = HidableFrame("Allow swaps", oracle_frame)
+        swap_frame.grid(row=2, column=0)
+        swap_frame.add_var('prob', desc='Swap Probability')
         self._tree_frame = top
         self._parse_button = parse_button
         self._secondary_tree_frame = secondary_frame
@@ -255,14 +265,20 @@ def convert_pcfg_to_str(pcfg):
 
 def learn_cmd_prob(indices, tree_list, reverse_dict, gui=None):
     trees = [tree_list[ind] for ind in indices]
-    teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
-    for tree in trees:
-        teacher.addExample(*tree)
+    set_verbose(LOG_DEBUG)
+    #teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
 
     def thread_task():
+        d = DuplicationComparator()
+        teacher = ProbabilityTeacher(d, 0.1, 0.001)
+        for tree in trees:
+            teacher.addExample(*tree)
+        print('setting')
+        teacher.setup_duplications_generator(2)
+        #set_verbose(LOG_DEBUG)
         print('starting')
         t = time()
-        set_verbose(LOG_DETAILS)
+
         acc = learnMultPos(teacher)
         g = convert_pmta_to_pcfg(acc, reverse_dict)
         g = compress_grammar(g)

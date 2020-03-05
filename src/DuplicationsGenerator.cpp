@@ -12,6 +12,14 @@ currIt(),directionsIterator(){
     createIterator();
 }
 
+DuplicationsGenerator::DuplicationsGenerator(vector<ParseTree*> trees, int depth):trees(),depth(depth),currTree(0),
+                                                                                  currIt(),directionsIterator(){
+    for(const auto& tree: trees){
+        this->trees.push_back(new ParseTree(*tree));
+    }
+    createIterator();
+}
+
 DuplicationsGenerator::DuplicationsGenerator(const DuplicationsGenerator& other):trees(),depth(other.depth),
 currTree(other.currTree),currIt(other.currIt),directionsIterator(other.directionsIterator){
     copy(other);
@@ -60,6 +68,7 @@ void DuplicationsGenerator::createIterator(){
     int numLeaves = tree.getLeavesNum();
     int duplications = depth*numLeaves;
     currIt = PartitionsIterator(duplications, numLeaves+1, depth, numLeaves);
+    directionsIterator = RIGHT;
 }
 
 
@@ -108,6 +117,15 @@ DuplicationsGenerator& DuplicationsGenerator::operator++(){
         }
     }
     return *this;
+}
+
+void DuplicationsGenerator::reset(){
+    currTree=0;
+    createIterator();
+}
+
+TreesGenerator* DuplicationsGenerator::clone() const{
+    return new DuplicationsGenerator(*this);
 }
 
 ParseTree DuplicationsGenerator::operator*(){

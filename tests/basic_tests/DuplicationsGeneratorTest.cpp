@@ -51,6 +51,7 @@ TEST(duplications_generator_test,depth_check){
            ParseTree(0, {ParseTree(0, {t, ParseTree(0, {t, t})}), ParseTree(0, {t2, t2})}),
            ParseTree(0, {ParseTree(0, {ParseTree(0, {t, t}), t}), ParseTree(0, {ParseTree(0, {t2, t2}), t2})}),
            ParseTree(0, {ParseTree(0, {t, ParseTree(0, {t, t})}), ParseTree(0, {t2, ParseTree(0, {t2, t2})})})};
-    TEST_VEC(gen, res, ind);
+    TreesGenerator& treeGen = gen;
+    TEST_VEC(treeGen, res, ind);
 }
 

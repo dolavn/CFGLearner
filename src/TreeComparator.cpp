@@ -1,6 +1,7 @@
 #include "TreeComparator.h"
 #include "ParseTree.h"
 #include "utility.h"
+#include "Logger.h"
 #include <limits>
 
 #define INDEL 2
@@ -64,6 +65,9 @@ float TreeAligner::compare(const ParseTree& t1, const ParseTree& t2){
     //cout << "t1 " << t1 << endl;
     //cout << "t2 " << t2 << endl;
     //cout << "innerNode:" << innerNode << " indelScore:" << indelScore << " replace:" << replaceScore << endl;
+    Logger& logger = Logger::getLogger();
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
+    logger << "treeAligner" << logger.endline;
     vector<const ParseTree*> v1 = t1.getInOrderPtrList();
     vector<const ParseTree*> v2 = t2.getInOrderPtrList();
     treeToIndMap v1PtrToIndMapping = createMapping(v1);
@@ -112,6 +116,9 @@ SwapComparator::SwapComparator(int replaceScore, int swapScore):replaceScore(rep
 
 
 float SwapComparator::compare(const ParseTree& t1, const ParseTree& t2){
+    Logger& logger = Logger::getLogger();
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
+    logger << "swapComp" << logger.endline;
     vector<const ParseTree*> v1 = t1.getInOrderPtrList();
     vector<const ParseTree*> v2 = t2.getInOrderPtrList();
     treeToIndMap v1PtrToIndMapping = createMapping(v1);
@@ -145,7 +152,8 @@ float SwapComparator::compare(const ParseTree& t1, const ParseTree& t2){
 }
 
 DuplicationComparator::DuplicationComparator(){
-
+    Logger& logger = Logger::getLogger();
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
 }
 
 vector<pair<int,int>> DuplicationComparator::getDupIndices(const ParseTree& tree){
@@ -171,15 +179,21 @@ vector<pair<int,int>> DuplicationComparator::getDupIndices(const ParseTree& tree
 
 
 float DuplicationComparator::compare(const ParseTree& t1, const ParseTree& t2){
+    Logger& logger = Logger::getLogger();
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
+    logger << "dupComp" << logger.endline;
     vector<const ParseTree*> v1 = t1.getInOrderPtrList();
     vector<const ParseTree*> v2 = t2.getInOrderPtrList();
     treeToIndMap v1PtrToIndMapping = createMapping(v1);
     treeToIndMap v2PtrToIndMapping = createMapping(v2);
     alignmentTable<float> table(v1.size(), vector<float>(v2.size()));
+    logger << "creating dup indices" << logger.endline;
     vector<pair<int,int>> dupIndices1 = getDupIndices(t1);
     vector<pair<int,int>> dupIndices2 = getDupIndices(t2);
+    logger << "starting compare" << logger.endline;
     for(unsigned int i=0;i<v1.size();++i){
         for(unsigned int j=0;j<v2.size();++j){
+            //logger << "i:" << i << " j:" << j << logger.endline;
             const ParseTree* subtree1 = v1[i];
             const ParseTree* subtree2 = v2[j];
             if(subtree1->isLeaf() && subtree2->isLeaf()){ //Both are leaves

@@ -14,7 +14,12 @@ class ParseTree;
 class TreesGenerator{
 public:
     virtual bool hasNext() const=0;
-    virtual ParseTree getNext()=0;
+    virtual ParseTree operator*()=0;
+    virtual TreesGenerator& operator++()=0;
+    virtual void reset()=0;
+    virtual TreesGenerator* clone() const=0;
+
+    virtual ~TreesGenerator(){}
 };
 
 
@@ -47,13 +52,17 @@ private:
     IndexArray indices;
 };
 
-class DuplicationsGenerator{
+class DuplicationsGenerator: public TreesGenerator{
 public:
     DuplicationsGenerator(std::vector<ParseTree>, int);
+    DuplicationsGenerator(std::vector<ParseTree*>, int);
     DuplicationsGenerator(const DuplicationsGenerator&);
     DuplicationsGenerator& operator=(const DuplicationsGenerator&);
     DuplicationsGenerator(DuplicationsGenerator&&);
     DuplicationsGenerator& operator=(DuplicationsGenerator&&);
+
+    TreesGenerator* clone() const;
+    virtual void reset();
 
     virtual ~DuplicationsGenerator();
     DuplicationsGenerator& operator++();

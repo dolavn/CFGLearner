@@ -224,11 +224,12 @@ PYBIND11_MODULE(CFGLearner, m) {
         if(!checkType(nltkTree1) || !checkType(nltkTree2)){
             throw std::invalid_argument("Must give an nltk tree");
         }
+        cout << "hey" << endl;
         string str1 = py::str(nltkTree1);
         string str2 = py::str(nltkTree2);
         ParseTree* tree1 = parseTree(str1);
         ParseTree* tree2 = parseTree(str2);
-        int score = c.compare(*tree1, *tree2);
+        float score = c.compare(*tree1, *tree2);
         delete(tree1);
         delete(tree2);
         return score;
@@ -291,6 +292,9 @@ PYBIND11_MODULE(CFGLearner, m) {
         tree->setProb(val);
         t.addExample(*tree);
         delete(tree);
+    });
+    probabilityTeacher.def("setup_duplications_generator",[](ProbabilityTeacher& t, int depth){
+        t.setupDuplicationsGenerator(depth);
     });
     py::enum_<Logger::LoggingLevel >(m, "LoggingLevel")
             .value("LOG_ERRORS", Logger::LoggingLevel::LOG_ERRORS)

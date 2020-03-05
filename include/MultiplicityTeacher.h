@@ -14,6 +14,7 @@
 class ParseTree;
 class TreeComparator;
 class MultiplicityTreeAcceptor;
+class TreesGenerator;
 
 class MultiplicityTeacher{
 public:
@@ -107,13 +108,17 @@ public:
     ProbabilityTeacher(ProbabilityTeacher&&);
     ProbabilityTeacher& operator=(const ProbabilityTeacher&)=delete;
     ProbabilityTeacher& operator=(ProbabilityTeacher&&)=delete;
+    virtual ~ProbabilityTeacher();
 
+    void setTreesGenerator(const TreesGenerator&);
+    void setupDuplicationsGenerator(int);
     virtual double membership(const ParseTree&) const;
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
 private:
     virtual double calcNewProb(const ParseTree&, const ParseTree&, TreeComparator&) const;
     double decayFactor;
     countingFunction countingFunc;
+    TreesGenerator* generator;
 };
 
 class FunctionalMultiplicityTeacher: public MultiplicityTeacher{

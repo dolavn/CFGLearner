@@ -34,7 +34,7 @@ class TreeAligner: public TreeComparator{
 public:
     TreeAligner(scoresMap, int);
     TreeAligner(int, int, int);
-    float compare(const ParseTree&, const ParseTree&);
+    virtual float compare(const ParseTree&, const ParseTree&);
 private:
     int getScore(int, int);
     int alignInnerNodes(const ParseTree&, const ParseTree&, treeToIndMap&, treeToIndMap&, alignmentTable<int>&);
@@ -47,7 +47,7 @@ private:
 class SwapComparator: public TreeComparator{
 public:
     SwapComparator(int, int);
-    float compare(const ParseTree&, const ParseTree&);
+    virtual float compare(const ParseTree&, const ParseTree&);
 private:
     int replaceScore;
     int swapScore;
@@ -57,7 +57,7 @@ private:
 class DuplicationComparator: public TreeComparator{
 public:
     DuplicationComparator();
-    float compare(const ParseTree&, const ParseTree&);
+    virtual float compare(const ParseTree&, const ParseTree&);
 private:
     std::vector<std::pair<int,int>> getDupIndices(const ParseTree&);
 };
