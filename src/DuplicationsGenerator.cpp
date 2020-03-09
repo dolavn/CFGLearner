@@ -64,6 +64,9 @@ bool DuplicationsGenerator::hasNext() const{
 void printVec(vector<int> v);
 
 void DuplicationsGenerator::createIterator(){
+    if(trees.empty()){
+        return;
+    }
     ParseTree& tree = *trees[currTree];
     int numLeaves = tree.getLeavesNum();
     int duplications = depth*numLeaves;

@@ -340,7 +340,15 @@ class HidableFrame(Frame):
         entry = Entry(self.frame)
         label.grid(row=len(self.vars), column=0)
         entry.grid(row=len(self.vars), column=1)
-        self.vars[name] = 0
+        self.vars[name] = entry
+
+    def get_visible(self):
+        return True if self.visible.get() == 1 else False
+
+    def get_val(self, var_name):
+        if var_name not in self.vars:
+            raise BaseException("Variable {} not found".format(var_name))
+        return self.vars[var_name].get()
 
     def create_frame(self):
         self.frame = Frame(self)

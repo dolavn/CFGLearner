@@ -122,6 +122,42 @@ class MainGUI:
     def main_loop(self):
         self._top.mainloop()
 
+    @staticmethod
+    def check_is_prob(p):
+        try:
+            p = float(p)
+        except Exception:
+            return False
+        return 0 <= p <= 1
+
+    def update_oracle(self, prob_dup, prob_swap):
+        if prob_dup is not None and not self.check_is_prob(prob_dup):
+            tkinter.messagebox.showerror("Update Oracle", "Invalid duplication probability")
+        if prob_swap is not None and not self.check_is_prob(prob_swap):
+            tkinter.messagebox.showerror("Update Oracle", "Invalid swap probability")
+
+    def create_oracle_frame(self):
+        oracle_frame = Frame(self._secondary_tree_frame)
+        oracle_frame.grid(column=0, row=2)
+        edit_dist_label = Label(oracle_frame, text='Edit distance options')
+        edit_dist_label.grid(row=0, column=0)
+        duplications_frame = HidableFrame("Allow duplications", oracle_frame)
+        duplications_frame.grid(row=1, column=0)
+        duplications_frame.add_var('prob', desc='Duplication Probability')
+        swap_frame = HidableFrame("Allow swaps", oracle_frame)
+        swap_frame.grid(row=2, column=0)
+        swap_frame.add_var('prob', desc='Swap Probability')
+
+        def set_oracle():
+            dup_vis = duplications_frame.get_visible()
+            swap_vis = swap_frame.get_visible()
+            dup_prob = None if not dup_vis else duplications_frame.get_val('prob')
+            swap_prob = None if not swap_vis else swap_frame.get_val('prob')
+            self.update_oracle(dup_prob, swap_prob)
+
+        set_oracle_button = Button(oracle_frame, text="Set", command=set_oracle)
+        set_oracle_button.grid(row=3, column=0)
+
     def add_trees_list(self, top, trees_list, d, weighted=False):
         secondary_frame = Frame(top)  # To be able to delete this frame.
         secondary_frame.pack()
@@ -164,19 +200,10 @@ class MainGUI:
         parse_button = Button(grammar_frame, text='Parse', command=lambda: self.parse_command(seq))
         parse_button.grid(column=0, row=1)
         parse_button['state'] = 'disabled'
-        oracle_frame = Frame(secondary_frame)
-        oracle_frame.grid(column=0, row=2)
-        edit_dist_label = Label(oracle_frame, text='Edit distance options')
-        edit_dist_label.grid(row=0, column=0)
-        duplications_frame = HidableFrame("Allow duplications", oracle_frame)
-        duplications_frame.grid(row=1, column=0)
-        duplications_frame.add_var('prob', desc='Duplication Probability')
-        swap_frame = HidableFrame("Allow swaps", oracle_frame)
-        swap_frame.grid(row=2, column=0)
-        swap_frame.add_var('prob', desc='Swap Probability')
         self._tree_frame = top
         self._parse_button = parse_button
         self._secondary_tree_frame = secondary_frame
+        self.create_oracle_frame()
 
     def create_trees_command(self, lambda_val, sequences, alphabet, alphabet_rev, post_process_func=None):
         try:
@@ -280,6 +307,7 @@ def learn_cmd_prob(indices, tree_list, reverse_dict, gui=None):
         t = time()
 
         acc = learnMultPos(teacher)
+        acc.print_desc()
         g = convert_pmta_to_pcfg(acc, reverse_dict)
         g = compress_grammar(g)
         gui.set_pcfg(g)

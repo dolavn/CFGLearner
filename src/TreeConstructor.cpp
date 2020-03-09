@@ -14,7 +14,8 @@ TreeConstructor::TreeConstructor(scoreTable table):table(std::move(table)), dpTa
 
 float TreeConstructor::createTree(const Sequence& seq){
     this->seq = seq;
-    dpTable = Trees::dpTable(seq.getLength(), seq.getLength());
+    //dpTable = Trees::dpTable(seq.getLength(), seq.getLength());
+    Trees::dpTable dpTable(seq.getLength(), seq.getLength());
     for(int i=0;i<seq.getLength();++i){    /*Table initialization*/
         dpTable[i][i] = 0;
         if(i<seq.getLength()-1){
@@ -27,7 +28,7 @@ float TreeConstructor::createTree(const Sequence& seq){
             float max = numeric_limits<float>::min();
             int argmax = -1;
             for(int k=i;k<j;k++){
-                float curr = dpTable[i][k] + dpTable[k+1][j];
+                float curr = dpTable.getVal(i, k) + dpTable.getVal(k+1, j);
                 if(curr>max){
                     max = curr;
                     argmax = k;
@@ -37,7 +38,13 @@ float TreeConstructor::createTree(const Sequence& seq){
             dpTable[i][j] = max+lambda*table[seq.subseq(i, j+1)];
         }
     }
-    return dpTable[0][seq.getLength()-1];
+    this->dpTable = move(dpTable);
+    return this->dpTable[0][seq.getLength()-1];
+}
+
+float TreeConstructor::createTree(const vector<int>& seq){
+    Sequence seq2(seq);
+    return createTree(seq2);
 }
 
 void TreeConstructor::setLambda(float lambda) {
@@ -80,22 +87,11 @@ ParseTree TreeConstructor::getTree(){
 }
 
 namespace Trees{
-    dpTable::dpTable():table(nullptr),len1(0),len2(0){}
-    dpTable::dpTable(int len1, int len2):table(nullptr),len1(len1),len2(len2){
-        table = new float[len1*len2];
+    dpTable::dpTable():table(),len1(0),len2(0){cout << "created empty" << endl;}
+    dpTable::dpTable(int len1, int len2):table(len1, vector<float>(len2)),len1(len1),len2(len2){
     }
 
-    dpTable::dpTable(const dpTable& other):table(nullptr),len1(other.len1),len2(other.len2){copy(other);}
-
-    dpTable& dpTable::operator=(const Trees::dpTable &other){
-        if(this==&other){
-            return *this;
-        }
-        clear();
-        copy(other);
-        return *this;
-    }
-
+/*
     dpTable::dpTable(Trees::dpTable &&other) noexcept:table(other.table),len1(other.len1),len2(other.len2){
         other.table = nullptr;
         other.len1 = 0;
@@ -129,27 +125,34 @@ namespace Trees{
         len2 = other.len2;
         for(int i=0;i<len1*len2;++i){table[i] = other.table[i];}
     }
-
+*/
     float dpTable::getVal(int i, int j) const{
-        return table[i*len2 + j];
+        return table[i][j];
     }
 
     int dpTable::getTrace(int i, int j) const{
-        return int(table[j*len2 + i]);
+        return int(table[j][i]);
     }
 
     void dpTable::printTable(){
-        for(int i=0;i<len1*len2;++i){
-            std::cout << "[" << i << "]=" << table[i] << std::endl;
+        for(int i=0;i<len1;++i){
+            for(int j=0;j<len2;++j){
+                std::cout << "[" << i << "," << j << "]=" << table[i][j] << std::endl;
+            }
         }
     }
 
+    vector<float>& dpTable::operator[](int ind){
+        return table[ind];
+    }
+
+/*
     dpTable::dpRow dpTable::operator[](int ind){
         return {*this, ind};
     }
 
     dpTable::dpRow::dpRow(const dpTable& table, int ind1):table(table.table),start(ind1*table.len2){
-
+        cout << "row " << ind1 << " , " << table.len2 << endl;
     }
 
     float& dpTable::dpRow::operator[](int ind2) {
@@ -159,4 +162,5 @@ namespace Trees{
     dpTable::~dpTable(){
         clear();
     }
+*/
 }

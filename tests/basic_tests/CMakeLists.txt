@@ -27,7 +27,8 @@ add_executable(runBasicTests
                 TreeConstructorTest.cpp
                 ProbabilityTeacherTest.cpp
                 PartitionsIteratorTest.cpp
-                DuplicationsGeneratorTest.cpp)
+                DuplicationsGeneratorTest.cpp
+                ConstructorGeneratorTest.cpp)
 
 
 include_directories(include ${PYTHON_INCLUDE_DIRS})

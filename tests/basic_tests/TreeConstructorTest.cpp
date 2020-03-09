@@ -25,6 +25,18 @@ TEST(constructor_test,basic_check){
     ASSERT_EQ(tree, ans2);
 }
 
+TEST(constructor_test,advanced_check){
+    scoreTable table;
+    table[{1, 1}] = 1.0f;
+    table[{1, 2}] = 2.0f;
+    table[{2, 1}] = 2.0f;
+    table[{2, 2}] = 0.0f;
+    TreeConstructor c(table);
+    Sequence s1({1, 2, 2, 2, 2});
+    float score = c.createTree(s1);
+    ASSERT_EQ(score, 2);
+}
+
 TEST(constructor_test,lambda_param_basic_test){
     scoreTable t;
     t[{1, 2}] = 10;

@@ -99,7 +99,7 @@ ParseTree* ProbabilityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) 
         }
     }else{
         Logger& logger = Logger::getLogger();
-        logger.setPrintLevel(Logger::LOG_DEBUG);
+        logger.setLoggingLevel(Logger::LOG_DEBUG);
         logger << "equivalence" << logger.endline;
         TreesGenerator& genRef = *generator;
         genRef.reset();

@@ -19,7 +19,7 @@ public:
     virtual void reset()=0;
     virtual TreesGenerator* clone() const=0;
 
-    virtual ~TreesGenerator(){}
+    virtual ~TreesGenerator()=default;
 };
 
 
@@ -92,6 +92,43 @@ private:
     int depth;
     PartitionsIterator currIt;
     direction directionsIterator;
+};
+
+class TreeConstructor;
+
+class ConstructorGenerator: public TreesGenerator{
+public:
+    ConstructorGenerator(TreeConstructor&, int, int, std::vector<int>);
+    ConstructorGenerator(const ConstructorGenerator&);
+    ConstructorGenerator(ConstructorGenerator&&);
+    ConstructorGenerator& operator=(const ConstructorGenerator&)=delete;
+    ConstructorGenerator& operator=(ConstructorGenerator&&)=delete;
+    virtual ~ConstructorGenerator();
+
+
+    TreesGenerator* clone() const;
+    virtual void reset();
+    virtual bool hasNext() const;
+    virtual ParseTree operator*();
+
+    ConstructorGenerator& operator++();
+    ConstructorGenerator operator++(int){
+        ConstructorGenerator ans(*this);
+        ++(*this);
+        return ans;
+    }
+private:
+    void copy(const ConstructorGenerator&);
+    void clear();
+    std::vector<int> generateSeq() const;
+    void generateTree();
+
+    TreeConstructor& constructor;
+    int maxLen;
+    int numTrees;
+    std::vector<int> alphabet;
+    ParseTree* currTree;
+    int treesGenerated;
 };
 
 #endif //CFGLEARNER_TREESGENERATOR_H
