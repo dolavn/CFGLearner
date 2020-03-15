@@ -296,6 +296,10 @@ PYBIND11_MODULE(CFGLearner, m) {
     probabilityTeacher.def("setup_duplications_generator",[](ProbabilityTeacher& t, int depth){
         t.setupDuplicationsGenerator(depth);
     });
+    probabilityTeacher.def("setup_constructor_generator",[](ProbabilityTeacher& t, TreeConstructor& c, int maxLen,
+            int numTrees){
+        t.setupConstructorGenerator(c, maxLen, numTrees);
+    });
     py::enum_<Logger::LoggingLevel >(m, "LoggingLevel")
             .value("LOG_ERRORS", Logger::LoggingLevel::LOG_ERRORS)
             .value("LOG_WARNING", Logger::LoggingLevel::LOG_WARNING)

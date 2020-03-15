@@ -6,6 +6,8 @@
 #include "../../include/TreeConstructor.h"
 #include "../../include/ParseTree.h"
 
+#define EPSILON 0.00001
+
 TEST(constructor_test,basic_check){
     scoreTable t;
     t[{1, 2}] = 5;
@@ -25,6 +27,8 @@ TEST(constructor_test,basic_check){
     ASSERT_EQ(tree, ans2);
 }
 
+
+
 TEST(constructor_test,advanced_check){
     scoreTable table;
     table[{1, 1}] = 1.0f;
@@ -34,7 +38,45 @@ TEST(constructor_test,advanced_check){
     TreeConstructor c(table);
     Sequence s1({1, 2, 2, 2, 2});
     float score = c.createTree(s1);
-    ASSERT_EQ(score, 2);
+    ASSERT_NEAR(score, 2, EPSILON);
+    table[{4, 4}] = 0.0f;
+    table[{4, 2}] = 0.0f;
+    table[{4, 4, 4}] = 0.0f;
+    table[{4, 4, 2}] = 0.0f;
+    c = TreeConstructor(table);
+    s1 = Sequence({4, 4, 4, 2});
+    score = c.createTree(s1);
+    ASSERT_NEAR(score, 0, EPSILON);
+    ParseTree tree = c.getTree();
+}
+
+TEST(constructor_test,concat_test){
+    scoreTable table;
+    table[{1, 2}] = 5.0f;
+    table[{1, 1, 1, 2}] = 5.0f;
+    TreeConstructor c(table);
+    c.setConcat(true);
+    c.setLambda(1.0f);
+    Sequence s({1, 1, 2});
+    float score = c.createTree(s);
+    ASSERT_NEAR(score, 0, EPSILON);
+    ParseTree expected(0, {ParseTree(0, {ParseTree(1), ParseTree(1)}), ParseTree(2)});
+    ASSERT_EQ(c.getTree(), expected);
+    Sequence s2({1, 1, 1, 2});
+    score = c.createTree(s2);
+    expected = ParseTree(0, {ParseTree(0, {ParseTree(1), ParseTree(0, {ParseTree(1), ParseTree(1)})}), ParseTree(2)});
+    ASSERT_NEAR(score, 5, EPSILON);
+    ASSERT_EQ(c.getTree(), expected);
+    Sequence s3({1, 1, 1, 2, 1, 2});
+    score = c.createTree(s3);
+    expected = ParseTree(0, {ParseTree(0, {ParseTree(0, {ParseTree(1), ParseTree(0, {ParseTree(1), ParseTree(1)})}),
+                                           ParseTree(2)}), ParseTree(0, {ParseTree(1), ParseTree(2)})});
+    c.getTree();
+    ASSERT_NEAR(score, 10, EPSILON);
+    ASSERT_EQ(c.getTree(), expected);
+    c.setConcat(false);
+    score = c.createTree(s);
+    ASSERT_NEAR(score, 5, EPSILON);
 }
 
 TEST(constructor_test,lambda_param_basic_test){

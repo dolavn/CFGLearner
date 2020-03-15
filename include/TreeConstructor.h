@@ -55,13 +55,17 @@ public:
     float createTree(const std::vector<int>&);
     ParseTree getTree();
     void setLambda(float);
+    void setConcat(bool);
 
 private:
     scoreTable table;
-    Trees::dpTable dpTable;
+    Trees::dpTable calcTable;
     Sequence seq;
     float lambda;
+    bool concatDuplications;
+    std::vector<std::pair<int, int>> getDuplicationIndices() const;
     ParseTree* traceback(const Trees::dpTable&, const Sequence&);
+    void concat(Trees::dpTable&);
 };
 
 #endif //GENEALIGNER_TREECONSTRUCTOR_H

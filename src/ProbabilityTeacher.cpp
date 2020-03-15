@@ -35,12 +35,8 @@ decayFactor(other.decayFactor),countingFunc(move(other.countingFunc)),generator(
 double ProbabilityTeacher::calcNewProb(const ParseTree& tree1, const ParseTree& tree2, TreeComparator& cmp) const{
     Logger& logger = Logger::getLogger();
     logger.setLoggingLevel(Logger::LOG_DEBUG);
-    logger << "calcNewProb" << logger.endline;
-    logger << &cmp << logger.endline;
     float result = cmp.compare(tree2, tree1);
-    logger << "afterCompare" << logger.endline;
     int numTreesWithResult = countingFunc?countingFunc(result, tree2.getLeavesNum()):1;
-    logger << "after numTrees" << logger.endline;
     double p = tree2.getProb();
     p = p*std::pow(decayFactor, result);
     p = p / numTreesWithResult;
@@ -51,6 +47,20 @@ double ProbabilityTeacher::membership(const ParseTree& tree) const{
     double ans = ComparatorTeacher::membership(tree);
     return ans;
 }
+
+void ProbabilityTeacher::setupConstructorGenerator(TreeConstructor& constructor, int maxLen, int treesNum){
+    if(this->generator){
+        delete(this->generator);
+        this->generator = nullptr;
+    }
+    set<rankedChar> alphabet = getAlphabet();
+    vector<int> alphabet_vec;
+    for(auto sym: alphabet){
+        if(sym.rank==0){alphabet_vec.push_back(sym.c);}
+    }
+    this->generator = new ConstructorGenerator(constructor, maxLen, treesNum, alphabet_vec);
+}
+
 
 void ProbabilityTeacher::setupDuplicationsGenerator(int depth){
     if(this->generator){
@@ -106,10 +116,11 @@ ParseTree* ProbabilityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) 
         while(genRef.hasNext()){
             ParseTree curr = *genRef;
             curr.setProb(membership(curr));
-            logger << curr << logger.endline;
-            logger << curr.getProb() << logger.endline;
-            logger << acc.run(curr) << logger.endline;
-            logger << epsilon << logger.endline;
+            if(curr.getProb()>0){
+                logger << "tree:" << curr << logger.endline;
+                logger << "tree-prob:" << curr.getProb() << logger.endline;
+                logger << "acceptor(tree):" << acc.run(curr) << logger.endline;
+            }
             if(testFunc(curr, true)){
                 logger << curr << logger.endline;
                 return new ParseTree(curr);

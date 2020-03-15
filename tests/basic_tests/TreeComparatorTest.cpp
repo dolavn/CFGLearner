@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 #include "../../include/ParseTree.h"
 #include "../../include/TreeComparator.h"
+#include "../../include/Logger.h"
 
 #define INDEL 2
 
@@ -127,4 +128,15 @@ TEST(duplication_comparator, basic_check){
     ASSERT_EQ(c.compare(t4, t7), numeric_limits<float>::max());
     ASSERT_EQ(c.compare(t7, t8), 1);
     ASSERT_EQ(c.compare(s, s2), 2);
+}
+
+TEST(duplication_comparator, advanced_check){
+    Logger& logger = Logger::getLogger();
+    logger.setPrintLevel(Logger::LOG_DEBUG);
+    ParseTree l1(1);
+    ParseTree l2(2);
+    ParseTree t(0, {l1, l2});
+    ParseTree t2(0, {ParseTree(0, {l1, l1}), ParseTree(0, {l2, ParseTree(0, {l2, l2})})});
+    DuplicationComparator c;
+    ASSERT_EQ(c.compare(t, t2), 3);
 }

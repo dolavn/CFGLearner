@@ -293,15 +293,19 @@ def convert_pcfg_to_str(pcfg):
 def learn_cmd_prob(indices, tree_list, reverse_dict, gui=None):
     trees = [tree_list[ind] for ind in indices]
     set_verbose(LOG_DEBUG)
+
     #teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
 
     def thread_task():
+        table = gui._scoring_table
         d = DuplicationComparator()
         teacher = ProbabilityTeacher(d, 0.1, 0.001)
         for tree in trees:
             teacher.addExample(*tree)
         print('setting')
-        teacher.setup_duplications_generator(2)
+        #teacher.setup_duplications_generator(2)
+        con = TreeConstructor(table)
+        teacher.setup_constructor_generator(con, 4, 10000)
         #set_verbose(LOG_DEBUG)
         print('starting')
         t = time()
@@ -476,7 +480,7 @@ def get_score_table(sequences, alphabet, alphabet_rev, key='seq'):
     table = {tuple(t[0]): t[1] for t in table}
     for key in table.keys():
         disp_key = tuple([alphabet_rev[k] for k in key])
-        print('{}={}'.format(disp_key, table[key]))
+        print('{}={}'.format(key, table[key]))
     return table
     table = {}
     for ngram_len in range(2, len(sequences)):

@@ -15,6 +15,7 @@ class ParseTree;
 class TreeComparator;
 class MultiplicityTreeAcceptor;
 class TreesGenerator;
+class TreeConstructor;
 
 class MultiplicityTeacher{
 public:
@@ -112,6 +113,7 @@ public:
 
     void setTreesGenerator(const TreesGenerator&);
     void setupDuplicationsGenerator(int);
+    void setupConstructorGenerator(TreeConstructor&, int, int);
     virtual double membership(const ParseTree&) const;
     virtual ParseTree* equivalence(const MultiplicityTreeAcceptor&) const;
 private:

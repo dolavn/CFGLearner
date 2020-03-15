@@ -120,6 +120,8 @@ public:
 private:
     void copy(const ConstructorGenerator&);
     void clear();
+    unsigned int generateSeqLen() const;
+    unsigned int convertSampleToLen(unsigned int) const;
     std::vector<int> generateSeq() const;
     void generateTree();
 

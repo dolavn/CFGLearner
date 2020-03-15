@@ -169,9 +169,9 @@ vector<pair<int,int>> DuplicationComparator::getDupIndices(const ParseTree& tree
             throw std::invalid_argument("Parse Tree must be binary");
         }
         int indChildren[] = {indMap[ptrVec[i]->getSubtrees()[0]], indMap[ptrVec[i]->getSubtrees()[1]]};
-        //duplications only allowed on left child
-        if(ans[indChildren[0]].first==ptrVec[i]->getSubtrees()[1]->getData()){
-            ans[i] = pair<int,int>(ans[indChildren[0]].first,ans[indChildren[0]].second+1);
+        //duplications only allowed on right child
+        if(ans[indChildren[1]].first==ptrVec[i]->getSubtrees()[0]->getData()){
+            ans[i] = pair<int,int>(ans[indChildren[1]].first,ans[indChildren[1]].second+1);
         }
     }
     return ans;
@@ -181,16 +181,16 @@ vector<pair<int,int>> DuplicationComparator::getDupIndices(const ParseTree& tree
 float DuplicationComparator::compare(const ParseTree& t1, const ParseTree& t2){
     Logger& logger = Logger::getLogger();
     logger.setLoggingLevel(Logger::LOG_DEBUG);
-    logger << "dupComp" << logger.endline;
+    //logger << "dupComp" << logger.endline;
     vector<const ParseTree*> v1 = t1.getInOrderPtrList();
     vector<const ParseTree*> v2 = t2.getInOrderPtrList();
     treeToIndMap v1PtrToIndMapping = createMapping(v1);
     treeToIndMap v2PtrToIndMapping = createMapping(v2);
     alignmentTable<float> table(v1.size(), vector<float>(v2.size()));
-    logger << "creating dup indices" << logger.endline;
+    //logger << "creating dup indices" << logger.endline;
     vector<pair<int,int>> dupIndices1 = getDupIndices(t1);
     vector<pair<int,int>> dupIndices2 = getDupIndices(t2);
-    logger << "starting compare" << logger.endline;
+    //logger << "starting compare" << logger.endline;
     for(unsigned int i=0;i<v1.size();++i){
         for(unsigned int j=0;j<v2.size();++j){
             //logger << "i:" << i << " j:" << j << logger.endline;

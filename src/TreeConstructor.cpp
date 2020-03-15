@@ -6,40 +6,55 @@
 #include <limits>
 #include <stack>
 
-using namespace std;
+#define NEG_INF -100
 
-TreeConstructor::TreeConstructor(scoreTable table):table(std::move(table)), dpTable(),seq(){
+using namespace std;
+using namespace Trees;
+
+bool checkIntersect(const pair<int, int>&, const pair<int, int>&);
+
+
+TreeConstructor::TreeConstructor(scoreTable table):table(std::move(table)), calcTable(),seq(),lambda(0),
+concatDuplications(false){
 
 }
 
 float TreeConstructor::createTree(const Sequence& seq){
     this->seq = seq;
+    //cout << seq << endl;
     //dpTable = Trees::dpTable(seq.getLength(), seq.getLength());
-    Trees::dpTable dpTable(seq.getLength(), seq.getLength());
+    dpTable dpTable(seq.getLength(), seq.getLength());
     for(int i=0;i<seq.getLength();++i){    /*Table initialization*/
         dpTable[i][i] = 0;
         if(i<seq.getLength()-1){
             dpTable[i][i+1] = table[seq.subseq(i, i+2)];
         }
     }
+    if(concatDuplications){
+        concat(dpTable);
+    }
     for(int currLength=3;currLength<=seq.getLength();currLength++){
         for(int i=0;i<seq.getLength()-currLength+1;++i){
             int j = i + currLength - 1;
-            float max = numeric_limits<float>::min();
-            int argmax = -1;
+            if(dpTable[i][j]==NEG_INF){continue;}
+            float max = NEG_INF;
+            int argmax = i;
             for(int k=i;k<j;k++){
+                //cout << "i, k, j" << i << "," << k << "," << j << endl;
+                //cout << dpTable.getVal(i,k) << " , " << dpTable.getVal(k+1, j) << endl;
                 float curr = dpTable.getVal(i, k) + dpTable.getVal(k+1, j);
                 if(curr>max){
                     max = curr;
                     argmax = k;
                 }
             }
+            //cout << "(" << i << "," << j << ")=" <<  argmax << endl;
             dpTable[j][i] = argmax;
             dpTable[i][j] = max+lambda*table[seq.subseq(i, j+1)];
         }
     }
-    this->dpTable = move(dpTable);
-    return this->dpTable[0][seq.getLength()-1];
+    this->calcTable = move(dpTable);
+    return this->calcTable[0][seq.getLength()-1];
 }
 
 float TreeConstructor::createTree(const vector<int>& seq){
@@ -51,6 +66,10 @@ void TreeConstructor::setLambda(float lambda) {
     this->lambda = lambda;
 }
 
+void TreeConstructor::setConcat(bool concat){
+    this->concatDuplications = concat;
+}
+
 ParseTree* TreeConstructor::traceback(const Trees::dpTable& table, const Sequence& seq){
     typedef pair<int, int> intTuple;
     typedef pair<ParseTree*, intTuple> stackPair;
@@ -58,10 +77,30 @@ ParseTree* TreeConstructor::traceback(const Trees::dpTable& table, const Sequenc
     auto root = new ParseTree(0);
     intTuple rootTup = intTuple(0, seq.getLength()-1);
     buildStack.emplace(root, rootTup);
+    /*
+    cout << seq << endl;
+    for(int i=0;i<seq.getLength();++i){
+        for(int j=0;j<seq.getLength();++j){
+            cout << table.getVal(i, j) << " , ";
+        }
+        cout << endl;
+    }
+    for(auto k: this->table){
+        cout << "[";
+        for(auto a: k.first){
+            cout << a << ",";
+        }
+        cout << "]=" << k.second << endl;
+    }*/
     while(!buildStack.empty()){
         auto top = buildStack.top(); ParseTree* node = top.first; intTuple currTup = top.second;
-        //cout << currTup.first << "," << currTup.second << endl;
-        //cout << "visiting" << endl;
+        /*cout << currTup.first << "," << currTup.second << endl;
+        cout << "[";
+        for(auto elem: seq.subseq(currTup.first, currTup.second+1)){
+            cout << elem << ",";
+        }
+        cout << "]" << endl;
+        cout << "visiting" << endl;*/
         buildStack.pop();
         if(currTup.first!=currTup.second){ //Node is an internal node
             int k = currTup.second==currTup.first+1?currTup.first:table.getTrace(currTup.first, currTup.second);
@@ -79,15 +118,77 @@ ParseTree* TreeConstructor::traceback(const Trees::dpTable& table, const Sequenc
     return root;
 }
 
+vector<pair<int,int>> TreeConstructor::getDuplicationIndices() const {
+    vector<pair<int, int>> ans;
+    int lastChar = seq.getValue(0);
+    int lastInd = 0;
+    for(int i=1;i<seq.getLength();++i){
+        if(seq.getValue(i)!=lastChar){
+            ans.emplace_back(lastInd, i);
+            lastInd = i;
+            lastChar = seq.getValue(i);
+        }
+    }
+    ans.emplace_back(lastInd, seq.getLength());
+    return ans;
+}
+
+
+void TreeConstructor::concat(dpTable& table){
+    vector<pair<int,int>> dupIndices = getDuplicationIndices();
+    for(auto p: dupIndices){
+        int dupStart = p.first; int dupEnd = p.second-1;
+        //cout << "[" << dupStart << "," << dupEnd << "]" << endl;
+        if(dupStart==dupEnd){continue;}
+        for(int i=dupStart;i<=dupEnd;++i){
+            //cout << "i=" << i << endl;
+            if(i<dupEnd) {
+                for (int j = 0; j <= dupStart; ++j) {
+                    //cout << "b[" << j << "," << i << "]" << endl;
+                    table[i][j] = NEG_INF;
+                }
+            }
+            if(i>dupStart){
+                for(int j=dupEnd;j<seq.getLength();++j){
+                    //cout << "a[" << i << "," << j << "]" << endl;
+                    table[i][j]= NEG_INF;
+                }
+            }
+            for(int j=i;j<=dupEnd;++j){
+                //cout << "i[" << i << "," << j << "]" << endl;
+                table[i][j]=NEG_INF;
+            }
+        }
+        for(int i=dupEnd;i>=dupStart;i=i-2){
+            table[i][dupStart] = i-2; //order is important for i==dupEnd
+            table[dupStart][i] = 0;
+            //cout << "[" << dupStart << "," << i << "]=0" << endl;
+            if(i<dupEnd){
+                //cout << "[" << i+1 << "," << i+2 << "]=0" << endl;
+                table[i+2][i+1] = i+1;
+                table[i+1][i+2] = 0;
+            }
+        }
+    }
+}
+
 ParseTree TreeConstructor::getTree(){
-    ParseTree* root = traceback(dpTable, seq);
+    ParseTree* root = traceback(calcTable, seq);
     ParseTree ans(*root);
     delete(root);
     return ans;
 }
 
+bool checkIntersect(const pair<int, int>& p1,const pair<int, int>& p2){
+    int i1 = p1.first, j1=p1.second, i2=p2.first, j2=p2.second;
+    if(i1<i2){
+        return j1>=j2; //p2 inside p1
+    }
+    return j1<j2; //p1 inside p2
+}
+
 namespace Trees{
-    dpTable::dpTable():table(),len1(0),len2(0){cout << "created empty" << endl;}
+    dpTable::dpTable():table(),len1(0),len2(0){}
     dpTable::dpTable(int len1, int len2):table(len1, vector<float>(len2)),len1(len1),len2(len2){
     }
 

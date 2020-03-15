@@ -1,5 +1,7 @@
 #include "Logger.h"
 #include <iostream>
+#include <sstream>
+#include <execinfo.h>
 
 using namespace std;
 
@@ -13,6 +15,14 @@ void Logger::setLoggingLevel(LoggingLevel level){
 
 void Logger::setPrintLevel(LoggingLevel level){
     printLevel = level;
+}
+
+string Logger::getCaller() {
+    void *array[2];
+    stringstream stream;
+    size_t size;
+    // get void*'s for all entries on the stack
+    return stream.str();
 }
 
 

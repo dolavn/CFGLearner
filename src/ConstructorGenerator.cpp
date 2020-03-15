@@ -1,12 +1,15 @@
 #include "TreesGenerator.h"
 #include "TreeConstructor.h"
 #include "ParseTree.h"
+#include "Logger.h"
 #include "utility.h"
 #include <random>
 #include <stdlib.h>
+#include <math.h>
 #include <time.h>
 #include <chrono>
-
+#include <iostream>
+#include <fstream>
 
 
 
@@ -14,9 +17,12 @@ typedef std::chrono::high_resolution_clock myclock;
 using namespace std;
 using namespace std::chrono;
 
+
+static ofstream myfile;
 ConstructorGenerator::ConstructorGenerator(TreeConstructor& con, int maxLen, int numTrees, vector<int> alphabet):
 constructor(con),maxLen(maxLen), numTrees(numTrees), alphabet(move(alphabet)),treesGenerated(0), currTree(nullptr){
     generateTree();
+    myfile.open("trees.txt");
 }
 
 ConstructorGenerator::ConstructorGenerator(const ConstructorGenerator& other):constructor(other.constructor),
@@ -32,7 +38,28 @@ currTree(other.currTree){
 }
 
 ConstructorGenerator::~ConstructorGenerator(){
+    myfile.close();
     clear();
+}
+
+unsigned int ConstructorGenerator::convertSampleToLen(unsigned int sample) const{
+    auto sigma = (unsigned int)alphabet.size();
+    unsigned int ans=0;
+    while(sample>=1){
+        sample = sample/sigma;
+        ans++;
+    }
+    return ans;
+}
+
+unsigned int ConstructorGenerator::generateSeqLen() const{
+    std::random_device rd;
+    std::default_random_engine generator(rd());
+    unsigned long sigma = alphabet.size();
+    double total = pow(sigma, maxLen)-1; total = total/(sigma-1); total = total*sigma;
+    uniform_int_distribution<int> distribution(1,int(total));
+    unsigned int sample = distribution(generator);
+    return convertSampleToLen(sample);
 }
 
 vector<int> ConstructorGenerator::generateSeq() const{
@@ -42,24 +69,30 @@ vector<int> ConstructorGenerator::generateSeq() const{
     );
     std::random_device rd;
     std::default_random_engine generator(rd());
-    uniform_int_distribution<int> distribution(1,maxLen);
-    unsigned int len = distribution(generator);
+    unsigned int len = generateSeqLen();
     vector<int> ans(len);
     for(int i=0;i<len;++i) {
         ms = duration_cast<milliseconds>(
                 system_clock::now().time_since_epoch()
         );
-        distribution = uniform_int_distribution<int>(0, int(alphabet.size()) - 1);
+        uniform_int_distribution<int> distribution = uniform_int_distribution<int>(0, int(alphabet.size()) - 1);
         ans[i] = alphabet[distribution(generator)];
+        myfile << ans[i] << ",";
     }
+    myfile << endl;
     return ans;
 }
 
 void ConstructorGenerator::generateTree(){
+    Logger& logger = Logger::getLogger();
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
     SAFE_DELETE(currTree);
     vector<int> seq = generateSeq();
     constructor.createTree(seq);
     currTree = new ParseTree(constructor.getTree());
+    if(seq[0] == 5 && seq[1] == 6 && seq[2] == 3){
+        logger << *currTree << logger.endline;
+    }
 }
 
 TreesGenerator* ConstructorGenerator::clone() const{
@@ -82,8 +115,12 @@ ParseTree ConstructorGenerator::operator*(){
 }
 
 ConstructorGenerator& ConstructorGenerator::operator++(){
+    Logger& logger = Logger::getLogger();
+    logger.setLoggingLevel(Logger::LOG_DEBUG);
+    //logger << "inc" << logger.endline;
     treesGenerated++;
     generateTree();
+    //logger << "tree generated" << logger.endline;
 }
 
 void ConstructorGenerator::copy(const ConstructorGenerator& other){
