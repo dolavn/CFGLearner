@@ -53,13 +53,12 @@ TEST(constructor_test,advanced_check){
 TEST(constructor_test,concat_test){
     scoreTable table;
     table[{1, 2}] = 5.0f;
-    table[{1, 1, 1, 2}] = 5.0f;
     TreeConstructor c(table);
     c.setConcat(true);
     c.setLambda(1.0f);
     Sequence s({1, 1, 2});
     float score = c.createTree(s);
-    ASSERT_NEAR(score, 0, EPSILON);
+    ASSERT_NEAR(score, 5, EPSILON);
     ParseTree expected(0, {ParseTree(0, {ParseTree(1), ParseTree(1)}), ParseTree(2)});
     ASSERT_EQ(c.getTree(), expected);
     Sequence s2({1, 1, 1, 2});

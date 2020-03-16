@@ -252,6 +252,9 @@ PYBIND11_MODULE(CFGLearner, m) {
     treeConstructor.def("set_lambda", [](TreeConstructor& c, float lambda){
        c.setLambda(lambda);
     });
+    treeConstructor.def("set_concat", [](TreeConstructor& c, bool concat){
+        c.setConcat(concat);
+    });
     py::class_<MultiplicityTeacher> multiplicityTeacher(m, "MultiplicityTeacher");
     py::class_<SimpleMultiplicityTeacher> simpleMultiplicityTeacher(m, "SimpleMultiplicityTeacher",
             multiplicityTeacher);

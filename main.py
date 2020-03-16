@@ -62,7 +62,6 @@ def merge_pdfs(input, output):
                 os.remove(name)
 
 
-
 def get_parse_options(seq, alphabet):
     unknown_indices = [ind for ind, s in enumerate(seq) if s==UNKNOWN]
     for tup in product(*[alphabet]*len(unknown_indices)):
@@ -216,8 +215,7 @@ class MainGUI:
         tree_frame = self._tree_frame
         self._secondary_tree_frame = None
         secondary_tree_frame.destroy()
-        trees = create_trees(sequences, table, alphabet_rev, alphabet, lambda_val=val,
-                             post_process_func=post_process_func)
+        trees = create_trees(sequences, table, lambda_val=val)
         self.add_trees_list(tree_frame, trees, alphabet_rev, weighted=WEIGHTED)
 
     @staticmethod
@@ -305,6 +303,8 @@ def learn_cmd_prob(indices, tree_list, reverse_dict, gui=None):
         print('setting')
         #teacher.setup_duplications_generator(2)
         con = TreeConstructor(table)
+        con.set_concat(True)
+        con.set_lambda(1.0)
         teacher.setup_constructor_generator(con, 4, 10000)
         #set_verbose(LOG_DEBUG)
         print('starting')
@@ -626,26 +626,19 @@ def create_seq(seq, indices):
     return ans
 
 
-def create_trees(sequences, table, alphabet_rev, alphabet, contract=False, lambda_val=0.0, key='annot',
-                 post_process_func=None):
+def create_trees(sequences, table, contract=False, lambda_val=0.0, key='annot'):
     ans = []
     seqs = []
     constructor = TreeConstructor(table)
+    constructor.set_lambda(lambda_val)
+    constructor.set_concat(True)
     sequences = filter(lambda a: a is not None, sequences)
     for row in sequences:
-        constructor.set_lambda(lambda_val)
-        input_to_constructor, indices = concat_duplications(row[key])
-        curr_tree = constructor.construct_tree(input_to_constructor)
+        curr_tree = constructor.construct_tree(row[key])
         if contract:
             convert_tree_to_cnf(curr_tree)
         ans.append((curr_tree, row['instances']))
-        seqs.append(create_seq(row['seq'], indices))
     normalize_trees(ans)
-    for ind, (tree, instances) in enumerate(ans):
-        if post_process_func is None:
-            ans[ind] = (pre_process_tree(tree, alphabet_rev, alphabet), instances)
-        else:
-            ans[ind] = remap_tree(tree, seqs[ind]), instances
     return ans
 
 

@@ -17,15 +17,6 @@ void Logger::setPrintLevel(LoggingLevel level){
     printLevel = level;
 }
 
-string Logger::getCaller() {
-    void *array[2];
-    stringstream stream;
-    size_t size;
-    // get void*'s for all entries on the stack
-    return stream.str();
-}
-
-
 int log_rank(Logger::LoggingLevel value)
 {
     switch (value)

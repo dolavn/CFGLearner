@@ -61,10 +61,15 @@ private:
     scoreTable table;
     Trees::dpTable calcTable;
     Sequence seq;
+    Sequence originalSeq; //For duplications concat
+    std::vector<std::pair<std::pair<int, int>, int>> duplications;
     float lambda;
     bool concatDuplications;
+
     std::vector<std::pair<int, int>> getDuplicationIndices() const;
     ParseTree* traceback(const Trees::dpTable&, const Sequence&);
+    ParseTree getDuplicatedTree(int, int) const;
+    ParseTree postProcessTree(const ParseTree&) const; //For duplications concat
     void concat(Trees::dpTable&);
 };
 

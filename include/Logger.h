@@ -31,7 +31,7 @@ public:
     Logger& operator<< (const T& data)
     {
         if(level<=printLevel){
-            std::cout << " " << getCaller() << data;
+            std::cout << data;
         }
         return *this;
     }
@@ -39,7 +39,6 @@ public:
     const char endline = '\n';
 private:
     Logger(LoggingLevel, LoggingLevel);
-    std::string getCaller();
     LoggingLevel level;
     LoggingLevel printLevel;
 };
