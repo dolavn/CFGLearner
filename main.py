@@ -84,6 +84,7 @@ class MainGUI:
         self._parse_button = None
         self._pcfg = None
         self._parsed_trees = []
+        self._oracle_settings = {'type': SimpleMultiplicityTeacher, 'args': [0.0005, 0], 'additional_settings': []}
 
     def set_pcfg(self, pcfg):
         self._pcfg = pcfg
@@ -134,6 +135,20 @@ class MainGUI:
             tkinter.messagebox.showerror("Update Oracle", "Invalid duplication probability")
         if prob_swap is not None and not self.check_is_prob(prob_swap):
             tkinter.messagebox.showerror("Update Oracle", "Invalid swap probability")
+        if prob_dup == 1:
+            tkinter.messagebox.showerror("Update Oracle", "Duplication probability can't be 1")
+        if prob_dup is not None:
+            prob_dup = float(prob_dup)
+            self._oracle_settings['type'] = ProbabilityTeacher
+            self._oracle_settings['args'] = [prob_dup]
+
+            def add_constructor_generator(teacher, **kwargs):
+                con = TreeConstructor(kwargs['table'])
+                con.set_concat(True)
+                con.set_lambda(1.0)
+                teacher.setup_constructor_generator(con, 4, 10000)
+
+            self._oracle_settings['additional_settings'] = [add_constructor_generator]
 
     def create_oracle_frame(self):
         oracle_frame = Frame(self._secondary_tree_frame)
@@ -189,7 +204,8 @@ class MainGUI:
         trees_check_list.grid(column=0, row=0)
         learn_func = lambda: learn_cmd(trees_check_list.get_selected(), trees_list, d)
         if weighted:
-            learn_func = lambda: learn_cmd_prob(trees_check_list.get_selected(), trees_list, d, gui=self)
+            learn_func = lambda: learn_cmd_prob(trees_check_list.get_selected(), trees_list, d, self._oracle_settings,
+                                                gui=self)
         grammar_frame = Frame(secondary_frame)
         grammar_frame.grid(column=0, row=1)
         learn_button = Button(grammar_frame, pady=10, text='Learn', command=learn_func)
@@ -288,28 +304,29 @@ def convert_pcfg_to_str(pcfg):
     return ans
 
 
-def learn_cmd_prob(indices, tree_list, reverse_dict, gui=None):
+def learn_cmd_prob(indices, tree_list, reverse_dict, oracle_settings, gui=None):
     trees = [tree_list[ind] for ind in indices]
     set_verbose(LOG_DEBUG)
 
-    #teacher = SimpleMultiplicityTeacher(epsilon=0.0005, default_val=0)
 
     def thread_task():
         table = gui._scoring_table
         d = DuplicationComparator()
-        teacher = ProbabilityTeacher(d, 0.1, 0.001)
+        if oracle_settings['type'] is ProbabilityTeacher:
+            teacher = ProbabilityTeacher(d, oracle_settings['args'][0], 0.001)
+        else:
+            teacher = oracle_settings['type'](*oracle_settings['args'])
         for tree in trees:
             teacher.addExample(*tree)
+        if oracle_settings['type'] is ProbabilityTeacher:
+            con = TreeConstructor(table)
+            con.set_concat(True)
+            con.set_lambda(1.0)
+            teacher.setup_constructor_generator(con, 8, 10000)
         print('setting')
-        #teacher.setup_duplications_generator(2)
-        con = TreeConstructor(table)
-        con.set_concat(True)
-        con.set_lambda(1.0)
-        teacher.setup_constructor_generator(con, 4, 10000)
-        #set_verbose(LOG_DEBUG)
+        set_verbose(LOG_DEBUG)
         print('starting')
         t = time()
-
         acc = learnMultPos(teacher)
         acc.print_desc()
         g = convert_pmta_to_pcfg(acc, reverse_dict)
@@ -543,8 +560,8 @@ def read_strings(file_path, tree_construct='ANNOT'):
     annotations_rev = {}
     ids = {}
     alphabet, alphabet_rev = (cogs, cogs_rev) if tree_construct == 'COGS' else (annotations, annotations_rev)
-    curr_ind_seq = [0]
-    curr_ind_annot = [0]
+    curr_ind_seq = [1]
+    curr_ind_annot = [1]
     with open(file_path) as file:
         data = json.load(file)
         for row in data:

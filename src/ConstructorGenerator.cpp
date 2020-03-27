@@ -19,6 +19,7 @@ using namespace std::chrono;
 
 
 static ofstream myfile;
+
 ConstructorGenerator::ConstructorGenerator(TreeConstructor& con, int maxLen, int numTrees, vector<int> alphabet):
 constructor(con),maxLen(maxLen), numTrees(numTrees), alphabet(move(alphabet)),treesGenerated(0), currTree(nullptr){
     generateTree();
@@ -90,9 +91,6 @@ void ConstructorGenerator::generateTree(){
     vector<int> seq = generateSeq();
     constructor.createTree(seq);
     currTree = new ParseTree(constructor.getTree());
-    if(seq[0] == 5 && seq[1] == 6 && seq[2] == 3){
-        logger << *currTree << logger.endline;
-    }
 }
 
 TreesGenerator* ConstructorGenerator::clone() const{

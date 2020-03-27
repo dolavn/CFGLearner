@@ -97,6 +97,8 @@ ParseTree* ProbabilityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) 
         return std::abs(val-prob)>epsilon;
     };
     if(!this->generator){
+        logger.setLoggingLevel(Logger::LOG_DEBUG);
+        logger << "no generator equiv" << logger.endline;
         for(auto& currTree: trees){
             if(testFunc(*currTree, false)){
                 return new ParseTree(*currTree);
@@ -108,7 +110,6 @@ ParseTree* ProbabilityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) 
             }
         }
     }else{
-        Logger& logger = Logger::getLogger();
         logger.setLoggingLevel(Logger::LOG_DEBUG);
         logger << "equivalence" << logger.endline;
         TreesGenerator& genRef = *generator;

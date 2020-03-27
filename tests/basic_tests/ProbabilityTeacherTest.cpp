@@ -115,3 +115,81 @@ TEST(probability_teacher_test,equiv_constructor_generator){
     }
     ASSERT_TRUE(counter==nullptr);
 }
+
+TEST(probability_teacher_test,equiv_constructor_generator2){
+    DuplicationComparator cmp;
+    ProbabilityTeacher teacher(cmp, 0.5, EPS);
+    ParseTree t1(0, {ParseTree(1), ParseTree(2)});
+    ParseTree t(0, {t1, ParseTree(3)});
+    t.setProb(1.0);
+    teacher.addExample(t);
+    scoreTable scores;
+    for(int i=0;i<4;++i){
+        for(int j=0;j<4;++j){
+            for(int p=0;p<4;++p){
+                if(i==0&&j==0){continue;}
+                vector<int> v;
+                for(int k=0;k<i;++k){v.push_back(1);}
+                for(int k=0;k<j;++k){v.push_back(2);}
+                for(int k=0;k<p;++k){v.push_back(3);}
+                int largerZero=0;
+                for(auto& elem: {i, j, p}){
+                    if(elem>0){largerZero++;}
+                }
+                if(largerZero==1){
+                    scores[v] = 10;
+                    continue;
+                }
+                if(p==0){
+                    scores[v] = 5;
+                    continue;
+                }
+                if(i==0){
+                    scores[v] = 2;
+                    continue;
+                }
+                if(j==0){
+                    scores[v] = 0;
+                    continue;
+                }
+                scores[v] = 1;
+            }
+        }
+    }
+    TreeConstructor c(scores);
+    teacher.setupConstructorGenerator(c, 5, 1000);
+    set<rankedChar> alphabet = {{0, 2}, {1, 0}, {2, 0}, {3, 0}};
+    MultiplicityTreeAcceptor acc(alphabet, 5);
+    acc.setLambda({0, 0, 0, 0, 1});
+    MultiLinearMap m_l1(5, 0), m_l2(5, 0), m_l3(5, 0), m_inner(5, 2);
+    m_l1.setParam(1.0, {0}); m_l2.setParam(1.0, {1}); m_l3.setParam(1.0, {2});
+    m_inner.setParam(1.0, {3,0,1});
+    m_inner.setParam(1.0, {4,3,2});
+    acc.addTransition(m_l1, {1, 0}); acc.addTransition(m_l2, {2, 0});
+    acc.addTransition(m_inner, {0, 2});
+    ParseTree* counter = teacher.equivalence(acc);
+    ASSERT_TRUE(counter!=nullptr);
+    SAFE_DELETE(counter);
+
+    acc = MultiplicityTreeAcceptor(alphabet, 8);
+    acc.setLambda({1, 0, 0, 0, 0, 0, 0, 0});
+    m_l1 = MultiLinearMap(8, 0); m_l2 = MultiLinearMap(8, 0); m_l3 = MultiLinearMap(8, 0);
+    m_inner = MultiLinearMap(8 ,2);
+    m_l1.setParam(1.0, {5}); m_l1.setParam(1.0, {1});
+    m_l2.setParam(1.0, {6}); m_l2.setParam(1.0, {2});
+    m_l3.setParam(1.0, {7}); m_l3.setParam(1.0, {3});
+    m_inner.setParam(1.0, {0, 4, 3});
+    m_inner.setParam(1.0, {4, 1, 2});
+    m_inner.setParam(0.5, {3, 7, 3});
+    m_inner.setParam(0.5, {1, 5, 1});
+    m_inner.setParam(0.5, {2, 6, 2});
+    acc.addTransition(m_l1, {1, 0}); acc.addTransition(m_l2, {2, 0}); acc.addTransition(m_l3, {3, 0});
+    acc.addTransition(m_inner, {0, 2});
+    counter = teacher.equivalence(acc);
+    if(counter){
+        cout << *counter << endl;
+        cout << counter->getProb() << endl;
+        cout << acc.run(*counter) << endl;
+    }
+    ASSERT_TRUE(counter==nullptr);
+}
