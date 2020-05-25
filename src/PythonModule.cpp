@@ -219,7 +219,7 @@ PYBIND11_MODULE(CFGLearner, m) {
     py::class_<DuplicationComparator> duplicationComparator(m, "DuplicationComparator", treeComparator);
     duplicationComparator.def(py::init<>());
     py::class_<SwapComparator> swapComparator(m, "SwapComparator", treeComparator);
-    swapComparator.def(py::init<int, int>());
+    swapComparator.def(py::init<>());
     treeAligner.def("compare", [](TreeComparator& c, py::object nltkTree1, py::object nltkTree2){
         if(!checkType(nltkTree1) || !checkType(nltkTree2)){
             throw std::invalid_argument("Must give an nltk tree");

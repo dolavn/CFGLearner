@@ -13,8 +13,8 @@ from nltk.draw.util import CanvasFrame
 from nltk.draw import TreeWidget
 from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, \
     SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose, SwapComparator, DifferenceMultiplicityTeacher, \
-    LoggingLevel, TreeConstructor, LOG_DETAILS, LOG_DEBUG, DuplicationComparator, ProbabilityTeacher
-from WCFG import load_trees_from_file, convert_pmta_to_pcfg, compress_grammar
+    LoggingLevel, TreeConstructor, LOG_DETAILS, LOG_DEBUG, DuplicationComparator, SwapComparator, ProbabilityTeacher
+from WCFG import load_trees_from_file, convert_pmta_to_pcfg, compress_grammar, create_duplications
 from threading import Thread
 from GUI import Table, MapTable, Checklist, PopupWindow, load_object_window, HidableFrame
 from PIL import Image, ImageFont, ImageDraw
@@ -40,7 +40,7 @@ def get_nonterminals(pcfg):
     return list(alphabet)
 
 
-UNKNOWN = 'UNKNOWN'
+UNKNOWN = 'UNKNOWN0'
 
 
 def merge_pdfs(input, output):
@@ -63,12 +63,16 @@ def merge_pdfs(input, output):
 
 
 def get_parse_options(seq, alphabet):
-    unknown_indices = [ind for ind, s in enumerate(seq) if s==UNKNOWN]
-    for tup in product(*[alphabet]*len(unknown_indices)):
-        curr_seq = [s for s in seq]
-        for ind, token in zip(unknown_indices, tup):
-            curr_seq[ind] = token
-        yield curr_seq
+    unknown_indices = [ind for ind, s in enumerate(seq) if s == UNKNOWN]
+    if len(unknown_indices) > 0:
+        #TODO : CHANGE THAT
+        for tup in product(*[alphabet]*1):
+            curr_seq = [s for s in seq]
+            for ind in unknown_indices:
+                curr_seq[ind] = tup[0]
+            yield curr_seq
+    else:
+        yield seq
 
 
 class MainGUI:
@@ -90,19 +94,36 @@ class MainGUI:
         self._pcfg = pcfg
         self._parse_button['state'] = 'normal'
 
-    def parse_command(self, seqs):
+    def parse_command(self, seqs, keep=3):
         non_terminals = get_nonterminals(self._pcfg)
         viterbi = ViterbiParser(self._pcfg)
         for seq, id in seqs:
+            curr_trees = []
             for parse_option in get_parse_options(seq, non_terminals):
-                for t in viterbi.parse(parse_option):
-                    self._parsed_trees.append((parse_option, t, id))
-        trees = [(tree[1], tree[2]) for tree in self._parsed_trees]
-        for i, (tree, ind) in enumerate(trees):
-            save_tree(tree, None, 'parse{}'.format(i), prob=tree.prob(), csb_id=ind)
+                try:
+                    for t in viterbi.parse(parse_option):
+                        curr_trees.append((t, parse_option))
+                except ValueError:
+                    print(parse_option)
+            print(curr_trees)
+            curr_trees = sorted(curr_trees, key=lambda tree: -tree[0].prob())
+            print(seq, sum([tree[0].prob() for tree in curr_trees]), len(curr_trees))
+            if keep != -1:
+                curr_trees = curr_trees[:keep]
+            print('now', len(curr_trees))
+            for tree, parse_option in curr_trees:
+                self._parsed_trees.append((parse_option, tree, id))
+        print(len(seqs), len(self._parsed_trees))
+        trees = [(tree[0], tree[1], tree[2]) for tree in self._parsed_trees]
+        output_files = []
+        for i, (option, tree, ind) in enumerate(trees):
+            a = save_tree(tree, None, 'parse{}'.format(i), postscript=False, prob=tree.prob(), csb_id=ind)
+            output_files.append(a)
+        merge_pdfs(output_files, 'merged_parse.pdf')
 
     def load_grammar(self):
         grammar = load_object_window()
+        print(grammar)
         grammar = PCFG.fromstring(grammar)
         self.set_pcfg(grammar)
 
@@ -111,6 +132,7 @@ class MainGUI:
         self._top.geometry('{0}x{1}'.format(self._width, self._height))
         self._top.title(self._title)
         self._scoring_table = table
+        self._parse_seq = [(tuple([annotations_rev[e] for e in s['seq']]), s['csb_id']) for s in sequences]
         seqFrame = Frame(self._top)
         seqFrame.grid(row=0, column=0)
         treeFrame = Frame(self._top)
@@ -131,24 +153,36 @@ class MainGUI:
         return 0 <= p <= 1
 
     def update_oracle(self, prob_dup, prob_swap):
+        if prob_dup is None and prob_swap is None:
+            self._oracle_settings['type'] = SimpleMultiplicityTeacher
+            return
+
         if prob_dup is not None and not self.check_is_prob(prob_dup):
             tkinter.messagebox.showerror("Update Oracle", "Invalid duplication probability")
         if prob_swap is not None and not self.check_is_prob(prob_swap):
             tkinter.messagebox.showerror("Update Oracle", "Invalid swap probability")
         if prob_dup == 1:
             tkinter.messagebox.showerror("Update Oracle", "Duplication probability can't be 1")
+
+        def add_constructor_generator(teacher, **kwargs):
+            con = TreeConstructor(kwargs['table'])
+            con.set_concat(True)
+            con.set_lambda(1.0)
+            teacher.setup_constructor_generator(con, 8, 10000)
+        self._oracle_settings['additional_settings'] = [add_constructor_generator]
+        self._oracle_settings['type'] = ProbabilityTeacher
+
+        if prob_swap is not None:
+            prob_swap = float(prob_swap)
+
+            self._oracle_settings['comparator'] = SwapComparator
+            self._oracle_settings['args'] = [prob_swap]
+
         if prob_dup is not None:
             prob_dup = float(prob_dup)
-            self._oracle_settings['type'] = ProbabilityTeacher
+            self._oracle_settings['comparator'] = DuplicationComparator
             self._oracle_settings['args'] = [prob_dup]
 
-            def add_constructor_generator(teacher, **kwargs):
-                con = TreeConstructor(kwargs['table'])
-                con.set_concat(True)
-                con.set_lambda(1.0)
-                teacher.setup_constructor_generator(con, 4, 10000)
-
-            self._oracle_settings['additional_settings'] = [add_constructor_generator]
 
     def create_oracle_frame(self):
         oracle_frame = Frame(self._secondary_tree_frame)
@@ -212,7 +246,7 @@ class MainGUI:
         learn_button.grid(column=0, row=0)
         load_grammar_button = Button(grammar_frame, text='Load Grammar', command=self.load_grammar)
         load_grammar_button.grid(column=1, row=0)
-        parse_button = Button(grammar_frame, text='Parse', command=lambda: self.parse_command(seq))
+        parse_button = Button(grammar_frame, text='Parse', command=lambda: self.parse_command(self._parse_seq))
         parse_button.grid(column=0, row=1)
         parse_button['state'] = 'disabled'
         self._tree_frame = top
@@ -311,8 +345,9 @@ def learn_cmd_prob(indices, tree_list, reverse_dict, oracle_settings, gui=None):
 
     def thread_task():
         table = gui._scoring_table
-        d = DuplicationComparator()
         if oracle_settings['type'] is ProbabilityTeacher:
+            print(oracle_settings)
+            d = oracle_settings['comparator']()
             teacher = ProbabilityTeacher(d, oracle_settings['args'][0], 0.001)
         else:
             teacher = oracle_settings['type'](*oracle_settings['args'])
@@ -322,7 +357,7 @@ def learn_cmd_prob(indices, tree_list, reverse_dict, oracle_settings, gui=None):
             con = TreeConstructor(table)
             con.set_concat(True)
             con.set_lambda(1.0)
-            teacher.setup_constructor_generator(con, 8, 10000)
+            teacher.setup_constructor_generator(con, 4, 5000)
         print('setting')
         set_verbose(LOG_DEBUG)
         print('starting')
@@ -330,7 +365,8 @@ def learn_cmd_prob(indices, tree_list, reverse_dict, oracle_settings, gui=None):
         acc = learnMultPos(teacher)
         acc.print_desc()
         g = convert_pmta_to_pcfg(acc, reverse_dict)
-        g = compress_grammar(g)
+        #g = compress_grammar(g)
+        #g = create_duplications(g, 0.2)
         gui.set_pcfg(g)
         print(g)
         g = convert_pcfg_to_str(g)
@@ -419,8 +455,9 @@ def onselect2(index, trees_list, cf, text_box, d, weight_text=None):
     draw_tree(tree, cf, text_box, d, prob=prob)
 
 
-def save_tree(tree, d, name, **kwargs):
+def save_tree(tree, d, name, postscript=False, **kwargs):
     drawable_tree = tree if d is None else get_drawable_tree(tree[0], d)
+    extension = 'ps' if postscript else 'png'
     cf = CanvasFrame()
     tc = TreeWidget(cf.canvas(), drawable_tree)
     tc['node_font'] = 'arial 22 bold'
@@ -432,25 +469,26 @@ def save_tree(tree, d, name, **kwargs):
     tc['yspace'] = 20
     curr_y = 40*len(kwargs)
     cf.add_widget(tc, 0, curr_y)
-    cf.print_to_file('{0}.png'.format(name))
-    im1 = Image.open('{0}.png'.format(name))
-    im1 = im1.convert('RGB')
-    curr_y = 10
-    for key in kwargs:
-        font = ImageFont.truetype("/fonts/Ubuntu-L.ttf", 24)
-        draw = ImageDraw.Draw(im1)
-        val = kwargs[key]
-        format_str = '{0}'
-        if isinstance(val, float):
-            format_str = format_str+'={1:.4f}'
-        else:
-            format_str = format_str+'=  {1}'
-        draw.text((10, curr_y), format_str.format(key, val), (0, 0, 0), font)
-        curr_y = curr_y + 40
-    im1.save('{}.pdf'.format(name))
-    cf.destroy()
-    os.remove('{}.png'.format(name))
-    return '{}.pdf'.format(name)
+    cf.print_to_file('{0}.{1}'.format(name, extension))
+    if not postscript:
+        im1 = Image.open('{0}.{1}'.format(name, extension))
+        im1 = im1.convert('RGB')
+        curr_y = 10
+        for key in kwargs:
+            font = ImageFont.truetype("/fonts/Ubuntu-L.ttf", 24)
+            draw = ImageDraw.Draw(im1)
+            val = kwargs[key]
+            format_str = '{0}'
+            if isinstance(val, float):
+                format_str = format_str+'={1:.4f}'
+            else:
+                format_str = format_str+'=  {1}'
+            draw.text((10, curr_y), format_str.format(key, val), (0, 0, 0), font)
+            curr_y = curr_y + 40
+        im1.save('{}.pdf'.format(name))
+        cf.destroy()
+        os.remove('{0}.{1}'.format(name, extension))
+    return '{0}.{1}'.format(name, 'ps' if postscript else 'pdf')
 
 
 def create_window(root):
@@ -489,9 +527,10 @@ def get_all_score_tuples(seq, alphabet, alphabet_rev):
         yield tuple([alphabet[t] for t in new_tup])
 
 
-def get_score_table(sequences, alphabet, alphabet_rev, key='seq'):
-    with open('csb_scores') as json_file:
+def get_score_table(sequences, alphabet, alphabet_rev, path, key='seq'):
+    with open(path) as json_file:
         table = json.load(json_file)
+        table = list(filter(lambda a: all(e in alphabet for e in a[0]), table))
         for ind, t in enumerate(table):
             table[ind] = ([alphabet[e] for e in t[0]], t[1])
     table = {tuple(t[0]): t[1] for t in table}
@@ -548,7 +587,7 @@ def pre_process_tree(tree, rev_map, alphabet):
     return tree
 
 
-def read_strings(file_path, tree_construct='ANNOT'):
+def read_strings(file_path, csb_path, tree_construct='ANNOT', additional_alphabet=['FimA', 'CitB']):
     if tree_construct not in ['ANNOT', 'COGS']:
         raise BaseException("Invalid option for tree construct")
     key = 'seq' if tree_construct == 'COGS' else 'annot'
@@ -575,19 +614,19 @@ def read_strings(file_path, tree_construct='ANNOT'):
                 seq_to_annot[s] = tuple(row['annotation'])
             else:
                 seq_dict[s] += row['instances']
+        for elem in additional_alphabet:
+            if elem not in alphabet:
+                alphabet[elem] = curr_ind_seq[0]
+                alphabet_rev[curr_ind_seq[0]] = elem
+                curr_ind_seq[0] += 1
+                annotations[elem] = curr_ind_annot[0]
+                annotations_rev[curr_ind_annot[0]] = elem
+                curr_ind_annot[0] += 1
     sequences = []
     for seq in seq_dict.keys():
         sequences.append({'csb_id': ids[seq], 'seq': seq, 'annot': seq_to_annot[seq], 'instances': seq_dict[seq]})
     sequences = sorted(sequences, key=lambda a: a['instances'])
-    if False:
-        seq_l = []
-        for seq in sequences:
-            seq2 = [cogs_rev[i] for i in seq[0]]
-            seq_l.append((seq2, seq[1]))
-        for s in seq_l:
-            print(s)
-        exit()
-    table = get_score_table(sequences, alphabet, alphabet_rev, key=key)
+    table = get_score_table(sequences, alphabet, alphabet_rev, csb_path, key=key)
     return sequences, cogs, cogs_rev, annotations, annotations_rev, table
 
 
@@ -687,11 +726,11 @@ def get_trees_list(file_path, weighted=False):
 
 if __name__ == '__main__':
     args = sys.argv
-    if len(args) < 2:
+    if len(args) < 3:
         print('Not enough arguments')
         exit()
     tree_construct = 'ANNOT'
-    sequences, alphabet, alphabet_rev, annotations, annotations_rev, table = read_strings(args[1],
+    sequences, alphabet, alphabet_rev, annotations, annotations_rev, table = read_strings(args[1], args[2],
                                                                                           tree_construct=tree_construct)
     gui = MainGUI(TITLE, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT)
     gui.init_GUI(sequences, alphabet, alphabet_rev, annotations, annotations_rev, table, tree_construct=tree_construct)

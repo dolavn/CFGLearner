@@ -110,10 +110,32 @@ int TreeAligner::getScore(int a, int b){
     }
 }
 
-SwapComparator::SwapComparator(int replaceScore, int swapScore):replaceScore(replaceScore),swapScore(swapScore){
+
+SwapComparator::SwapComparator(bool swapAll):replaceScore(std::numeric_limits<int>::max()),
+swapScore(1),swapAll(swapAll),swappablePairs(){
 
 }
 
+
+SwapComparator::SwapComparator():replaceScore(std::numeric_limits<int>::max()),swapScore(1),swapAll(true),swappablePairs(){
+
+}
+
+
+SwapComparator::SwapComparator(int replaceScore, int swapScore):replaceScore(replaceScore),swapAll(true),
+swappablePairs(),swapScore(swapScore){
+
+}
+
+void SwapComparator::addPair(string s1, string s2){
+    if(swapAll){
+        Logger& logger = Logger::getLogger();
+        logger.setLoggingLevel(Logger::LOG_WARNING);
+        logger << "Added swappable pair, but comparator is set to swap all." << logger.endline;
+    }
+    stringPair p(s1,s2);
+    swappablePairs.push_back(p);
+}
 
 float SwapComparator::compare(const ParseTree& t1, const ParseTree& t2){
     Logger& logger = Logger::getLogger();
@@ -129,7 +151,7 @@ float SwapComparator::compare(const ParseTree& t1, const ParseTree& t2){
             const ParseTree* subtree1 = v1[i];
             const ParseTree* subtree2 = v2[j];
             if(subtree1->isLeaf() && subtree2->isLeaf()){ //Both are leaves
-                table[i][j] = subtree1->getData()==subtree2->getData()?0:replaceScore;
+                table[i][j] = subtree1->getData()==subtree2->getData()?0:std::numeric_limits<int>::max();
             }else{
                 if(subtree1->isLeaf() || subtree2->isLeaf()){ //One is a leaf
                     table[i][j] = std::numeric_limits<int>::max();
@@ -142,8 +164,8 @@ float SwapComparator::compare(const ParseTree& t1, const ParseTree& t2){
                 vector<const ParseTree*> subtrees2 = subtree2->getSubtrees();
                 int normal = safeAdd(table[v1PtrToIndMapping[subtrees1[0]]][v2PtrToIndMapping[subtrees2[0]]],
                              table[v1PtrToIndMapping[subtrees1[1]]][v2PtrToIndMapping[subtrees2[1]]]);
-                int swap =   safeAdd(table[v1PtrToIndMapping[subtrees1[0]]][v2PtrToIndMapping[subtrees2[1]]],
-                             table[v1PtrToIndMapping[subtrees1[1]]][v2PtrToIndMapping[subtrees2[0]]])+swapScore;
+                int swap =   safeAdd(safeAdd(table[v1PtrToIndMapping[subtrees1[0]]][v2PtrToIndMapping[subtrees2[1]]],
+                             table[v1PtrToIndMapping[subtrees1[1]]][v2PtrToIndMapping[subtrees2[0]]]),swapScore);
                 table[i][j] = min(normal, swap);
             }
         }

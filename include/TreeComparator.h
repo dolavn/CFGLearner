@@ -46,9 +46,16 @@ private:
 
 class SwapComparator: public TreeComparator{
 public:
+    SwapComparator();
+    SwapComparator(bool);
     SwapComparator(int, int);
     virtual float compare(const ParseTree&, const ParseTree&);
+    void addPair(std::string, std::string);
 private:
+    typedef std::pair<std::string, std::string> stringPair;
+    typedef std::vector<stringPair> pairsVec;
+    bool swapAll;
+    pairsVec swappablePairs;
     int replaceScore;
     int swapScore;
 };

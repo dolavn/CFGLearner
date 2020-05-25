@@ -66,6 +66,7 @@ TEST(swap_comparator,basic_check){
     ParseTree t2(0);
     ParseTree t3(0);
     ParseTree t4(0);
+    ParseTree t5(0);
     t.setSubtree(ParseTree(1), 0);
     t.setSubtree(ParseTree(2), 1);
     t2.setSubtree(ParseTree(2), 0);
@@ -74,10 +75,13 @@ TEST(swap_comparator,basic_check){
     t3.setSubtree(ParseTree(1), 1);
     t4.setSubtree(ParseTree(1), 0);
     t4.setSubtree(t2, 1);
+    t5.setSubtree(t3, 0);
+    t5.setSubtree(t4, 1);
     scoresMap scores = getScores();
-    SwapComparator c(4, 1);
+    SwapComparator c;
     ASSERT_EQ(1, c.compare(t, t2));
     ASSERT_EQ(2, c.compare(t3, t4));
+    ASSERT_EQ(std::numeric_limits<int>::max(), c.compare(t, t5));
 }
 
 TEST(swap_comparator, exception_test){

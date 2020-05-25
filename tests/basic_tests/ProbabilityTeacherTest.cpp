@@ -193,3 +193,65 @@ TEST(probability_teacher_test,equiv_constructor_generator2){
     }
     ASSERT_TRUE(counter==nullptr);
 }
+
+TEST(probability_swap_teacher_test,equiv_constructor_generator){
+    SwapComparator cmp;
+    ProbabilityTeacher teacher(cmp, 0.5, EPS);
+    ParseTree t1(0, {ParseTree(1), ParseTree(2)});
+    t1.setProb(0.5);
+    teacher.addExample(t1);
+    scoreTable scores;
+    scores[{1,2}]=5;
+    scores[{2,1}]=5;
+    TreeConstructor c(scores);
+    teacher.setupConstructorGenerator(c, 5, 1000);
+    set<rankedChar> alphabet = {{0, 2}, {1, 0}, {2, 0}};
+    MultiplicityTreeAcceptor acc(alphabet, 3);
+    acc.setLambda({0, 0, 0.5});
+    MultiLinearMap m_l1(3, 0), m_l2(3, 0), m_inner(3, 2);
+    m_l1.setParam(1.0, {0}); m_l2.setParam(1.0, {1});
+    m_inner.setParam(1.0, {2,0,1});
+    acc.addTransition(m_l1, {1, 0}); acc.addTransition(m_l2, {2, 0});
+    acc.addTransition(m_inner, {0, 2});
+    ParseTree* counter = teacher.equivalence(acc);
+    ASSERT_TRUE(counter!=nullptr);
+    SAFE_DELETE(counter);
+    m_inner.setParam(0.5, {2,1,0});
+    acc.addTransition(m_inner, {0, 2});
+    ParseTree t2(0, {ParseTree(2), ParseTree(1)});
+    counter = teacher.equivalence(acc);
+    ASSERT_TRUE(counter==nullptr);
+}
+
+TEST(probability_swap_teacher_test2,equiv_constructor_generator){
+    SwapComparator cmp;
+    ProbabilityTeacher teacher(cmp, 0.5, EPS);
+    ParseTree t1(0, {ParseTree(1), ParseTree(2)});
+    ParseTree t2(0, {t1, ParseTree(4)});
+    t1.setProb(0.5);
+    t2.setProb(0.5);
+    teacher.addExample(t1);
+    scoreTable scores;
+    scores[{1,2}]=5;
+    scores[{2,1}]=5;
+    TreeConstructor c(scores);
+    teacher.setupConstructorGenerator(c, 5, 1000);
+    set<rankedChar> alphabet = {{0, 2}, {1, 0}, {2, 0}, {4, 0}};
+    MultiplicityTreeAcceptor acc(alphabet, 5);
+    acc.setLambda({0, 0, 0, 0.5, 0.5});
+    MultiLinearMap m_l1(5, 0), m_l2(5, 0), m_l4(5, 0), m_inner(5, 2);
+    m_l1.setParam(1.0, {0}); m_l2.setParam(1.0, {1});
+    m_l4.setParam(1.0, {2});
+    m_inner.setParam(1.0, {3,0,1});
+    m_inner.setParam(1.0, {4,3,2});
+    acc.addTransition(m_l1, {1, 0}); acc.addTransition(m_l2, {2, 0});
+    acc.addTransition(m_l4, {4, 0}); acc.addTransition(m_inner, {0, 2});
+    ParseTree* counter = teacher.equivalence(acc);
+    ASSERT_TRUE(counter!=nullptr);
+    SAFE_DELETE(counter);
+    m_inner.setParam(0.5, {3,1,0});
+    m_inner.setParam(0.5, {4,2,3});
+    acc.addTransition(m_inner, {0, 2});
+    counter = teacher.equivalence(acc);
+    ASSERT_TRUE(counter==nullptr);
+}

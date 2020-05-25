@@ -513,3 +513,19 @@ TEST(tree_test, leaves_num_test){
     ParseTree t4(0, {t3, t2});
     ASSERT_EQ(t4.getLeavesNum(), 5);
 }
+
+TEST(tree_test, yieldTest){
+    ParseTree t(2);
+    ASSERT_EQ(t.getYield(), vector<int>({2}));
+    ParseTree t2(0, {t, t});
+    ASSERT_EQ(t2.getYield(), vector<int>({2, 2}));
+    ParseTree t3(0, {t, t2});
+    ASSERT_EQ(t3.getYield(), vector<int>({2, 2, 2}));
+    ParseTree t4(0, {t3, t2});
+    ASSERT_EQ(t4.getYield(), vector<int>({2, 2, 2, 2, 2}));
+    ParseTree p(1);
+    ParseTree t5(0, {p, p, t4});
+    ASSERT_EQ(t5.getYield(), vector<int>({1, 1, 2, 2, 2, 2, 2}));
+    ParseTree t6(0, {t4, p, t4});
+    ASSERT_EQ(t6.getYield(), vector<int>({2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2}));
+}

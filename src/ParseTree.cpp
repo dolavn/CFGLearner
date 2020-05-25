@@ -316,6 +316,22 @@ int ParseTree::getLeavesNum() const{
     return ans;
 }
 
+vector<int> ParseTree::getYield() const{
+    if(isLeaf()){
+        return {getData()};
+    }
+    vector<int> ans;
+    for(auto subtree: subtrees){
+        if(subtree!=nullptr){
+            vector<int> childYield = subtree->getYield();
+            for(int& elem: childYield){
+                ans.push_back(elem);
+            }
+        }
+    }
+    return ans;
+}
+
 vector<ParseTree*> ParseTree::getAllContexts() const{
     auto it = getIndexIterator();
     vector<ParseTree*> ans;
