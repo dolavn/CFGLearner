@@ -116,6 +116,22 @@ private:
     std::vector<rankedChar> getAlphabetVec() const;
 };
 
+class ScalarHankelMatrix: public HankelMatrix{
+public:
+    explicit ScalarHankelMatrix(const MultiplicityTeacher&);
+    ScalarHankelMatrix(const ScalarHankelMatrix&)=delete;
+    ScalarHankelMatrix& operator=(const ScalarHankelMatrix&)=delete;
+    ScalarHankelMatrix(ScalarHankelMatrix&&)=delete;
+    ScalarHankelMatrix& operator=(ScalarHankelMatrix&&)=delete;
+
+private:
+    virtual arma::vec getCoefficients(const ParseTree&, const arma::mat&) const override;
+    void completeTree(ParseTree*);
+    void completeContextS(ParseTree*);
+    void completeContextR(ParseTree*);
+    bool checkTableComplete(ParseTree*);
+};
+
 class PositiveHankelMatrix: public HankelMatrix{
 public:
     explicit PositiveHankelMatrix(const MultiplicityTeacher&);

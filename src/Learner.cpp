@@ -205,13 +205,13 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
     ofstream myfile;
     Logger& logger = Logger::getLogger();
     MultiplicityTreeAcceptor acc({}, 0);
-    myfile.open("multLearn");
+    myfile.open("multLearn10");
     while(true){
         myfile << "Current table:\\\\" << endl;
         myfile << "\\begin{center}" << endl;
         myfile << h.getTableLatex() << endl;
         myfile << "\\end{center}" << endl;
-        //acc.printDesc();
+        acc.printDesc();
         clock_t begin = clock();
         ParseTree* counterExample = teacher.equivalence(acc);
         clock_t end = clock();
@@ -221,10 +221,12 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
             logger << acc.run(*counterExample) << logger.endline;
             logger << *counterExample << logger.endline;
         }
+        /*
         if(0 && h.getC().size()>35){
             SAFE_DELETE(counterExample);
             myfile << "stopping learning" << endl;
         }
+         */
         if(counterExample==nullptr){
             myfile << "Final table:\\\\" << endl;
             myfile << "\\begin{center}" << endl;

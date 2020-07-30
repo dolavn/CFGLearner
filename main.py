@@ -88,7 +88,8 @@ class MainGUI:
         self._parse_button = None
         self._pcfg = None
         self._parsed_trees = []
-        self._oracle_settings = {'type': SimpleMultiplicityTeacher, 'args': [0.0005, 0], 'additional_settings': []}
+        self._oracle_settings = {'type': SimpleMultiplicityTeacher, 'args': [0.0005, 0], 'additional_settings': [],
+                                 'equiv_settings': (4, 5000)}
 
     def set_pcfg(self, pcfg):
         self._pcfg = pcfg
@@ -144,6 +145,16 @@ class MainGUI:
     def main_loop(self):
         self._top.mainloop()
 
+
+    @staticmethod
+    def check_is_int(n):
+        try:
+            n = int(n)
+        except Exception:
+            return False
+        return n > 0
+
+
     @staticmethod
     def check_is_prob(p):
         try:
@@ -152,17 +163,27 @@ class MainGUI:
             return False
         return 0 <= p <= 1
 
-    def update_oracle(self, prob_dup, prob_swap):
+    def update_oracle(self, prob_dup, prob_swap, max_len, num_examples):
         if prob_dup is None and prob_swap is None:
             self._oracle_settings['type'] = SimpleMultiplicityTeacher
             return
-
+        if not self.check_is_int(max_len):
+            tkinter.messagebox.showerror("Update Oracle", "Invalid max length")
+            return
+        max_len = int(max_len)
+        if not self.check_is_int(num_examples):
+            tkinter.messagebox.showerror("Update Oracle", "Invalid num of examples")
+            return
+        num_examples = int(num_examples)
         if prob_dup is not None and not self.check_is_prob(prob_dup):
             tkinter.messagebox.showerror("Update Oracle", "Invalid duplication probability")
+            return
         if prob_swap is not None and not self.check_is_prob(prob_swap):
             tkinter.messagebox.showerror("Update Oracle", "Invalid swap probability")
+            return
         if prob_dup == 1:
             tkinter.messagebox.showerror("Update Oracle", "Duplication probability can't be 1")
+            return
 
         def add_constructor_generator(teacher, **kwargs):
             con = TreeConstructor(kwargs['table'])
@@ -171,6 +192,7 @@ class MainGUI:
             teacher.setup_constructor_generator(con, 8, 10000)
         self._oracle_settings['additional_settings'] = [add_constructor_generator]
         self._oracle_settings['type'] = ProbabilityTeacher
+        self._oracle_settings['equiv_settings'] = (max_len, num_examples)
 
         if prob_swap is not None:
             prob_swap = float(prob_swap)
@@ -195,16 +217,28 @@ class MainGUI:
         swap_frame = HidableFrame("Allow swaps", oracle_frame)
         swap_frame.grid(row=2, column=0)
         swap_frame.add_var('prob', desc='Swap Probability')
+        equiv_title = Label(oracle_frame, text='Equivalence query settings')
+        max_len_label = Label(oracle_frame, text='Max example length')
+        max_len_entry = Entry(oracle_frame)
+        num_examples_label = Label(oracle_frame, text='Examples number')
+        num_examples_entry = Entry(oracle_frame)
+        equiv_title.grid(row=3, column=0, columnspan=2)
+        max_len_label.grid(row=4, column=0)
+        max_len_entry.grid(row=4, column=1)
+        max_len_entry.insert(END, self._oracle_settings['equiv_settings'][0])
+        num_examples_entry.insert(END, self._oracle_settings['equiv_settings'][1])
+        num_examples_label.grid(row=5, column=0)
+        num_examples_entry.grid(row=5, column=1)
 
         def set_oracle():
             dup_vis = duplications_frame.get_visible()
             swap_vis = swap_frame.get_visible()
             dup_prob = None if not dup_vis else duplications_frame.get_val('prob')
             swap_prob = None if not swap_vis else swap_frame.get_val('prob')
-            self.update_oracle(dup_prob, swap_prob)
+            self.update_oracle(dup_prob, swap_prob, max_len_entry.get(), num_examples_entry.get())
 
         set_oracle_button = Button(oracle_frame, text="Set", command=set_oracle)
-        set_oracle_button.grid(row=3, column=0)
+        set_oracle_button.grid(row=6, column=0)
 
     def add_trees_list(self, top, trees_list, d, weighted=False):
         secondary_frame = Frame(top)  # To be able to delete this frame.
@@ -338,13 +372,76 @@ def convert_pcfg_to_str(pcfg):
     return ans
 
 
+def get_nonterminals(pcfg):
+    nt = set([prod.lhs() for prod in pcfg.productions()])
+    return list(nt)
+
+
+def get_prod_by_nt(pcfg, nt):
+    ans = [prod for prod in pcfg.productions() if prod.lhs()==nt]
+    ans = sorted(ans, key=lambda a: a.prob())
+    return ans[::-1]
+
+
+def learn_prob(trees, reverse_dict, oracle_settings, table):
+    print(oracle_settings['equiv_settings'])
+    if oracle_settings['type'] is ProbabilityTeacher:
+        print(oracle_settings)
+        d = oracle_settings['comparator']()
+        teacher = ProbabilityTeacher(d, oracle_settings['args'][0], 0.001)
+    else:
+        teacher = oracle_settings['type'](*oracle_settings['args'])
+    for tree in trees:
+        teacher.addExample(*tree)
+    if oracle_settings['type'] is ProbabilityTeacher:
+        con = TreeConstructor(table)
+        con.set_concat(True)
+        con.set_lambda(1.0)
+        teacher.setup_constructor_generator(con, *oracle_settings['equiv_settings'])
+    print('setting')
+    set_verbose(LOG_DEBUG)
+    print('starting')
+    t = time()
+    acc = learnMultPos(teacher)
+    acc.print_desc()
+    g = convert_pmta_to_pcfg(acc, reverse_dict)
+    #gui.set_pcfg(g)
+    with open('output_g', 'w') as output_file:
+        for nt in get_nonterminals(g):
+            output_file.write('\startprod{%s} ' % nt)
+            prod_list = get_prod_by_nt(g, nt)
+            if len(prod_list) <= 4:
+                for prod in prod_list:
+                    rhs_str = ' '.join([str(r) for  r in prod.rhs()])
+                    output_file.write('\derivation{%s}{%.3f}{%d}' % (rhs_str, prod.prob(), int(100*prod.prob())))
+            else:
+                for i in range(0, len(prod_list), 4):
+                    curr_sub_list = prod_list[i:min(i+4, len(prod_list))]
+                    output_file.write('\makebox[10cm]{')
+                    for prod in curr_sub_list:
+                        rhs_str = ' '.join([str(r) for  r in prod.rhs()])
+                        output_file.write('\derivation{%s}{%.3f}{%d}' % (rhs_str, prod.prob(),
+                                                                         int(100*prod.prob())))
+                    output_file.write('}\n\n')
+            output_file.write('\n\n')
+    g_str = convert_pcfg_to_str(g)
+    with open('grammar.json', 'w') as json_file:
+        json.dump(g_str, json_file)
+    print('took {}'.format(time()-t))
+    return g
+
+
 def learn_cmd_prob(indices, tree_list, reverse_dict, oracle_settings, gui=None):
     trees = [tree_list[ind] for ind in indices]
     set_verbose(LOG_DEBUG)
 
 
     def thread_task():
+        g = learn_prob(trees, reverse_dict, oracle_settings, gui._scoring_table)
+        gui.set_pcfg(g)
+        """
         table = gui._scoring_table
+        print(oracle_settings['equiv_settings'])
         if oracle_settings['type'] is ProbabilityTeacher:
             print(oracle_settings)
             d = oracle_settings['comparator']()
@@ -357,7 +454,7 @@ def learn_cmd_prob(indices, tree_list, reverse_dict, oracle_settings, gui=None):
             con = TreeConstructor(table)
             con.set_concat(True)
             con.set_lambda(1.0)
-            teacher.setup_constructor_generator(con, 4, 5000)
+            teacher.setup_constructor_generator(con, *oracle_settings['equiv_settings'])
         print('setting')
         set_verbose(LOG_DEBUG)
         print('starting')
@@ -365,14 +462,30 @@ def learn_cmd_prob(indices, tree_list, reverse_dict, oracle_settings, gui=None):
         acc = learnMultPos(teacher)
         acc.print_desc()
         g = convert_pmta_to_pcfg(acc, reverse_dict)
-        #g = compress_grammar(g)
-        #g = create_duplications(g, 0.2)
         gui.set_pcfg(g)
-        print(g)
+        with open('output_g', 'w') as output_file:
+            for nt in get_nonterminals(g):
+                output_file.write('\startprod{%s} ' % nt)
+                prod_list = get_prod_by_nt(g, nt)
+                if len(prod_list) <= 4:
+                    for prod in prod_list:
+                        rhs_str = ' '.join([str(r) for  r in prod.rhs()])
+                        output_file.write('\derivation{%s}{%.3f}{%d}' % (rhs_str, prod.prob(), int(100*prod.prob())))
+                else:
+                    for i in range(0, len(prod_list), 4):
+                        curr_sub_list = prod_list[i:min(i+4, len(prod_list))]
+                        output_file.write('\makebox[10cm]{')
+                        for prod in curr_sub_list:
+                            rhs_str = ' '.join([str(r) for  r in prod.rhs()])
+                            output_file.write('\derivation{%s}{%.3f}{%d}' % (rhs_str, prod.prob(),
+                                                                             int(100*prod.prob())))
+                        output_file.write('}\n\n')
+                output_file.write('\n\n')
         g = convert_pcfg_to_str(g)
         with open('grammar.json', 'w') as json_file:
             json.dump(g, json_file)
         print('took {}'.format(time()-t))
+        """
     thread = Thread(target=thread_task)
     thread.start()
 
@@ -724,8 +837,49 @@ def get_trees_list(file_path, weighted=False):
     return trees_list, d
 
 
+def create_swapped_tree(tree):
+    return Tree(0, [tree[1], tree[0]])
+
+
+def get_yield(tree, alphabet_rev):
+    ans = []
+    for ind in tree.treepositions():
+        t = tree[ind]
+        if len(t) == 0:
+            ans.append(alphabet_rev[int(t.label())])
+    return ans
+
+
+def auto_tests(args):
+    sequences, alphabet, alphabet_rev, annotations, annotations_rev, table = read_strings(args[1], args[2])
+    trees = create_trees(sequences, table, lambda_val=1.0)
+    tree = create_swapped_tree(trees[0][0])
+    cmp = SwapComparator()
+    g = learn_prob(trees[:4], alphabet_rev, {'equiv_settings': (5, 1000), 'type': ProbabilityTeacher,
+                                             'comparator': SwapComparator, 'args': [0.2]}, table)
+    print(g)
+    swapped_trees = [create_swapped_tree(t[0]) for t in trees]
+    probs = [t[1] for t in trees]
+    viterbi = ViterbiParser(g)
+    for parse in viterbi.parse(get_yield(trees[0][0], alphabet_rev)):
+        a = parse.prob()
+    for parse in viterbi.parse(get_yield(swapped_trees[0], alphabet_rev)):
+        b = parse.prob()
+    for parse in viterbi.parse(get_yield(trees[3][0], alphabet_rev)):
+        c = parse.prob()
+    for parse in viterbi.parse(get_yield(swapped_trees[3], alphabet_rev)):
+        d = parse.prob()
+    print(a/b)
+    print(c/d)
+    print(trees[0])
+    print(trees[3])
+
+
 if __name__ == '__main__':
     args = sys.argv
+    if args[-1] == '-test':
+        auto_tests(args)
+        exit()
     if len(args) < 3:
         print('Not enough arguments')
         exit()

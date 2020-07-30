@@ -131,6 +131,32 @@ FunctionalMultiplicityTeacher getFuncTeacherProb(){
 }
 
 
+FunctionalMultiplicityTeacher getFuncTeacherProb2(){
+    ParseTree t1(1); ParseTree t2(2);
+    TreesIterator it({&t1, &t2}, getAlphabetProb(), 2);
+    FunctionalMultiplicityTeacher teacher(0.05, 0, [](const ParseTree& tree){
+        if(tree.getChildrenNum()!=2 || tree.getLeavesNum()!=2){
+            return 0.0;
+        }
+        int leftChar = tree.getNode({0}).getData();
+        int rightChar = tree.getNode({1}).getData();
+        if(leftChar==1 && rightChar==1){
+            return 0.2;
+        }
+        if(leftChar==2 && rightChar==2){
+            return 0.2;
+        }
+        if(leftChar==1 && rightChar==2){
+            return 0.5;
+        }
+        if(leftChar==2 && rightChar==1){
+            return 0.1;
+        }
+    }, it);
+    return teacher;
+}
+
+
 set<rankedChar> getAlphabet(){
     set<rankedChar> alphabet = {a,b,l};
     return alphabet;

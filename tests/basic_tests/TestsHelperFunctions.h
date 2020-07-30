@@ -18,6 +18,7 @@ SimpleMultiplicityTeacher getMultiplicityTeacher();
 SimpleMultiplicityTeacher getMultiplicityProbTeacher();
 SimpleMultiplicityTeacher getDistributionTeacher(double);
 FunctionalMultiplicityTeacher getFuncTeacherProb();
+FunctionalMultiplicityTeacher getFuncTeacherProb2();
 FunctionalMultiplicityTeacher getFuncTeacherNeg();
 FunctionalMultiplicityTeacher getFuncTeacher();
 

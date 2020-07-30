@@ -24,6 +24,11 @@ ConstructorGenerator::ConstructorGenerator(TreeConstructor& con, int maxLen, int
 constructor(con),maxLen(maxLen), numTrees(numTrees), alphabet(move(alphabet)),treesGenerated(0), currTree(nullptr){
     generateTree();
     myfile.open("trees.txt");
+    myfile << "alphabet:[";
+    for(auto a: alphabet){
+        myfile << a << ",";
+    }
+    myfile << "]" << endl;
 }
 
 ConstructorGenerator::ConstructorGenerator(const ConstructorGenerator& other):constructor(other.constructor),
@@ -45,9 +50,10 @@ ConstructorGenerator::~ConstructorGenerator(){
 
 unsigned int ConstructorGenerator::convertSampleToLen(unsigned int sample) const{
     auto sigma = (unsigned int)alphabet.size();
+    int curr_sum = 0;
     unsigned int ans=0;
-    while(sample>=1){
-        sample = sample/sigma;
+    while(curr_sum<sample){
+        curr_sum = curr_sum + int(pow(sigma, ans));
         ans++;
     }
     return ans;
@@ -57,9 +63,10 @@ unsigned int ConstructorGenerator::generateSeqLen() const{
     std::random_device rd;
     std::default_random_engine generator(rd());
     unsigned long sigma = alphabet.size();
-    double total = pow(sigma, maxLen)-1; total = total/(sigma-1); total = total*sigma;
+    double total = pow(sigma, maxLen)-1; total = total/(sigma-1); //total = total*sigma;
     uniform_int_distribution<int> distribution(1,int(total));
     unsigned int sample = distribution(generator);
+    //return sample;
     return convertSampleToLen(sample);
 }
 
@@ -72,6 +79,7 @@ vector<int> ConstructorGenerator::generateSeq() const{
     std::default_random_engine generator(rd());
     unsigned int len = generateSeqLen();
     vector<int> ans(len);
+    myfile << "currlen:" << len << " maxlen:" << maxLen << endl;
     for(int i=0;i<len;++i) {
         ms = duration_cast<milliseconds>(
                 system_clock::now().time_since_epoch()

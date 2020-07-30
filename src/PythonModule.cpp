@@ -220,7 +220,7 @@ PYBIND11_MODULE(CFGLearner, m) {
     duplicationComparator.def(py::init<>());
     py::class_<SwapComparator> swapComparator(m, "SwapComparator", treeComparator);
     swapComparator.def(py::init<>());
-    treeAligner.def("compare", [](TreeComparator& c, py::object nltkTree1, py::object nltkTree2){
+    treeComparator.def("compare", [](TreeComparator& c, py::object nltkTree1, py::object nltkTree2){
         if(!checkType(nltkTree1) || !checkType(nltkTree2)){
             throw std::invalid_argument("Must give an nltk tree");
         }
@@ -321,7 +321,8 @@ PYBIND11_MODULE(CFGLearner, m) {
     });
     m.def("learnMultPos",[](const MultiplicityTeacher& t) {
         py::gil_scoped_release release;
-        PositiveHankelMatrix h(t);
+        //PositiveHankelMatrix h(t);
+        ScalarHankelMatrix h(t);
         return learn(t, h);
     });
     py::class_<MultiLinearMap> multiLinearMap(m, "MultiLinearMap");

@@ -42,6 +42,7 @@ SET (SRCS src/ParseTree.cpp
           src/DuplicationsGenerator.cpp
           src/PartitionsIterator.cpp
           src/ConstructorGenerator.cpp
+          src/ScalarHankelMatrix.cpp
         )
 
 
