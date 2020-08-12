@@ -89,25 +89,26 @@ public:
     std::vector<double> getObs(const ParseTree&) const;
     MultiplicityTreeAcceptor getAcceptor() const;
     void closeTable();
-    void makeConsistent();
+    virtual void makeConsistent();
     virtual bool hasContext(const ParseTree&) const;
     bool checkClosed() const;
     std::string getTableLatex();
     void printTable() const;
+    virtual void giveCounterExample(const ParseTree&);
     TreesIterator getSuffixIterator() const;
 protected:
+    std::set<rankedChar> alphabet;
     const MultiplicityTeacher& teacher;
     arma::mat getSMatrix(bool) const;
     void fillMatLastRow(arma::mat&, const ParseTree&) const;
     bool checkIsTreeZero(const ParseTree&) const;
+    MultiplicityTreeAcceptor getAcceptorTemp() const;
     virtual arma::vec getCoefficients(const ParseTree&, const arma::mat&) const;
     std::unordered_map<ParseTree*,std::vector<double>> obs;
 private:
-    std::set<rankedChar> alphabet;
     std::vector<arma::Row<double>> base;
     arma::vec getObsVec(const ParseTree&) const;
     arma::mat getSInv() const;
-    MultiplicityTreeAcceptor getAcceptorTemp() const;
     virtual void completeTree(ParseTree*);
     void updateTransition(MultiLinearMap&, const ParseTree&, const std::vector<rankedChar>&, const arma::mat&) const;
     virtual void completeContextS(ParseTree*);
@@ -123,13 +124,23 @@ public:
     ScalarHankelMatrix& operator=(const ScalarHankelMatrix&)=delete;
     ScalarHankelMatrix(ScalarHankelMatrix&&)=delete;
     ScalarHankelMatrix& operator=(ScalarHankelMatrix&&)=delete;
+    virtual void giveCounterExample(const ParseTree&) override;
+    virtual void makeConsistent() override;
+
+    int getSObsInd(const ParseTree&) const;
+    std::vector<const ParseTree*> getTreesInClass(int) const;
+    std::vector<std::pair<const ParseTree*,const ParseTree*>> getPairsVec(std::vector<const ParseTree*>) const;
 
 private:
     virtual arma::vec getCoefficients(const ParseTree&, const arma::mat&) const override;
     void completeTree(ParseTree*);
     void completeContextS(ParseTree*);
     void completeContextR(ParseTree*);
+    double getCoeff(const ParseTree&, const ParseTree&) const;
+    std::vector<double> getRow(const ParseTree&) const;
     bool checkTableComplete(ParseTree*);
+
+    std::vector<std::pair<ParseTree, int>> getExtensions(const ParseTree&) const;
 };
 
 class PositiveHankelMatrix: public HankelMatrix{
@@ -139,7 +150,6 @@ public:
     PositiveHankelMatrix& operator=(const PositiveHankelMatrix&)=delete;
     PositiveHankelMatrix(PositiveHankelMatrix&&)=delete;
     PositiveHankelMatrix& operator=(PositiveHankelMatrix&&)=delete;
-
 private:
     virtual arma::vec getCoefficients(const ParseTree&, const arma::mat&) const override;
     void completeTree(ParseTree*);
@@ -147,5 +157,8 @@ private:
     void completeContextR(ParseTree*);
     bool checkTableComplete(ParseTree*);
 };
+
+
+std::vector<std::pair<ParseTree, int>> extendSet(const ParseTree&, std::vector<ParseTree>, std::set<rankedChar>);
 
 #endif //CFGLEARNER_OBSERVATIONTABLE_H

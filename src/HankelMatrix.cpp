@@ -164,6 +164,17 @@ MultiplicityTreeAcceptor HankelMatrix::getAcceptor() const{
     return getAcceptorTemp();
 }
 
+
+void HankelMatrix::giveCounterExample(const ParseTree& counterExample){
+    for(auto& context: counterExample.getAllContexts()){
+        if(!hasContext(*context)){
+            addContext(*context);
+        }
+        SAFE_DELETE(context)
+    }
+}
+
+
 MultiplicityTreeAcceptor HankelMatrix::getAcceptorTemp() const{
     vector<MultiLinearMap> maps;
     vector<rankedChar> alphabetVec = getAlphabetVec();
@@ -289,6 +300,7 @@ void HankelMatrix::closeTable(){
         Logger& logger = Logger::getLogger();
         logger.setLoggingLevel(Logger::LOG_DEBUG);
         logger << "closing " << "c:" << c.size() << " s:" << s.size() << " r:" << r.size() << logger.endline;
+        printTable();
         //if(c.size()>20){return;} //todo: delete
         if(s.empty()){
             for(auto c:alphabet){

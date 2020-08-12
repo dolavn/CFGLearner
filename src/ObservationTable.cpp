@@ -43,6 +43,8 @@ void BaseTable::addTree(const ParseTree& tree){
 
 void BaseTable::addContext(const ParseTree& context){
     if (!context.getIsContext()) {
+        cout << context << endl;
+        cout << context.getIsContext() << endl;
         throw invalid_argument("Tree must be a context to be added to C");
     }
     if(hasContext(context)){

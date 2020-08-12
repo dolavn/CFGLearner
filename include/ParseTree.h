@@ -107,6 +107,7 @@ public:
     std::vector<int> getContextLoc() const{return this->contextLoc;}
     std::vector<const ParseTree*> getInOrderPtrList() const;
     std::vector<ParseTree*> getAllContexts() const;
+    std::vector<ParseTree> getAllPrefixes() const;
     std::pair<ParseTree*,ParseTree*> makeContext(std::vector<int>) const;
     ParseTree* mergeContext(const ParseTree&) const;
     ParseTree getSkeleton() const;

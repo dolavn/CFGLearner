@@ -60,6 +60,10 @@ unordered_map<const ParseTree*, int> createMapping(vector<const ParseTree*> v){
     return map;
 }
 
+float EqualityComparator::compare(const ParseTree& t1, const ParseTree& t2){
+    return t1==t2?0:100;
+}
+
 float TreeAligner::compare(const ParseTree& t1, const ParseTree& t2){
     //cout << "comparing" << endl;
     //cout << "t1 " << t1 << endl;

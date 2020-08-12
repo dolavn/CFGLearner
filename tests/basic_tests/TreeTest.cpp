@@ -4,6 +4,7 @@
 
 #include "gtest/gtest.h"
 #include "../../include/ParseTree.h"
+#include "utility.h"
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
@@ -249,6 +250,28 @@ TEST(tree_test,context_merge_test){
     delete(tree);
 }
 
+TEST(tree_test,context_merge_test2){
+    ParseTree t(0, {ParseTree(0, {ParseTree(1), ParseTree(2)}), ParseTree(2)});
+    std::pair<ParseTree*,ParseTree*> contextPair = t.makeContext({0});
+    std::pair<ParseTree*,ParseTree*> contextPair2 = t.makeContext({1});
+    SAFE_DELETE(contextPair.second); SAFE_DELETE(contextPair2.second);
+    ParseTree* context1 = contextPair.first; ParseTree* context2 = contextPair2.first;
+    ParseTree* merged = context1->mergeContext(*context2);
+    ASSERT_EQ(merged->getIsContext(), true);
+    vector<int> contextLoc = merged->getContextLoc();
+    ASSERT_EQ(contextLoc.size(), 2);
+    ASSERT_EQ(contextLoc[0], 0); ASSERT_EQ(contextLoc[1], 1);
+    ASSERT_EQ(merged->getData(), 0);
+    const ParseTree& l = (*merged)[{0}]; const ParseTree& r = (*merged)[{1}];
+    const ParseTree& ll = (*merged)[{0,0}]; const ParseTree& lr = (*merged)[{0,1}];
+    const ParseTree& lll = (*merged)[{0,0,0}]; const ParseTree& llr = (*merged)[{0,0,1}];
+    ASSERT_EQ(l.getData(), 0); ASSERT_EQ(r.getData(), 2);
+    ASSERT_EQ(ll.getData(), 0); ASSERT_EQ(lr.getData(), -1);
+    ASSERT_EQ(lll.getData(), 1); ASSERT_EQ(llr.getData(), 2);
+
+    SAFE_DELETE(context1); SAFE_DELETE(context2); SAFE_DELETE(merged);
+}
+
 TEST(tree_test,equivalence_test){
     ParseTree t(2);
     ParseTree t2(2);
@@ -479,6 +502,52 @@ TEST(tree_test, get_all_contexts_test){
         }
     }
 }
+
+TEST(tree_test, get_all_prefixes_test){
+    ParseTree l(0);
+    ParseTree t(1, {l, l});
+    ParseTree t2(1, {t, l});
+    ParseTree* t2_copy = new ParseTree(t2);
+    vector<ParseTree> v = l.getAllPrefixes();
+    ASSERT_EQ(v.size(), 1);
+    ASSERT_EQ(v[0].getIsContext(), false);
+    ASSERT_EQ(v[0].getData(), 0);
+    ASSERT_EQ(v[0].getChildrenNum(), 0);
+    v = t.getAllPrefixes();
+    ASSERT_EQ(v.size(), 3);
+    ASSERT_EQ(v[0].getData(), 1);
+    ASSERT_EQ(v[0].getChildrenNum(), 2);
+    ASSERT_EQ(v[1].getData(), 0);
+    ASSERT_EQ(v[1].getChildrenNum(), 0);
+    ASSERT_EQ(v[2].getData(), 0);
+    ASSERT_EQ(v[2].getChildrenNum(), 0);
+    v = t2.getAllPrefixes();
+    ASSERT_EQ(v.size(), 5);
+    ASSERT_EQ(v[0].getData(), 1);
+    ASSERT_EQ(v[0].getChildrenNum(), 2);
+    ASSERT_EQ(v[1].getData(), 1);
+    ASSERT_EQ(v[1].getChildrenNum(), 2);
+    ASSERT_EQ(v[2].getData(), 0);
+    ASSERT_EQ(v[2].getChildrenNum(), 0);
+    ASSERT_EQ(v[3].getData(), 0);
+    ASSERT_EQ(v[3].getChildrenNum(), 0);
+    ASSERT_EQ(v[4].getData(), 0);
+    ASSERT_EQ(v[4].getChildrenNum(), 0);
+    v = t2_copy->getAllPrefixes();
+    SAFE_DELETE(t2_copy);
+    ASSERT_EQ(v.size(), 5);
+    ASSERT_EQ(v[0].getData(), 1);
+    ASSERT_EQ(v[0].getChildrenNum(), 2);
+    ASSERT_EQ(v[1].getData(), 1);
+    ASSERT_EQ(v[1].getChildrenNum(), 2);
+    ASSERT_EQ(v[2].getData(), 0);
+    ASSERT_EQ(v[2].getChildrenNum(), 0);
+    ASSERT_EQ(v[3].getData(), 0);
+    ASSERT_EQ(v[3].getChildrenNum(), 0);
+    ASSERT_EQ(v[4].getData(), 0);
+    ASSERT_EQ(v[4].getChildrenNum(), 0);
+}
+
 
 
 TEST(tree_test,latex_tree_test){

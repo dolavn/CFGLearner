@@ -237,12 +237,7 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
             cout << h.getR().size() << endl;
             return acc;
         }else{
-            for(auto& context: counterExample->getAllContexts()){
-                if(!h.hasContext(*context)){
-                    h.addContext(*context);
-                }
-                SAFE_DELETE(context)
-            }
+            h.giveCounterExample(*counterExample);
             SAFE_DELETE(counterExample)
         }
         begin = clock();

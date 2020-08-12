@@ -30,6 +30,11 @@ protected:
     using alignmentTable = std::vector<std::vector<T>>;
 };
 
+class EqualityComparator: public TreeComparator{
+public:
+    virtual float compare(const ParseTree& t1, const ParseTree& t2);
+};
+
 class TreeAligner: public TreeComparator{
 public:
     TreeAligner(scoresMap, int);

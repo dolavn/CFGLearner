@@ -29,7 +29,6 @@ FILE_PATH = 'michalTrees'
 WEIGHTED = True
 
 
-
 def get_nonterminals(pcfg):
     prods = pcfg.productions()
     alphabet = set()

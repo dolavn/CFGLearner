@@ -204,8 +204,15 @@ ParseTree* ParseTree::mergeContext(const ParseTree& other) const{
         throw std::invalid_argument("Tree must be a context");
     }
     auto ans = new ParseTree(*this);
-    ans->isContext = false;
-    ans->contextLoc = vector<int>();
+    ans->isContext = other.isContext;
+    if(!ans->isContext) {
+        ans->contextLoc = vector<int>();
+    }else{
+        ans->contextLoc = contextLoc;
+        for(auto elem: other.contextLoc){
+            ans->contextLoc.push_back(elem);
+        }
+    }
     (*ans)[contextLoc].setData(other.getData());
     (*ans)[contextLoc].subtrees = vector<ParseTree*>(other.subtrees.size());
     for(unsigned int i=0;i<other.subtrees.size();++i){
@@ -343,6 +350,18 @@ vector<ParseTree*> ParseTree::getAllContexts() const{
             contextTreePair.second=nullptr;
         }
         ans.push_back(contextTreePair.first);
+        ++it;
+    }
+    return ans;
+}
+
+vector<ParseTree> ParseTree::getAllPrefixes() const{
+    auto it = getIndexIterator();
+    vector<ParseTree> ans;
+    while(it.hasNext()){
+        auto ind = *it;
+        ParseTree currTree = ParseTree(getNode(ind));
+        ans.emplace_back(currTree);
         ++it;
     }
     return ans;
