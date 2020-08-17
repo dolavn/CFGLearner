@@ -24,6 +24,7 @@ public:
     inline int getParamNum() const{return paramNum;};
     float getParam(const intVec&) const;
     void printDesc() const;
+    MultiLinearMap removeDimension(int) const;
 private:
     void initParams();
     bool testLocation(const intVec&) const;

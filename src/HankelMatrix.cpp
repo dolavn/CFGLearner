@@ -296,25 +296,26 @@ void HankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t, const
 }
 
 void HankelMatrix::closeTable(){
+    //printTable();
     while(true){
         Logger& logger = Logger::getLogger();
         logger.setLoggingLevel(Logger::LOG_DEBUG);
         logger << "closing " << "c:" << c.size() << " s:" << s.size() << " r:" << r.size() << logger.endline;
-        printTable();
+        //printTable();
         //if(c.size()>20){return;} //todo: delete
-        if(s.empty()){
-            for(auto c:alphabet){
-                if(c.rank==0){
-                    addTree(ParseTree(c.c));
-                }
-            }
-        }
         if(c.empty()){ /*Adds an empty context */
             ParseTree t(1);
             pair<ParseTree*,ParseTree*> contextTreePair = t.makeContext({});
             SAFE_DELETE(contextTreePair.second);
             addContext(*contextTreePair.first);
             SAFE_DELETE(contextTreePair.first);
+        }
+        if(s.empty()){
+            for(auto c:alphabet){
+                if(c.rank==0){
+                    addTree(ParseTree(c.c));
+                }
+            }
         }
         auto it = getSuffixIterator();
         bool closed=true;

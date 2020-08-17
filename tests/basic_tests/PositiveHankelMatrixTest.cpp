@@ -6,6 +6,8 @@
 #include "../../include/ObservationTable.h"
 #include "../../include/TreesIterator.h"
 #include "../../include/Learner.h"
+#include "../../include/TreeComparator.h"
+#include "../../include/TreeConstructor.h"
 #include "TestsHelperFunctions.h"
 
 extern rankedChar a;
@@ -63,4 +65,21 @@ TEST(positive_hankel_matrix_test, learn_test){
         PositiveHankelMatrix h(teacher);
         learn(teacher, h);
     }
+}
+
+TEST(positive_hankel_matrix_test, learn_test2){
+    set<rankedChar> alphabet = {{0, 2}, {1, 0}, {2, 0}};
+    EqualityComparator cmp;
+    ProbabilityTeacher teacher(cmp, 0, 1);
+    ParseTree t1(0, {ParseTree(1), ParseTree(0, {ParseTree(1), ParseTree(2)})});
+    ParseTree t2(0, {ParseTree(1), ParseTree(0, {ParseTree(1), ParseTree(1)})});
+    ParseTree t3(0, {ParseTree(1), ParseTree(1)});
+    t1.setProb(0.3); t2.setProb(0.2); t3.setProb(0.5);
+    teacher.addExample(t1);teacher.addExample(t2);teacher.addExample(t3);
+    scoreTable scores;
+    scores[{1,2}]=5;
+    TreeConstructor c(scores);
+    teacher.setupConstructorGenerator(c, 5, 1000);
+    ScalarHankelMatrix h(teacher);
+    learn(teacher, h);
 }

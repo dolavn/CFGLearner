@@ -323,7 +323,12 @@ PYBIND11_MODULE(CFGLearner, m) {
         py::gil_scoped_release release;
         //PositiveHankelMatrix h(t);
         ScalarHankelMatrix h(t);
-        return learn(t, h);
+        MultiplicityTreeAcceptor acc = learn(t, h);
+        if(h.getZeroVecInd()!=-1){
+            cout << h.getZeroVecInd() << endl;
+            return acc.getAcceptorWithoutState(h.getZeroVecInd());
+        }
+        return acc;
     });
     py::class_<MultiLinearMap> multiLinearMap(m, "MultiLinearMap");
     multiLinearMap.def("get_param",[](const MultiLinearMap& m, vector<int> v){

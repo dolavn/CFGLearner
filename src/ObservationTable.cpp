@@ -48,6 +48,8 @@ void BaseTable::addContext(const ParseTree& context){
         throw invalid_argument("Tree must be a context to be added to C");
     }
     if(hasContext(context)){
+        cout << context << endl;
+        cout << c.size() << endl;
         throw invalid_argument("Already has this context");
     }
     Logger& logger = Logger::getLogger();

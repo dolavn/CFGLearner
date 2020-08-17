@@ -113,3 +113,54 @@ TEST(multi_linear_map_test,exception_test){
     ASSERT_THROW(m({{1.0f, 1.0f}, {1.0f}}), invalid_argument);
     ASSERT_NO_THROW(m({{1.0f, 1.0f}, {1.0f, 1.0f}}));
 }
+
+TEST(multi_linear_map_test, remove_state){
+    MultiLinearMap m(2, 2);
+    m.setParam(1.0, {0, 0, 0}); m.setParam(2.0, {0, 0, 1});
+    m.setParam(3.0, {0, 1, 0}); m.setParam(4.0, {0, 1, 1});
+    m.setParam(1.0, {1, 0, 0}); m.setParam(2.0, {1, 0, 1});
+    m.setParam(3.0, {1, 1, 0}); m.setParam(4.0, {1, 1, 1});
+    MultiLinearMap m2 = m.removeDimension(0);
+    MultiLinearMap m3 = m.removeDimension(1);
+
+    ASSERT_EQ(m2.getParamNum(), 2);ASSERT_EQ(m3.getParamNum(), 2);
+    ASSERT_EQ(m2.getVDim(), 1); ASSERT_EQ(m3.getVDim(), 1);
+
+    ASSERT_EQ(m2.getParam({0, 0, 0}), 4);
+    ASSERT_EQ(m3.getParam({0, 0, 0}), 1);
+}
+
+TEST(multi_linear_map_test, remove_state2){
+    MultiLinearMap m(3, 2);
+    m.setParam(1.0, {0, 0, 0}); m.setParam(2.0, {0, 0, 1}); m.setParam(3.0, {0, 0, 2});
+    m.setParam(4.0, {0, 1, 0}); m.setParam(5.0, {0, 1, 1}); m.setParam(6.0, {0, 1, 2});
+    m.setParam(7.0, {0, 2, 0}); m.setParam(8.0, {0, 2, 1}); m.setParam(9.0, {0, 2, 2});
+    m.setParam(10.0, {1, 0, 0}); m.setParam(11.0, {1, 0, 1}); m.setParam(12.0, {1, 0, 2});
+    m.setParam(13.0, {1, 1, 0}); m.setParam(14.0, {1, 1, 1}); m.setParam(15.0, {1, 1, 2});
+    m.setParam(16.0, {1, 2, 0}); m.setParam(17.0, {1, 2, 1}); m.setParam(18.0, {1, 2, 2});
+    m.setParam(19.0, {2, 0, 0}); m.setParam(20.0, {2, 0, 1}); m.setParam(21.0, {2, 0, 2});
+    m.setParam(22.0, {2, 1, 0}); m.setParam(23.0, {2, 1, 1}); m.setParam(24.0, {2, 1, 2});
+    m.setParam(25.0, {2, 2, 0}); m.setParam(26.0, {2, 2, 1}); m.setParam(27.0, {2, 2, 2});
+
+    MultiLinearMap m2 = m.removeDimension(0);
+    MultiLinearMap m3 = m.removeDimension(1);
+    MultiLinearMap m4 = m.removeDimension(2);
+
+    ASSERT_EQ(m2.getParamNum(), 2);ASSERT_EQ(m3.getParamNum(), 2); ASSERT_EQ(m4.getParamNum(), 2);
+    ASSERT_EQ(m2.getVDim(), 2); ASSERT_EQ(m3.getVDim(), 2); ASSERT_EQ(m4.getVDim(), 2);
+
+    ASSERT_EQ(m2.getParam({0, 0, 0}), 14); ASSERT_EQ(m2.getParam({0, 0, 1}), 15);
+    ASSERT_EQ(m2.getParam({0, 1, 0}), 17); ASSERT_EQ(m2.getParam({0, 1, 1}), 18);
+    ASSERT_EQ(m2.getParam({1, 0, 0}), 23); ASSERT_EQ(m2.getParam({1, 0, 1}), 24);
+    ASSERT_EQ(m2.getParam({1, 1, 0}), 26); ASSERT_EQ(m2.getParam({1, 1, 1}), 27);
+
+    ASSERT_EQ(m3.getParam({0, 0, 0}), 1); ASSERT_EQ(m3.getParam({0, 0, 1}), 3);
+    ASSERT_EQ(m3.getParam({0, 1, 0}), 7); ASSERT_EQ(m3.getParam({0, 1, 1}), 9);
+    ASSERT_EQ(m3.getParam({1, 0, 0}), 19); ASSERT_EQ(m3.getParam({1, 0, 1}), 21);
+    ASSERT_EQ(m3.getParam({1, 1, 0}), 25); ASSERT_EQ(m3.getParam({1, 1, 1}), 27);
+
+    ASSERT_EQ(m4.getParam({0, 0, 0}), 1); ASSERT_EQ(m4.getParam({0, 0, 1}), 2);
+    ASSERT_EQ(m4.getParam({0, 1, 0}), 4); ASSERT_EQ(m4.getParam({0, 1, 1}), 5);
+    ASSERT_EQ(m4.getParam({1, 0, 0}), 10); ASSERT_EQ(m4.getParam({1, 0, 1}), 11);
+    ASSERT_EQ(m4.getParam({1, 1, 0}), 13); ASSERT_EQ(m4.getParam({1, 1, 1}), 14);
+}

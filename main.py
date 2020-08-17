@@ -398,7 +398,7 @@ def learn_prob(trees, reverse_dict, oracle_settings, table):
         con.set_lambda(1.0)
         teacher.setup_constructor_generator(con, *oracle_settings['equiv_settings'])
     print('setting')
-    set_verbose(LOG_DEBUG)
+    # set_verbose(LOG_DEBUG)
     print('starting')
     t = time()
     acc = learnMultPos(teacher)
@@ -432,7 +432,7 @@ def learn_prob(trees, reverse_dict, oracle_settings, table):
 
 def learn_cmd_prob(indices, tree_list, reverse_dict, oracle_settings, gui=None):
     trees = [tree_list[ind] for ind in indices]
-    set_verbose(LOG_DEBUG)
+    #set_verbose(LOG_DEBUG)
 
 
     def thread_task():

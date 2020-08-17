@@ -87,8 +87,8 @@ public:
     HankelMatrix& operator=(HankelMatrix&&)=delete;
     std::vector<double> test();
     std::vector<double> getObs(const ParseTree&) const;
-    MultiplicityTreeAcceptor getAcceptor() const;
-    void closeTable();
+    virtual MultiplicityTreeAcceptor getAcceptor() const;
+    virtual void closeTable();
     virtual void makeConsistent();
     virtual bool hasContext(const ParseTree&) const;
     bool checkClosed() const;
@@ -100,6 +100,7 @@ protected:
     std::set<rankedChar> alphabet;
     const MultiplicityTeacher& teacher;
     arma::mat getSMatrix(bool) const;
+    std::vector<rankedChar> getAlphabetVec() const;
     void fillMatLastRow(arma::mat&, const ParseTree&) const;
     bool checkIsTreeZero(const ParseTree&) const;
     MultiplicityTreeAcceptor getAcceptorTemp() const;
@@ -114,7 +115,6 @@ private:
     virtual void completeContextS(ParseTree*);
     virtual void completeContextR(ParseTree*);
     bool checkTableComplete(ParseTree*);
-    std::vector<rankedChar> getAlphabetVec() const;
 };
 
 class ScalarHankelMatrix: public HankelMatrix{
@@ -126,21 +126,28 @@ public:
     ScalarHankelMatrix& operator=(ScalarHankelMatrix&&)=delete;
     virtual void giveCounterExample(const ParseTree&) override;
     virtual void makeConsistent() override;
-
+    virtual MultiplicityTreeAcceptor getAcceptor() const override;
+    virtual void closeTable() override;
+    void complete();
     int getSObsInd(const ParseTree&) const;
+    int getZeroVecInd() const;
     std::vector<const ParseTree*> getTreesInClass(int) const;
     std::vector<std::pair<const ParseTree*,const ParseTree*>> getPairsVec(std::vector<const ParseTree*>) const;
 
 private:
+    typedef std::pair<ParseTree, int> extension;
     virtual arma::vec getCoefficients(const ParseTree&, const arma::mat&) const override;
+    void updateTransition(MultiLinearMap&, const ParseTree&, const std::vector<rankedChar>&) const;
     void completeTree(ParseTree*);
     void completeContextS(ParseTree*);
     void completeContextR(ParseTree*);
     double getCoeff(const ParseTree&, const ParseTree&) const;
     std::vector<double> getRow(const ParseTree&) const;
-    bool checkTableComplete(ParseTree*);
-
-    std::vector<std::pair<ParseTree, int>> getExtensions(const ParseTree&) const;
+    std::vector<ParseTree> getSExtensions() const;
+    bool checkTableComplete(const ParseTree&);
+    bool checkIsSExtension(const ParseTree&) const;
+    bool checkExtension(extension, extension, const ParseTree&, double);
+    std::vector<extension> getExtensions(const ParseTree&) const;
 };
 
 class PositiveHankelMatrix: public HankelMatrix{

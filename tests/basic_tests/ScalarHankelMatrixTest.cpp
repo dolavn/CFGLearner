@@ -89,7 +89,7 @@ TEST(scalar_hankel_matrix_test, extend_set_test){
 
 TEST(scalar_hankel_matrix_test, consistent_test){
     Logger& logger = Logger::getLogger();
-    logger.setPrintLevel(Logger::LOG_DEBUG);
+    //logger.setPrintLevel(Logger::LOG_DEBUG);
     set<rankedChar> alphabet = {{0, 2}, {1, 0}, {2, 0}};
     EqualityComparator cmp;
     ProbabilityTeacher teacher(cmp, 0, 1);
@@ -104,7 +104,8 @@ TEST(scalar_hankel_matrix_test, consistent_test){
     teacher.setupConstructorGenerator(c, 5, 1000);
 
     ScalarHankelMatrix h(teacher);
-    h.closeTable();
-    h.makeConsistent();
-    cout << h.getTableLatex() << endl;
+    //h.closeTable();
+    h.complete();
+    h.getAcceptor().printDesc();
 }
+

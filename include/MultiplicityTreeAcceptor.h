@@ -18,10 +18,9 @@ public:
     floatVec getLambda() const{return lambda;}
     MultiLinearMap getMap(rankedChar) const;
     void printDesc() const;
-
     bool checkIsPositive() const;
     MultiplicityTreeAcceptor getNormalizedAcceptor(bool) const;
-
+    MultiplicityTreeAcceptor getAcceptorWithoutState(int) const;
     int getDim() const{return dim;}
     std::vector<rankedChar> getAlphabet() const;
     std::vector<rankedChar> getAlphabet(int) const;
@@ -42,6 +41,7 @@ private:
     };
     std::vector<float> getParamSums(bool) const;
     bool testMap(const MultiLinearMap&, const rankedChar&);
+    bool isStateReachable(int) const;
     std::set<rankedChar> alphabet;
     int dim;
     std::unordered_map<rankedChar, MultiLinearMap, ranked_char_hash> transitions;

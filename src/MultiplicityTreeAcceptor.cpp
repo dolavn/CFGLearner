@@ -145,6 +145,26 @@ MultiplicityTreeAcceptor MultiplicityTreeAcceptor::getNormalizedAcceptor(bool so
     return ans;
 }
 
+MultiplicityTreeAcceptor MultiplicityTreeAcceptor::getAcceptorWithoutState(int state) const{
+    if(isStateReachable(state)){
+        throw std::invalid_argument("Can't remove a reachable state");
+    }
+    MultiplicityTreeAcceptor ans(alphabet, dim-1);
+    for(auto c: alphabet){
+        const MultiLinearMap& m = (*transitions.find(c)).second;
+        MultiLinearMap mNew = m.removeDimension(state);
+        ans.addTransition(mNew, c);
+    }
+    vector<float> newLambda;
+    for(int i=0;i<dim;++i){if(i!=state){newLambda.push_back(lambda[i]);}}
+    ans.setLambda(newLambda);
+    return ans;
+}
+
+bool MultiplicityTreeAcceptor::isStateReachable(int state) const{
+    return false;
+}
+
 MultiLinearMap MultiplicityTreeAcceptor::getMap(rankedChar c) const{
     auto it = transitions.find(c);
     if(it==transitions.end()){

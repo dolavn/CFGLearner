@@ -213,9 +213,11 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
         myfile << "\\end{center}" << endl;
         acc.printDesc();
         clock_t begin = clock();
+        cout << "equiv" << endl;
         ParseTree* counterExample = teacher.equivalence(acc);
         clock_t end = clock();
         double equivTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
+        cout << "end equiv " << equivTime << endl;
         if(counterExample){
             logger << counterExample->getProb() << logger.endline;
             logger << acc.run(*counterExample) << logger.endline;

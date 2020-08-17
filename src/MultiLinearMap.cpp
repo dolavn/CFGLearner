@@ -98,13 +98,18 @@ void MultiLinearMap::initParams(){
 
 bool MultiLinearMap::testLocation(const intVec& ind) const{
     if(dim==0){
+        cout << "err1" << endl;
         return false;
     }
     if(ind.size()!=(unsigned int)(paramNum+1)){
+        cout << ind.size() << endl;
+        cout << "p:" << paramNum << endl;
+        cout << "err2" << endl;
         return false;
     }
     for(int i=0;i<paramNum+1;++i){
         if(ind[i]>=dim){
+            cout << "err3" << endl;
             return false;
         }
     }
@@ -123,9 +128,27 @@ bool MultiLinearMap::testInput(const vector<floatVec>& input){
     return true;
 }
 
+MultiLinearMap MultiLinearMap::removeDimension(int dimension) const{
+    MultiLinearMap ans(dim-1, paramNum);
+    IndexArray arr(vector<int>(paramNum+1, dim));
+    while(!arr.getOverflow()){
+        vector<int> newParamLocation;
+        for(int i=0;i<paramNum+1;++i){
+            if(arr[i]==dimension){continue;}
+            if(arr[i]>dimension){
+                newParamLocation.push_back(arr[i]-1);
+            }else{
+                newParamLocation.push_back(arr[i]);
+            }
+        }
+        if(newParamLocation.size()!=paramNum+1){ ++arr;continue;}
+        ans.setParam(getParam(arr.getIntVector()), newParamLocation);
+        ++arr;
+    }
+    return ans;
+}
+
 void MultiLinearMap::printDesc() const{
-    cout << "output:" << dim << endl;
-    cout << "paramNum:" << paramNum << endl;
     if(dim==0){return;}
     intVec maxLengths(paramNum+1, dim);
     IndexArray ind(maxLengths);
