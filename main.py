@@ -204,7 +204,6 @@ class MainGUI:
             self._oracle_settings['comparator'] = DuplicationComparator
             self._oracle_settings['args'] = [prob_dup]
 
-
     def create_oracle_frame(self):
         oracle_frame = Frame(self._secondary_tree_frame)
         oracle_frame.grid(column=0, row=2)
@@ -428,6 +427,10 @@ def learn_prob(trees, reverse_dict, oracle_settings, table):
         json.dump(g_str, json_file)
     print('took {}'.format(time()-t))
     return g
+
+
+def print_cfg(pcfg):
+    print(pcfg)
 
 
 def learn_cmd_prob(indices, tree_list, reverse_dict, oracle_settings, gui=None):
@@ -807,6 +810,7 @@ def create_trees(sequences, table, contract=False, lambda_val=0.0, key='annot'):
             convert_tree_to_cnf(curr_tree)
         ans.append((curr_tree, row['instances']))
     normalize_trees(ans)
+    print(ans)
     return ans
 
 

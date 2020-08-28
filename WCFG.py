@@ -10,6 +10,7 @@ from functools import reduce
 from nltk import Tree
 import re
 from nltk.grammar import ProbabilisticProduction
+from nltk.probability import ImmutableProbabilisticMixIn
 from nltk.parse import ViterbiParser
 from CFGLearner import SimpleTeacher, FrequencyTeacher, DifferenceTeacher, Teacher, learn, TreeComparator, test_arma, \
     SimpleMultiplicityTeacher, learnMult, learnMultPos, set_verbose, SwapComparator, DifferenceMultiplicityTeacher,\
@@ -98,7 +99,6 @@ def get_leaves(nltk_tree, reverse_dict=None):
     return leaves
 
 
-
 def get_grammar(acc, reverse_dict=None):
     prods = []
     g = {'prod': [], 'nt': ['S'], 'terminals': []}
@@ -120,6 +120,8 @@ def get_grammar(acc, reverse_dict=None):
                                                         terminal=str(terminal))
         else:
             g['prod'] = g['prod'] + get_productions(acc.get_map_non_terminal(rank))
+    for prod in g['prod']:
+        print(prod)
     return g
 
 
@@ -151,7 +153,24 @@ def compress_grammar(grammar):
     return grammar
 
 
-MAX_ITER = 50
+def create_duplications(grammar, dup_prob):
+    dup_prods = []
+    for ind, prod in enumerate(grammar._productions):
+        rhs = prod.rhs()
+        if len(rhs) == 1 and type(rhs[0]) is str:
+            if prod.prob() != 1.0:
+                raise BaseException("Can't handle this currently")
+            new_prod = ProbabilisticProduction(prod.lhs(), rhs, prob=1-dup_prob)
+            grammar._productions[ind] = new_prod
+            dup_prod = ProbabilisticProduction(prod.lhs(), [rhs[0], prod.lhs()], prob=dup_prob)
+            dup_prods.append(dup_prod)
+    for dup_prod in dup_prods:
+        grammar._productions.append(dup_prod)
+    return grammar
+
+
+
+MAX_ITER = 20
 
 
 def calc_partition_functions(variables):
@@ -169,9 +188,12 @@ def calc_partition_functions(variables):
             conv[variable].append(new_value)
         for variable in variables.keys():
             variables[variable]['value'] = new_values[variable]
-    """for variable in variables.keys():
+        for variable in variables:
+            print(variable, variables[variable]['value'])
+        print('-----')
+    for variable in variables.keys():
         plt.plot(conv[variable])
-    plt.show()"""
+    plt.show()
     return variables
 
 
@@ -184,12 +206,25 @@ def normalize_grammar(g):
         w = w * prod.get_weight()
         w = w / variables[prod.get_lhs()]['value']
         prod.set_weight(w)
+        print(prod)
+    for nt in g['nt']:
+        total = 0
+        prod_list = []
+        for prod in g['prod']:
+            if prod.get_lhs() == nt:
+                total = total + prod.get_weight()
+                prod_list.append(prod)
+        if total > 1:
+            for prod in prod_list:
+                w = prod.get_weight()/total
+                prod.set_weight(w)
     return g
 
 
 def get_nltk_pcfg(g):
     prod_lists = [[prod for prod in g['prod'] if prod.get_lhs() == nt] for nt in g['nt']]
     #print([len(p) for p in prod_lists])
+    prod_lists = filter(lambda a: len(a) > 0, prod_lists)
     strings = ['{0} -> {1}'.format(prod_list[0].get_lhs(),
                                    ('{} [{}] | '*(len(prod_list)-1)+'{} [{}]').format(
                                        *sum([[' '.join(prod.get_rhs()), prod.get_weight()] for prod in prod_list],
