@@ -13,9 +13,11 @@
 class Teacher;
 class MultiplicityTeacher;
 class HankelMatrix;
+class ColinearHankelMatrix;
 
 TreeAcceptor learn(const Teacher&);
 MultiplicityTreeAcceptor learn(const MultiplicityTeacher&, HankelMatrix&);
+MultiplicityTreeAcceptor learnColin(const MultiplicityTeacher&, ColinearHankelMatrix&);
 
 //Methods for testing here.
 //TODO: delete

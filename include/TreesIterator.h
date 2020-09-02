@@ -12,6 +12,7 @@
 
 class ParseTree;
 
+
 class TreesIterator{
 public:
     TreesIterator(std::vector<ParseTree*>, std::set<rankedChar>, int);
@@ -52,5 +53,22 @@ private:
     IndexArray arr;
 };
 
+//todo : bad design, fix TreesIterator to receive a vector of ParseTrees
+struct IteratorWrapper{
+public:
+    IteratorWrapper(const std::vector<ParseTree>&, std::set<rankedChar>, int);
+    IteratorWrapper(const IteratorWrapper&);
+    IteratorWrapper& operator=(const IteratorWrapper&);
+    IteratorWrapper(IteratorWrapper&&);
+    IteratorWrapper& operator=(IteratorWrapper&&);
+
+    virtual ~IteratorWrapper();
+    TreesIterator& operator*();
+private:
+    void copy(const IteratorWrapper&);
+    void clear();
+    std::vector<ParseTree*> copies;
+    TreesIterator* it;
+};
 
 #endif //CFGLEARNER_TREESITERATOR_H

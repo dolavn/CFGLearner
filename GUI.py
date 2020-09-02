@@ -379,14 +379,15 @@ class Checklist(Frame):
         row = self.widget_to_row[e.widget]
         self.command(row)
 
-    def __init__(self, elements, *args, **kwargs):
+    def __init__(self, labels, elements, *args, **kwargs):
         self.command = lambda i: print(i)
         if 'command' in kwargs:
             self.command = kwargs['command']
             del kwargs['command']
         Frame.__init__(self, *args, **kwargs)
+        self.labels = labels
         self.elements = elements
-        self.elem_bools = [IntVar() for _ in elements]
+        self.elem_bools = [IntVar() for _ in labels]
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self.checkbuttons = []
@@ -406,10 +407,10 @@ class Checklist(Frame):
         self.canvas.configure(yscrollcommand=myscrollbar.set)
         self.canvas.grid(column=0, sticky="nsew")
         myscrollbar.grid(row=0, column=1, sticky="nsew")
-        for ind, elem in enumerate(elements):
+        for ind, curr_label in enumerate(labels):
             b = Checkbutton(self.sensorsStatsFrame,
                             var=self.elem_bools[ind])
-            lbl = Label(self.sensorsStatsFrame, text=str(elem))
+            lbl = Label(self.sensorsStatsFrame, text=str(curr_label))
             lbl.bind("<Button-1>", lambda e: self.on_click(e))
             self.widget_to_row[lbl] = ind
             b.grid(column=0, row=ind+1, padx=(100, 0))
@@ -426,6 +427,24 @@ class Checklist(Frame):
         self.sensorsStatsFrame.bind("<Configure>", self.OnFrameConfigure)
         self.canvas.bind('<Configure>', self.FrameWidth)
 
+    def add_elem(self, elem_text, elem):
+        ind = len(self.labels)
+        self.labels.append(elem_text)
+        self.elements.append(elem)
+        self.elem_bools.append(IntVar())
+        b = Checkbutton(self.sensorsStatsFrame,
+                        var=self.elem_bools[ind])
+        lbl = Label(self.sensorsStatsFrame, text=str(elem_text))
+        lbl.bind("<Button-1>", lambda e: self.on_click(e))
+        self.widget_to_row[lbl] = ind
+        b.grid(column=0, row=ind+1, padx=(100, 0))
+        lbl.grid(column=1, row=ind+1)
+        self.checkbuttons.append(b)
+
+    def delete_elem(self, elem_ind):
+        # todo: implement
+        pass
+
     def select_all(self):
         if self.selected_all.get() == 1:
             for b in self.checkbuttons:
@@ -433,6 +452,10 @@ class Checklist(Frame):
         else:
             for b in self.checkbuttons:
                 b.deselect()
+
+    def get_selected_elements(self):
+        ans = [elem for elem, elem_bool in zip(self.elements, self.elem_bools) if elem_bool.get() == 1]
+        return ans
 
     def get_selected(self):
         ans = [ind for ind, elem in enumerate(self.elem_bools) if elem.get() == 1]

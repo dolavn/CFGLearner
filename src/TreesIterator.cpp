@@ -224,3 +224,56 @@ void TreesIterator::clear(){
     }
     prevLevels.clear();
 }
+
+IteratorWrapper::IteratorWrapper(const vector<ParseTree>& trees, set<rankedChar> alphabet, int maxLevel):copies(), it(){
+    for(auto tree: trees){
+        copies.push_back(new ParseTree(tree));
+    }
+    it = new TreesIterator(copies, alphabet, maxLevel);
+}
+
+IteratorWrapper::IteratorWrapper(const IteratorWrapper& other):copies(),it(){
+    copy(other);
+}
+
+IteratorWrapper& IteratorWrapper::operator=(const IteratorWrapper& other){
+    if(this==&other){return *this;}
+    clear();
+    copy(other);
+    return *this;
+}
+
+IteratorWrapper::IteratorWrapper(IteratorWrapper&& other):copies(move(other.copies)),it(other.it){
+    other.it=nullptr;
+}
+
+IteratorWrapper& IteratorWrapper::operator=(IteratorWrapper&& other){
+    if(this==&other){return *this;}
+    clear();
+    copies = move(other.copies);
+    it = other.it;
+    other.it=nullptr;
+    return *this;
+}
+
+IteratorWrapper::~IteratorWrapper(){
+    clear();
+}
+
+void IteratorWrapper::copy(const IteratorWrapper& other){
+    for(auto tree: other.copies){
+        copies.push_back(new ParseTree(*tree));
+    }
+    it = new TreesIterator(*other.it);
+}
+
+void IteratorWrapper::clear(){
+    for(auto& tree: copies){
+        delete(tree); tree=nullptr;
+    }
+    delete(it); it=nullptr;
+}
+
+TreesIterator& IteratorWrapper::operator*(){
+    return *it;
+}

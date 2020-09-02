@@ -322,8 +322,10 @@ PYBIND11_MODULE(CFGLearner, m) {
     m.def("learnMultPos",[](const MultiplicityTeacher& t) {
         py::gil_scoped_release release;
         //PositiveHankelMatrix h(t);
-        ScalarHankelMatrix h(t);
-        MultiplicityTreeAcceptor acc = learn(t, h);
+        //ScalarHankelMatrix h(t);
+        ColinearHankelMatrix h(t);
+        MultiplicityTreeAcceptor acc = learnColin(t, h);
+        h.printTable();
         if(h.getZeroVecInd()!=-1){
             cout << h.getZeroVecInd() << endl;
             return acc.getAcceptorWithoutState(h.getZeroVecInd());

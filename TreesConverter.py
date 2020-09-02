@@ -1,8 +1,10 @@
 from nltk import Tree
 from WCFG import convert_pmta_to_pcfg
 
+
 def traverse_tree(tree, leaves=False, get_trees=False):
     if type(tree) != Tree:
+        print(tree)
         raise BaseException("not a tree")
     for child in tree:
         yield from traverse_tree(child, leaves=leaves, get_trees=get_trees)
@@ -29,7 +31,7 @@ class TreesConverter:
     def __init__(self):
         self._alphabet_dict = {}
         self._reverse_dict = {}
-        self._curr_ind = 0
+        self._curr_ind = 1
 
     def convert_tree(self, tree):
         for leaf in traverse_leaves(tree):

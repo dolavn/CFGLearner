@@ -376,11 +376,6 @@ arma::vec ScalarHankelMatrix::getCoefficients(const ParseTree& tree, const arma:
     return ans;
 }
 
-bool isZeroVec(vector<double>& vec){
-    for(auto elem: vec){if(elem!=0){return false;}}
-    return true;
-}
-
 int ScalarHankelMatrix::getSObsInd(const ParseTree& tree) const{
     mat sMat = getSMatrix(false);
     mat currMat(2, c.size());

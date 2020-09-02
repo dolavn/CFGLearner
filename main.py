@@ -18,6 +18,7 @@ from WCFG import load_trees_from_file, convert_pmta_to_pcfg, compress_grammar, c
 from threading import Thread
 from GUI import Table, MapTable, Checklist, PopupWindow, load_object_window, HidableFrame
 from PIL import Image, ImageFont, ImageDraw
+from TreesConverter import TreesConverter
 from PyPDF2 import PdfFileReader, PdfFileWriter
 import os
 
@@ -38,6 +39,11 @@ def get_nonterminals(pcfg):
                 alphabet.add(r)
     return list(alphabet)
 
+
+def fix_tree(tree):
+    if type(tree) is not Tree:
+        return Tree(tree, [])
+    return Tree(tree.label(), [fix_tree(child) for child in tree])
 
 UNKNOWN = 'UNKNOWN0'
 
@@ -87,6 +93,8 @@ class MainGUI:
         self._parse_button = None
         self._pcfg = None
         self._parsed_trees = []
+        self._tree_converter = TreesConverter()
+        self._tree_list = None
         self._oracle_settings = {'type': SimpleMultiplicityTeacher, 'args': [0.0005, 0], 'additional_settings': [],
                                  'equiv_settings': (4, 5000)}
 
@@ -127,6 +135,118 @@ class MainGUI:
         grammar = PCFG.fromstring(grammar)
         self.set_pcfg(grammar)
 
+    def add_text_box(self, frame, name, row, lbl_kwargs={}, txt_kwargs={}):
+        if 'text' not in lbl_kwargs:
+            lbl_kwargs['text'] = name
+        lbl = Label(frame, **lbl_kwargs)
+        txt = Entry(frame, **txt_kwargs)
+        lbl.grid(row=row, column=0)
+        txt.grid(row=row, column=1)
+
+        return lbl, txt
+
+
+    @staticmethod
+    def check_is_int(n):
+        try:
+            n = int(n)
+        except Exception:
+            return False
+        return n > 0
+
+    @staticmethod
+    def check_is_prob(p):
+        try:
+            p = float(p)
+        except Exception:
+            return False
+        return 0 <= p <= 1
+
+    def init_tree_adder_frame(self):
+
+        def show_tree(tree, prob, cf):
+            cf.canvas().delete('all')
+            tc = TreeWidget(cf.canvas(), tree, xspace=50, yspace=50,
+                            line_width=2, node_font=('helvetica', -28))
+            cf.add_widget(tc, 400, 0)
+            tp = TreeWidget(cf.canvas(), 'p={}'.format(prob))
+            cf.add_widget(tp, 200, 200)
+
+        def add_tree(tree, prob, lst):
+            t = None
+            try:
+                t = Tree.fromstring(tree)
+                t = fix_tree(t)
+                self._tree_converter.convert_tree(t)
+            except Exception:
+                tkinter.messagebox.showerror("Add tree", "Not a valid tree")
+                return
+            if not MainGUI.check_is_prob(prob):
+                tkinter.messagebox.showerror("Add tree", "Invalid probability")
+                return
+            prob = float(prob)
+
+            lst.add_elem('tree', (t, prob))
+
+        secondaryFrame = Frame(self._top)
+        secondaryFrame.pack()
+        addTreesFrame = Frame(secondaryFrame)
+        addTreesFrame.grid(row=0, column=0, columnspan=2)
+        _, tree_txt = self.add_text_box(addTreesFrame, 'enter_tree', 0, lbl_kwargs={'text': 'Tree'},
+                                                                        txt_kwargs={'width': 50})
+        _, prob_txt = self.add_text_box(addTreesFrame, 'enter_prob', 1, lbl_kwargs={'text': 'Prob'},
+                                        txt_kwargs={'width': 10})
+        tree_frame = Frame(secondaryFrame)
+        tree_frame.grid(column=1, row=1, rowspan=3, columnspan=1)
+        cf = CanvasFrame(tree_frame)
+        cf.canvas()['width'] = 1000
+        cf.canvas()['height'] = 400
+        cf.pack()
+        lst = Checklist([], [], secondaryFrame, command=lambda a: show_tree(*lst.elements[a], cf))
+        lst.grid(row=1, column=0, rowspan=3)
+        addTreeButton = Button(addTreesFrame, text='Add tree', command=lambda: add_tree(tree_txt.get(), prob_txt.get(),
+                                                                                        lst))
+        addTreeButton.grid(row=2, columnspan=2)
+        self._secondary_tree_frame = secondaryFrame
+        self._tree_list = lst
+
+    def learn_cmd_prob2(self):
+        lst = self._tree_list
+        oracle_settings = self._oracle_settings
+        #set_verbose(LOG_DEBUG)
+
+        def thread_task():
+            if oracle_settings['type'] is ProbabilityTeacher:
+                print(oracle_settings)
+                d = oracle_settings['comparator']()
+                teacher = ProbabilityTeacher(d, oracle_settings['args'][0], 0.001)
+            else:
+                teacher = oracle_settings['type'](*oracle_settings['args'])
+            for tree, prob in lst.get_selected_elements():
+                teacher.addExample(self._tree_converter.convert_tree(tree), prob)
+            if oracle_settings['type'] is ProbabilityTeacher:
+                con = TreeConstructor(table)
+                con.set_concat(True)
+                con.set_lambda(1.0)
+                teacher.setup_constructor_generator(con, *oracle_settings['equiv_settings'])
+            print('starting')
+            t = time()
+            acc = learnMultPos(teacher)
+            acc.print_desc()
+            g = convert_pmta_to_pcfg(acc, self._tree_converter._reverse_dict)
+
+        thread = Thread(target=thread_task)
+        thread.start()
+
+    def init_GUI_second_version(self):
+        self._top = tkinter.Tk()
+        self._top.geometry('{0}x{1}'.format(self._width, self._height))
+        self._top.title(self._title)
+        self.init_tree_adder_frame()
+        self.create_oracle_frame(first_row=2)
+        learn_button = Button(self._top, text='Learn', command=lambda: self.learn_cmd_prob2())
+        learn_button.pack()
+
     def init_GUI(self, sequences, alphabet, alphabet_rev, annotations, annotations_rev, table, tree_construct='ANNOT'):
         self._top = tkinter.Tk()
         self._top.geometry('{0}x{1}'.format(self._width, self._height))
@@ -143,24 +263,6 @@ class MainGUI:
 
     def main_loop(self):
         self._top.mainloop()
-
-
-    @staticmethod
-    def check_is_int(n):
-        try:
-            n = int(n)
-        except Exception:
-            return False
-        return n > 0
-
-
-    @staticmethod
-    def check_is_prob(p):
-        try:
-            p = float(p)
-        except Exception:
-            return False
-        return 0 <= p <= 1
 
     def update_oracle(self, prob_dup, prob_swap, max_len, num_examples):
         if prob_dup is None and prob_swap is None:
@@ -204,29 +306,29 @@ class MainGUI:
             self._oracle_settings['comparator'] = DuplicationComparator
             self._oracle_settings['args'] = [prob_dup]
 
-    def create_oracle_frame(self):
+    def create_oracle_frame(self, first_row=0):
         oracle_frame = Frame(self._secondary_tree_frame)
-        oracle_frame.grid(column=0, row=2)
+        oracle_frame.grid(column=0, row=first_row+2)
         edit_dist_label = Label(oracle_frame, text='Edit distance options')
-        edit_dist_label.grid(row=0, column=0)
+        edit_dist_label.grid(row=first_row, column=0)
         duplications_frame = HidableFrame("Allow duplications", oracle_frame)
-        duplications_frame.grid(row=1, column=0)
+        duplications_frame.grid(row=first_row+1, column=0)
         duplications_frame.add_var('prob', desc='Duplication Probability')
         swap_frame = HidableFrame("Allow swaps", oracle_frame)
-        swap_frame.grid(row=2, column=0)
+        swap_frame.grid(row=first_row+2, column=0)
         swap_frame.add_var('prob', desc='Swap Probability')
         equiv_title = Label(oracle_frame, text='Equivalence query settings')
         max_len_label = Label(oracle_frame, text='Max example length')
         max_len_entry = Entry(oracle_frame)
         num_examples_label = Label(oracle_frame, text='Examples number')
         num_examples_entry = Entry(oracle_frame)
-        equiv_title.grid(row=3, column=0, columnspan=2)
-        max_len_label.grid(row=4, column=0)
-        max_len_entry.grid(row=4, column=1)
+        equiv_title.grid(row=first_row+3, column=0, columnspan=2)
+        max_len_label.grid(row=first_row+4, column=0)
+        max_len_entry.grid(row=first_row+4, column=1)
         max_len_entry.insert(END, self._oracle_settings['equiv_settings'][0])
         num_examples_entry.insert(END, self._oracle_settings['equiv_settings'][1])
-        num_examples_label.grid(row=5, column=0)
-        num_examples_entry.grid(row=5, column=1)
+        num_examples_label.grid(row=first_row+5, column=0)
+        num_examples_entry.grid(row=first_row+5, column=1)
 
         def set_oracle():
             dup_vis = duplications_frame.get_visible()
@@ -236,7 +338,7 @@ class MainGUI:
             self.update_oracle(dup_prob, swap_prob, max_len_entry.get(), num_examples_entry.get())
 
         set_oracle_button = Button(oracle_frame, text="Set", command=set_oracle)
-        set_oracle_button.grid(row=6, column=0)
+        set_oracle_button.grid(row=first_row+6, column=0)
 
     def add_trees_list(self, top, trees_list, d, weighted=False):
         secondary_frame = Frame(top)  # To be able to delete this frame.
@@ -890,5 +992,6 @@ if __name__ == '__main__':
     sequences, alphabet, alphabet_rev, annotations, annotations_rev, table = read_strings(args[1], args[2],
                                                                                           tree_construct=tree_construct)
     gui = MainGUI(TITLE, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT)
-    gui.init_GUI(sequences, alphabet, alphabet_rev, annotations, annotations_rev, table, tree_construct=tree_construct)
+    gui.init_GUI_second_version()
+    #gui.init_GUI(sequences, alphabet, alphabet_rev, annotations, annotations_rev, table, tree_construct=tree_construct)
     gui.main_loop()

@@ -30,6 +30,7 @@ add_executable(runBasicTests
                 DuplicationsGeneratorTest.cpp
                 ConstructorGeneratorTest.cpp
                 ScalarHankelMatrixTest.cpp
+                ColinearHankelMatrixTest.cpp
         )
 
 
