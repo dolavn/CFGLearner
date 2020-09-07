@@ -33,12 +33,19 @@ class TreesConverter:
         self._reverse_dict = {}
         self._curr_ind = 1
 
+    @property
+    def reverse_dict(self):
+        return self._reverse_dict
+
+    def add_symbol(self, symbol):
+        if symbol not in self._alphabet_dict:
+            self._alphabet_dict[symbol] = self._curr_ind
+            self._reverse_dict[self._curr_ind] = symbol
+            self._curr_ind = self._curr_ind + 1
+
     def convert_tree(self, tree):
         for leaf in traverse_leaves(tree):
-            if leaf not in self._alphabet_dict:
-                self._alphabet_dict[leaf] = self._curr_ind
-                self._reverse_dict[self._curr_ind] = leaf
-                self._curr_ind = self._curr_ind + 1
+            self.add_symbol(leaf)
         new_tree = deep_copy_tree(tree)
         for leaf in traverse_leaves(new_tree, get_trees=True):
             convert_leaf(leaf, self._alphabet_dict)
@@ -49,6 +56,14 @@ class TreesConverter:
         for leaf in traverse_leaves(new_tree, get_trees=True):
             convert_leaf(leaf, self._reverse_dict)
         return new_tree
+
+    def convert_ngram(self, ngram):
+        for elem in ngram:
+            self.add_symbol(elem)
+        return tuple([self._alphabet_dict[elem] for elem in ngram])
+
+    def reverse_convert_ngram(self, ngram):
+        return tuple([self._reverse_dict[elem] for elem in ngram])
 
     def get_grammar(self, pmta):
         return convert_pmta_to_pcfg(pmta, self._reverse_dict)

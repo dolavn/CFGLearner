@@ -13,18 +13,19 @@ using namespace Trees;
 
 
 TreeConstructor::TreeConstructor(scoreTable table):table(std::move(table)), calcTable(),seq(),lambda(0),
-concatDuplications(false){
+concatDuplications(false),concatDirection(false){
 
 }
 
 float TreeConstructor::createTree(const Sequence& seq){
     this->seq = seq;
-    //cout << seq << endl;
+    cout << seq << endl;
     //dpTable = Trees::dpTable(seq.getLength(), seq.getLength());
     dpTable dpTable(this->seq.getLength(), this->seq.getLength());
     if(concatDuplications){
         concat(dpTable);
     }
+    printTable();
     for(int i=0;i<seq.getLength();++i){    /*Table initialization*/
         dpTable[i][i] = 0;
         if(i<this->seq.getLength()-1){
@@ -66,6 +67,7 @@ void TreeConstructor::setLambda(float lambda) {
 void TreeConstructor::setConcat(bool concat){
     this->concatDuplications = concat;
 }
+
 
 ParseTree* TreeConstructor::traceback(const Trees::dpTable& table, const Sequence& seq){
     typedef pair<int, int> intTuple;
@@ -133,7 +135,12 @@ ParseTree TreeConstructor::getDuplicatedTree(int symbol, int len) const{
     if(len<=0){throw std::invalid_argument("len must be at least 1");}
     ParseTree currTree(symbol);
     while(len>1){
-        currTree = ParseTree(0, {ParseTree(symbol), currTree});
+        if(concatDirection){ //left
+            currTree = ParseTree(0, {ParseTree(symbol), currTree});
+        }else{ //right
+            currTree = ParseTree(0, {currTree, ParseTree(symbol)});
+        }
+
         len=len-1;
     }
     return currTree;
@@ -165,6 +172,12 @@ ParseTree TreeConstructor::getTree(){
         ans = postProcessTree(ans);
     }
     return ans;
+}
+
+void TreeConstructor::printTable(){
+    for(auto elem: table){
+        cout << "["; for(auto e: elem.first){ cout << e << ",";} cout << "]=>" << elem.second << endl;
+    }
 }
 
 

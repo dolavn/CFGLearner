@@ -20,12 +20,25 @@ using namespace std::chrono;
 
 static ofstream myfile;
 
-ConstructorGenerator::ConstructorGenerator(TreeConstructor& con, int maxLen, int numTrees, vector<int> alphabet):
-constructor(con),maxLen(maxLen), numTrees(numTrees), alphabet(move(alphabet)),treesGenerated(0), currTree(nullptr){
+ConstructorGenerator::ConstructorGenerator(TreeConstructor& con, int maxLen, vector<int> alphabet):
+        constructor(con),maxLen(maxLen), numTrees(-1), alphabet(move(alphabet)),currLen(1),
+        currArr({(int)(alphabet.size())}),treesGenerated(0), currTree(nullptr){
     generateTree();
     myfile.open("trees.txt");
     myfile << "alphabet:[";
-    for(auto a: alphabet){
+    for(auto a: this->alphabet){
+        myfile << a << ",";
+    }
+    myfile << "]" << endl;
+}
+
+ConstructorGenerator::ConstructorGenerator(TreeConstructor& con, int maxLen, int numTrees, vector<int> alphabet):
+constructor(con),maxLen(maxLen), numTrees(numTrees), alphabet(move(alphabet)),currLen(1),
+currArr({(int)(alphabet.size())}),treesGenerated(0), currTree(nullptr){
+    generateTree();
+    myfile.open("trees.txt");
+    myfile << "alphabet:[";
+    for(auto a: this->alphabet){
         myfile << a << ",";
     }
     myfile << "]" << endl;
@@ -34,6 +47,7 @@ constructor(con),maxLen(maxLen), numTrees(numTrees), alphabet(move(alphabet)),tr
 ConstructorGenerator::ConstructorGenerator(const ConstructorGenerator& other):constructor(other.constructor),
 maxLen(other.maxLen),numTrees(other.numTrees),alphabet(other.alphabet),treesGenerated(other.treesGenerated),
 currTree(nullptr){
+    cout << "copy" << endl;
     copy(other);
 }
 
@@ -70,7 +84,16 @@ unsigned int ConstructorGenerator::generateSeqLen() const{
     return convertSampleToLen(sample);
 }
 
+vector<int> ConstructorGenerator::generateSeqDeterministic() const{
+    vector<int> ans(currLen);
+    myfile << "[";
+    for(unsigned int i=0;i<currLen;++i){ans[i] = alphabet[currArr.get(i)]; myfile << ans[i] << ",";}
+    myfile << "]" << endl;
+    return ans;
+}
+
 vector<int> ConstructorGenerator::generateSeq() const{
+    if(numTrees==-1){return generateSeqDeterministic();}
     myclock::time_point beginning = myclock::now();
     milliseconds ms = duration_cast< milliseconds >(
             system_clock::now().time_since_epoch()
@@ -106,10 +129,17 @@ TreesGenerator* ConstructorGenerator::clone() const{
 }
 
 void ConstructorGenerator::reset(){
+    if(numTrees==-1){
+        currLen=1;
+        currArr = IndexArray({(int)(alphabet.size())});
+    }
     treesGenerated = 0;
 }
 
 bool ConstructorGenerator::hasNext() const{
+    if(numTrees==-1){
+        return currLen<maxLen;
+    }
     return treesGenerated<numTrees;
 }
 
@@ -124,7 +154,17 @@ ConstructorGenerator& ConstructorGenerator::operator++(){
     Logger& logger = Logger::getLogger();
     logger.setLoggingLevel(Logger::LOG_DEBUG);
     //logger << "inc" << logger.endline;
-    treesGenerated++;
+    if(numTrees==-1){
+        currArr++;
+        if(currArr.getOverflow()){
+            currLen++;
+            vector<int> sizes; for(int i=0;i<currLen;++i){sizes.push_back((int)(alphabet.size()));}
+            currArr = IndexArray(sizes);
+        }
+
+    }else{
+        treesGenerated++;
+    }
     generateTree();
     //logger << "tree generated" << logger.endline;
 }

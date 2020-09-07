@@ -56,6 +56,7 @@ public:
     ParseTree getTree();
     void setLambda(float);
     void setConcat(bool);
+    void printTable(); //todo: delete
 
 private:
     scoreTable table;
@@ -65,6 +66,7 @@ private:
     std::vector<std::pair<std::pair<int, int>, int>> duplications;
     float lambda;
     bool concatDuplications;
+    bool concatDirection;
 
     std::vector<std::pair<int, int>> getDuplicationIndices() const;
     ParseTree* traceback(const Trees::dpTable&, const Sequence&);

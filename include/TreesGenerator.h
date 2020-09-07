@@ -98,6 +98,7 @@ class TreeConstructor;
 
 class ConstructorGenerator: public TreesGenerator{
 public:
+    ConstructorGenerator(TreeConstructor&, int, std::vector<int>);
     ConstructorGenerator(TreeConstructor&, int, int, std::vector<int>);
     ConstructorGenerator(const ConstructorGenerator&);
     ConstructorGenerator(ConstructorGenerator&&);
@@ -123,12 +124,15 @@ private:
     unsigned int generateSeqLen() const;
     unsigned int convertSampleToLen(unsigned int) const;
     std::vector<int> generateSeq() const;
+    std::vector<int> generateSeqDeterministic() const;
     void generateTree();
 
     TreeConstructor& constructor;
     int maxLen;
     int numTrees;
     std::vector<int> alphabet;
+    unsigned int currLen;
+    IndexArray currArr;
     ParseTree* currTree;
     int treesGenerated;
 };

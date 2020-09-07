@@ -112,7 +112,7 @@ class Table(Frame):
             for row in new_rows:
                 if len(row) != self.cols_num:
                     raise BaseException("Invalid json file")
-            self.fill_table(self._rows)
+            self.fill_table(new_rows)
 
     def load_command(self):
         filename = askopenfilename()
@@ -140,6 +140,10 @@ class Table(Frame):
                 widget.configure(background=defaultbg)
         self.selected = row
 
+    @property
+    def rows(self):
+        return self._rows
+
     def __init__(self, rows, cols, mutable_cols, *args, **kwargs):
         self._update_cmd = None
         self._print_funcs = None
@@ -157,6 +161,7 @@ class Table(Frame):
         if self.is_dict:
             cols = rows[0].keys()
             mutable_cols = [False]*len(cols)
+        assert(len(mutable_cols) == len(cols))
         self.rows_num = len(rows)
         self.cols_num = len(cols)
         self.cols = cols
@@ -441,7 +446,7 @@ class Checklist(Frame):
         lbl.grid(column=1, row=ind+1)
         self.checkbuttons.append(b)
 
-    def delete_elem(self, elem_ind):
+    def remove_elem(self, elem_ind):
         # todo: implement
         pass
 
@@ -456,6 +461,18 @@ class Checklist(Frame):
     def get_selected_elements(self):
         ans = [elem for elem, elem_bool in zip(self.elements, self.elem_bools) if elem_bool.get() == 1]
         return ans
+
+    def get_all_elements(self):
+        return [elem for elem in self.elements]
+
+    def remove_all_elements(self):
+        self.labels = []
+        self.elements = []
+        self.elem_bools = []
+        for widget in itertools.chain(self.widget_to_row.keys(), self.checkbuttons):
+            widget.grid_forget()
+        self.widget_to_row = {}
+        self.checkbuttons = []
 
     def get_selected(self):
         ans = [ind for ind, elem in enumerate(self.elem_bools) if elem.get() == 1]

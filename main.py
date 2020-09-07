@@ -30,6 +30,11 @@ FILE_PATH = 'michalTrees'
 WEIGHTED = True
 
 
+def make_tree_nodes_int(tree):
+    new_label = '?' if tree.label() == '0' else int(tree.label())
+    return Tree(new_label, [make_tree_nodes_int(child) for child in tree])
+
+
 def get_nonterminals(pcfg):
     prods = pcfg.productions()
     alphabet = set()
@@ -96,7 +101,7 @@ class MainGUI:
         self._tree_converter = TreesConverter()
         self._tree_list = None
         self._oracle_settings = {'type': SimpleMultiplicityTeacher, 'args': [0.0005, 0], 'additional_settings': [],
-                                 'equiv_settings': (4, 5000)}
+                                 'equiv_settings': (4, 5000), 'comparator': None}
 
     def set_pcfg(self, pcfg):
         self._pcfg = pcfg
@@ -162,7 +167,26 @@ class MainGUI:
             return False
         return 0 <= p <= 1
 
-    def init_tree_adder_frame(self):
+    def save_trees(self, lst, button):
+        top = self._top
+        w = PopupWindow(top, 'Choose file name')
+        button["state"] = "disabled"
+        top.wait_window(w.top)
+        button["state"] = "normal"
+        if w.value is not None:
+            trees = [(str(tree), prob) for tree, prob in lst.get_all_elements()]
+            with open('{}.json'.format(w.value), 'w') as json_file:
+                json.dump(trees, json_file)
+
+    def load_trees(self, lst):
+        top = self._top
+        trees_list = load_object_window()
+        trees_list = [(Tree.fromstring(str_repr), prob) for str_repr, prob in trees_list]
+        lst.remove_all_elements()
+        for tree, prob in trees_list:
+            lst.add_elem('tree', (tree, prob))
+
+    def add_trees_list(self, frame, row_ind=0, col_ind=0):
 
         def show_tree(tree, prob, cf):
             cf.canvas().delete('all')
@@ -172,50 +196,90 @@ class MainGUI:
             tp = TreeWidget(cf.canvas(), 'p={}'.format(prob))
             cf.add_widget(tp, 200, 200)
 
-        def add_tree(tree, prob, lst):
-            t = None
-            try:
-                t = Tree.fromstring(tree)
-                t = fix_tree(t)
-                self._tree_converter.convert_tree(t)
-            except Exception:
-                tkinter.messagebox.showerror("Add tree", "Not a valid tree")
+        canvasFrameSuper = Frame(frame)
+        canvasFrameSuper.grid(row=1, column=1)
+        cf = CanvasFrame(canvasFrameSuper)
+        cf.canvas()['width'] = 1000
+        cf.canvas()['height'] = 400
+        cf.pack()
+        tree_frame = Frame(frame)
+        tree_frame.grid(column=col_ind, row=row_ind, rowspan=2)
+        lst = Checklist([], [], tree_frame, command=lambda a: show_tree(*lst.elements[a], cf))
+        lst.grid(row=1, column=0, rowspan=1, columnspan=2)
+        save_trees_button = Button(tree_frame, text='Save trees', command=lambda: self.save_trees(lst,
+                                                                                                  save_trees_button))
+        save_trees_button.grid(row=2, column=0)
+        load_trees_button = Button(tree_frame, text='Load trees', command=lambda: self.load_trees(lst))
+        load_trees_button.grid(row=2, column=1)
+        return lst
+
+    def construct_tree_from_string(self, string):
+        table = self._table.rows
+        table = {self._tree_converter.convert_ngram(key): val for key, val in table}
+        con = TreeConstructor(table)
+        con.set_concat(True)
+        con.set_lambda(1.0)
+        ngram = self._tree_converter.convert_ngram(string.split(' '))
+        tree = make_tree_nodes_int(con.construct_tree(ngram))
+        return self._tree_converter.reverse_convert_tree(tree)
+
+    def init_tree_adder_frame(self, lst, row=0, column=0, column_span=3):
+
+        def add_tree(tree, str_to_tree, prob, lst):
+            if str_to_tree != '' and tree != '':
+                tkinter.messagebox.showerror("Add tree", "Can't enter both a tree and a string to tree")
                 return
             if not MainGUI.check_is_prob(prob):
                 tkinter.messagebox.showerror("Add tree", "Invalid probability")
                 return
             prob = float(prob)
+            t = None
+            if str_to_tree != '':
+                lst.add_elem('tree', (self.construct_tree_from_string(str_to_tree), prob))
+            else:
+                try:
+                    t = Tree.fromstring(tree)
+                    t = fix_tree(t)
+                    self._tree_converter.convert_tree(t)
+                except Exception:
+                    tkinter.messagebox.showerror("Add tree", "Not a valid tree")
+                    return
 
-            lst.add_elem('tree', (t, prob))
+                lst.add_elem('tree', (t, prob))
+
+        def load_sequences(lst):
+            seq_list = load_object_window()
+            for seq, prob in seq_list:
+                add_tree('', seq, prob, lst)
 
         secondaryFrame = Frame(self._top)
-        secondaryFrame.pack()
+        secondaryFrame.grid(row=row, column=column, columnspan=column_span)
         addTreesFrame = Frame(secondaryFrame)
         addTreesFrame.grid(row=0, column=0, columnspan=2)
         _, tree_txt = self.add_text_box(addTreesFrame, 'enter_tree', 0, lbl_kwargs={'text': 'Tree'},
                                                                         txt_kwargs={'width': 50})
-        _, prob_txt = self.add_text_box(addTreesFrame, 'enter_prob', 1, lbl_kwargs={'text': 'Prob'},
+        _, str_txt = self.add_text_box(addTreesFrame, 'enter_string', 1, lbl_kwargs={'text': 'String'},
+                                        txt_kwargs={'width': 50})
+        _, prob_txt = self.add_text_box(addTreesFrame, 'enter_prob', 2, lbl_kwargs={'text': 'Prob'},
                                         txt_kwargs={'width': 10})
-        tree_frame = Frame(secondaryFrame)
-        tree_frame.grid(column=1, row=1, rowspan=3, columnspan=1)
-        cf = CanvasFrame(tree_frame)
-        cf.canvas()['width'] = 1000
-        cf.canvas()['height'] = 400
-        cf.pack()
-        lst = Checklist([], [], secondaryFrame, command=lambda a: show_tree(*lst.elements[a], cf))
-        lst.grid(row=1, column=0, rowspan=3)
-        addTreeButton = Button(addTreesFrame, text='Add tree', command=lambda: add_tree(tree_txt.get(), prob_txt.get(),
+        addTreeButton = Button(addTreesFrame, text='Add tree', command=lambda: add_tree(tree_txt.get(),
+                                                                                        str_txt.get(),
+                                                                                        prob_txt.get(),
                                                                                         lst))
-        addTreeButton.grid(row=2, columnspan=2)
+        loadSequencesButton = Button(addTreesFrame, text='Load Sequences', command=lambda: load_sequences(lst))
+        addTreeButton.grid(row=3, column=1)
+        loadSequencesButton.grid(row=3, column=2)
         self._secondary_tree_frame = secondaryFrame
         self._tree_list = lst
 
     def learn_cmd_prob2(self):
         lst = self._tree_list
         oracle_settings = self._oracle_settings
-        #set_verbose(LOG_DEBUG)
 
         def thread_task():
+            set_verbose(LOG_DEBUG)
+            table = self._table.rows
+            table = {self._tree_converter.convert_ngram(key): val for key, val in table}
             if oracle_settings['type'] is ProbabilityTeacher:
                 print(oracle_settings)
                 d = oracle_settings['comparator']()
@@ -224,28 +288,44 @@ class MainGUI:
                 teacher = oracle_settings['type'](*oracle_settings['args'])
             for tree, prob in lst.get_selected_elements():
                 teacher.addExample(self._tree_converter.convert_tree(tree), prob)
-            if oracle_settings['type'] is ProbabilityTeacher:
+
+            if oracle_settings['comparator'] is SwapComparator:
                 con = TreeConstructor(table)
                 con.set_concat(True)
                 con.set_lambda(1.0)
                 teacher.setup_constructor_generator(con, *oracle_settings['equiv_settings'])
+            if oracle_settings['comparator'] is DuplicationComparator:
+                teacher.setup_duplications_generator(2)
+                """
+            for curr_lambda in oracle_settings['additional_settings']:
+                curr_lambda(teacher, table=table)
+"""
             print('starting')
             t = time()
             acc = learnMultPos(teacher)
             acc.print_desc()
-            g = convert_pmta_to_pcfg(acc, self._tree_converter._reverse_dict)
-
+            g = convert_pmta_to_pcfg(acc, self._tree_converter.reverse_dict)
+            g = convert_pcfg_to_str(g)
+            with open('grammar.json', 'w') as json_file:
+                json.dump(g, json_file)
         thread = Thread(target=thread_task)
         thread.start()
+
+    def create_scores_table(self, row=1, column=0):
+        t = Table([], ['Seq', 'Score'], [False]*2, self._top)
+        t.grid(row=row, column=column)
+        self._table = t
 
     def init_GUI_second_version(self):
         self._top = tkinter.Tk()
         self._top.geometry('{0}x{1}'.format(self._width, self._height))
         self._top.title(self._title)
-        self.init_tree_adder_frame()
-        self.create_oracle_frame(first_row=2)
+        lst = self.add_trees_list(self._top)
+        self.init_tree_adder_frame(lst)
+        self.create_scores_table(row=3)
+        self.create_oracle_frame(first_row=0)
         learn_button = Button(self._top, text='Learn', command=lambda: self.learn_cmd_prob2())
-        learn_button.pack()
+        learn_button.grid(row=2, column=1)
 
     def init_GUI(self, sequences, alphabet, alphabet_rev, annotations, annotations_rev, table, tree_construct='ANNOT'):
         self._top = tkinter.Tk()
@@ -259,7 +339,7 @@ class MainGUI:
         treeFrame.grid(row=1, column=0)
         self.create_sequences_list(seqFrame, sequences, alphabet, alphabet_rev, annotations, annotations_rev,
                                    tree_construct=tree_construct)
-        self.add_trees_list(treeFrame, [], alphabet_rev, weighted=WEIGHTED)
+        self.add_trees_list_old(treeFrame, [], alphabet_rev, weighted=WEIGHTED)
 
     def main_loop(self):
         self._top.mainloop()
@@ -267,12 +347,13 @@ class MainGUI:
     def update_oracle(self, prob_dup, prob_swap, max_len, num_examples):
         if prob_dup is None and prob_swap is None:
             self._oracle_settings['type'] = SimpleMultiplicityTeacher
+            self._oracle_settings['comparator'] = None
             return
         if not self.check_is_int(max_len):
             tkinter.messagebox.showerror("Update Oracle", "Invalid max length")
             return
         max_len = int(max_len)
-        if not self.check_is_int(num_examples):
+        if num_examples != -1 and not self.check_is_int(num_examples):
             tkinter.messagebox.showerror("Update Oracle", "Invalid num of examples")
             return
         num_examples = int(num_examples)
@@ -287,11 +368,17 @@ class MainGUI:
             return
 
         def add_constructor_generator(teacher, **kwargs):
-            con = TreeConstructor(kwargs['table'])
+            if 'table' not in kwargs:
+                raise BaseException("no table")
+            table = kwargs['table']
+            con = TreeConstructor(table)
             con.set_concat(True)
             con.set_lambda(1.0)
-            teacher.setup_constructor_generator(con, 8, 10000)
-        self._oracle_settings['additional_settings'] = [add_constructor_generator]
+            teacher.setup_constructor_generator(con, max_len, num_examples)
+
+        def add_duplications_generator(teacher, **kwargs):
+            teacher.setup_duplications_generator(2)
+
         self._oracle_settings['type'] = ProbabilityTeacher
         self._oracle_settings['equiv_settings'] = (max_len, num_examples)
 
@@ -300,14 +387,17 @@ class MainGUI:
 
             self._oracle_settings['comparator'] = SwapComparator
             self._oracle_settings['args'] = [prob_swap]
+            self._oracle_settings['additional_settings'] = [lambda t, **kwargs: add_constructor_generator(t, **kwargs)]
 
         if prob_dup is not None:
             prob_dup = float(prob_dup)
             self._oracle_settings['comparator'] = DuplicationComparator
             self._oracle_settings['args'] = [prob_dup]
+            self._oracle_settings['additional_settings'] = [lambda t, **kwargs: add_duplications_generator(t, **kwargs)]
 
     def create_oracle_frame(self, first_row=0):
-        oracle_frame = Frame(self._secondary_tree_frame)
+        #oracle_frame = Frame(self._secondary_tree_frame)
+        oracle_frame = Frame(self._top)
         oracle_frame.grid(column=0, row=first_row+2)
         edit_dist_label = Label(oracle_frame, text='Edit distance options')
         edit_dist_label.grid(row=first_row, column=0)
@@ -320,27 +410,26 @@ class MainGUI:
         equiv_title = Label(oracle_frame, text='Equivalence query settings')
         max_len_label = Label(oracle_frame, text='Max example length')
         max_len_entry = Entry(oracle_frame)
-        num_examples_label = Label(oracle_frame, text='Examples number')
-        num_examples_entry = Entry(oracle_frame)
+        random_sampling = HidableFrame("Random sampling", oracle_frame)
+        random_sampling.add_var('num_samples', desc='Samples Number')
+        random_sampling.grid(row=first_row+4, column=0)
         equiv_title.grid(row=first_row+3, column=0, columnspan=2)
-        max_len_label.grid(row=first_row+4, column=0)
-        max_len_entry.grid(row=first_row+4, column=1)
+        max_len_label.grid(row=first_row+5, column=0)
+        max_len_entry.grid(row=first_row+5, column=1)
         max_len_entry.insert(END, self._oracle_settings['equiv_settings'][0])
-        num_examples_entry.insert(END, self._oracle_settings['equiv_settings'][1])
-        num_examples_label.grid(row=first_row+5, column=0)
-        num_examples_entry.grid(row=first_row+5, column=1)
 
         def set_oracle():
             dup_vis = duplications_frame.get_visible()
             swap_vis = swap_frame.get_visible()
+            num_examples = -1 if not random_sampling.get_visible() else random_sampling.get_val('num_samples')
             dup_prob = None if not dup_vis else duplications_frame.get_val('prob')
             swap_prob = None if not swap_vis else swap_frame.get_val('prob')
-            self.update_oracle(dup_prob, swap_prob, max_len_entry.get(), num_examples_entry.get())
+            self.update_oracle(dup_prob, swap_prob, max_len_entry.get(), num_examples)
 
         set_oracle_button = Button(oracle_frame, text="Set", command=set_oracle)
         set_oracle_button.grid(row=first_row+6, column=0)
 
-    def add_trees_list(self, top, trees_list, d, weighted=False):
+    def add_trees_list_old(self, top, trees_list, d, weighted=False):
         secondary_frame = Frame(top)  # To be able to delete this frame.
         secondary_frame.pack()
         save_frame = Frame(secondary_frame)
@@ -366,9 +455,9 @@ class MainGUI:
             weight_text = Label(secondary_frame, width=20)
             weight_text.configure(font=myFont)
             weight_text.grid(column=1, row=4)
-        trees_check_list = Checklist(['Tree {}'.format(ind) for ind in range(len(trees_list))], secondary_frame,
-                                     command=lambda ind: onselect2(ind, trees_list, cf, text, d,
-                                                                   weight_text=weight_text))
+        trees_check_list = Checklist(['Tree {}'.format(ind) for ind in range(len(trees_list))], trees_list,
+                                     secondary_frame,command=lambda ind: onselect2(ind, trees_list, cf, text, d,
+                                                                                   weight_text=weight_text))
         trees_check_list.grid(column=0, row=0)
         learn_func = lambda: learn_cmd(trees_check_list.get_selected(), trees_list, d)
         if weighted:
@@ -400,7 +489,7 @@ class MainGUI:
         self._secondary_tree_frame = None
         secondary_tree_frame.destroy()
         trees = create_trees(sequences, table, lambda_val=val)
-        self.add_trees_list(tree_frame, trees, alphabet_rev, weighted=WEIGHTED)
+        self.add_trees_list_old(tree_frame, trees, alphabet_rev, weighted=WEIGHTED)
 
     @staticmethod
     def convert_sequence(sequence, alphabet_rev_dict):
@@ -753,7 +842,7 @@ def get_score_table(sequences, alphabet, alphabet_rev, path, key='seq'):
     table = {tuple(t[0]): t[1] for t in table}
     for key in table.keys():
         disp_key = tuple([alphabet_rev[k] for k in key])
-        print('{}={}'.format(key, table[key]))
+        print('{}={}'.format(disp_key, table[key]))
     return table
     table = {}
     for ngram_len in range(2, len(sequences)):
@@ -843,6 +932,7 @@ def read_strings(file_path, csb_path, tree_construct='ANNOT', additional_alphabe
     for seq in seq_dict.keys():
         sequences.append({'csb_id': ids[seq], 'seq': seq, 'annot': seq_to_annot[seq], 'instances': seq_dict[seq]})
     sequences = sorted(sequences, key=lambda a: a['instances'])
+    total = sum([seq['instances'] for seq in sequences])
     table = get_score_table(sequences, alphabet, alphabet_rev, csb_path, key=key)
     return sequences, cogs, cogs_rev, annotations, annotations_rev, table
 

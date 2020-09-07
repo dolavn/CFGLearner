@@ -271,7 +271,9 @@ MultiplicityTreeAcceptor learnColin(const MultiplicityTeacher& teacher, Colinear
     h.complete();
     while(true){
         MultiplicityTreeAcceptor acc = h.getAcceptor();
+        cout << "equiv" << endl;
         ParseTree* counterExample = teacher.equivalence(acc);
+        cout << "received" << endl;
         if(!counterExample){
 #ifdef DEBUG_MODE
             for(auto elem: counterExamples){

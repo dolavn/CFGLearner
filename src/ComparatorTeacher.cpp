@@ -49,12 +49,12 @@ void ComparatorTeacher::addExample(const ParseTree& tree){
 double ComparatorTeacher::membership(const ParseTree& tree) const{
     Logger& logger = Logger::getLogger();
     logger.setLoggingLevel(Logger::LOG_DEBUG);
-    logger << "prob membership" << logger.endline;
+    //logger << "prob membership" << logger.endline;
     double maxVal=0;
     for(auto& currTree: trees){
-        logger << "currTree:" << *currTree << logger.endline;
+        //logger << "currTree:" << *currTree << logger.endline;
         if(*currTree==tree){
-            logger << "if" << logger.endline;
+            //logger << "if" << logger.endline;
             return currTree->getProb();
         }else{
             //logger << "else" << logger.endline;

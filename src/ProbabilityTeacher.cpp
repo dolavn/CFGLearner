@@ -5,6 +5,7 @@
 #include <functional>
 #include "Logger.h"
 #include "TreesGenerator.h"
+#include "TreeConstructor.h"
 #include "math.h"
 
 using namespace std;
@@ -58,6 +59,8 @@ void ProbabilityTeacher::setupConstructorGenerator(TreeConstructor& constructor,
     for(auto sym: alphabet){
         if(sym.rank==0){alphabet_vec.push_back(sym.c);}
     }
+    cout << "setup constructor" << endl;
+    constructor.printTable();
     this->generator = new ConstructorGenerator(constructor, maxLen, treesNum, alphabet_vec);
 }
 
@@ -88,12 +91,13 @@ ProbabilityTeacher::~ProbabilityTeacher(){
 //TODO: Ugly design. Fix this.
 ParseTree* ProbabilityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) const{
     Logger& logger = Logger::getLogger();
-    std::function<bool(const ParseTree&, bool)> testFunc = [&acc,this](const ParseTree& t1, bool cache){
+    std::function<bool(const ParseTree&, bool)> testFunc = [&acc,&logger,this](const ParseTree& t1, bool cache){
         double val = acc.run(t1);
         double prob = t1.getProb();
-        if(!cache){
+        /*if(!cache){
             prob = prob*(1-decayFactor);
-        }
+        }*/
+        logger << val << "," << prob << logger.endline;
         return std::abs(val-prob)>epsilon;
     };
     if(!this->generator){
@@ -120,12 +124,14 @@ ParseTree* ProbabilityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) 
             if(curr.getProb()>0){
                 logger << "tree:" << curr << logger.endline;
                 logger << "tree-prob:" << curr.getProb() << logger.endline;
+                acc.printDesc();
                 logger << "acceptor(tree):" << acc.run(curr) << logger.endline;
             }
             if(testFunc(curr, true)){
                 logger << curr << logger.endline;
                 return new ParseTree(curr);
             }
+            logger << "tree:" << curr << "p:" << curr.getProb() << logger.endline;
             ++genRef;
         }
         logger << "all good" << logger.endline;

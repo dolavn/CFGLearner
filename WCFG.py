@@ -170,7 +170,7 @@ def create_duplications(grammar, dup_prob):
 
 
 
-MAX_ITER = 20
+MAX_ITER = 100
 
 
 def calc_partition_functions(variables):

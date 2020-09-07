@@ -132,6 +132,7 @@ TreesGenerator* DuplicationsGenerator::clone() const{
 }
 
 ParseTree DuplicationsGenerator::operator*(){
+    cout << "operator *" << endl;
     return createDuplication(*trees[currTree], *currIt);
 }
 
