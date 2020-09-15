@@ -1,11 +1,10 @@
-#include "ObservationTable.h"
-#include "ConicCombinationFinder.h"
+#include "ColinearHankelMatrix.h"
 #include "MultiplicityTeacher.h"
 #include "MultiplicityTreeAcceptor.h"
 #include "Logger.h"
 #include "utility.h"
+#include <algorithm>
 using namespace std;
-using namespace arma;
 
 #define EPSILON (0.000001)
 
@@ -347,9 +346,9 @@ void ColinearHankelMatrix::makeConsistent(){
     logger.setLoggingLevel(Logger::LOG_DETAILS);
     logger << "consistent" << logger.endline;
     //printTable();
-    cout << "con" << endl;
+    //cout << "con" << endl;
     if(!makeZeroConsistent()){
-        cout << "not zero consistent" << endl;
+        //cout << "not zero consistent" << endl;
         return;
     }
     for(int i=0;i<trees.size();++i){ //TODO: modify, should only go over number of classes and not all trees
@@ -369,7 +368,7 @@ void ColinearHankelMatrix::makeConsistent(){
                     }
                     try{
                         if(!checkExtension(extensions1[j], extensions2[j], context, alpha)){
-                            cout << "fincon" << endl;
+                            //cout << "fincon" << endl;
                             //printTable();
                             return;
                         }
@@ -385,7 +384,7 @@ void ColinearHankelMatrix::makeConsistent(){
             }
         }
     }
-    cout << "fincon noChange" << endl;
+    //cout << "fincon noChange" << endl;
 }
 
 int ColinearHankelMatrix::getClassInd(const ParseTree& tree) const{
@@ -491,7 +490,7 @@ void ColinearHankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& 
     }
     float deriv = 1; for(auto a: alphas){deriv=deriv*a;}
     rankedChar c = {t.getData(), (int)(sIndices.size())};
-    unsigned int charInd = (unsigned int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+    unsigned int charInd = (unsigned int)(std::find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
     if(charInd>=alphabetVec.size()){
         throw std::invalid_argument("Character not in alphabet");
     }
@@ -501,10 +500,10 @@ void ColinearHankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& 
     vector<int> mapParams;
     mapParams.push_back(-1);
     mapParams.insert(mapParams.end(), sIndices.begin(), sIndices.end());
-    if(alpha!=0 && classInd!=getZeroVecInd()){
+    /*if(alpha!=0 && classInd!=getZeroVecInd()){
         cout << "[" << classInd << ","; for(int i=1;i<=t.getChildrenNum();++i){cout << mapParams[i] << ",";}
         cout << "]" << alpha << "=" << getCoeff(t,trees[representativeInd]) << "/" << deriv << endl;
-    }
+    }*/
     for(unsigned int i=0;i<numClasses;++i){
         mapParams[0] = i;
         m.setParam(i==classInd?alpha:0, mapParams);
@@ -521,7 +520,7 @@ MultiplicityTreeAcceptor ColinearHankelMatrix::getAcceptor() const{
     MultiplicityTreeAcceptor acc(alphabet, numClasses);
     for(auto& currTree: trees){
         rankedChar c = {currTree.getData(), (int)(currTree.getSubtrees().size())};
-        unsigned int charInd = (unsigned int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+        unsigned int charInd = (unsigned int)(std::find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
         if(charInd>=alphabetVec.size()){
             throw std::invalid_argument("Character not in alphabet");
         }
@@ -529,7 +528,7 @@ MultiplicityTreeAcceptor ColinearHankelMatrix::getAcceptor() const{
     }
     for(auto& currTree: getExtensions()){
         rankedChar c = {currTree.getData(), (int)(currTree.getSubtrees().size())};
-        unsigned int charInd = (unsigned int)(find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
+        unsigned int charInd = (unsigned int)(std::find(alphabetVec.begin(), alphabetVec.end(), c)-alphabetVec.begin());
         if(charInd>=alphabetVec.size()){
             throw std::invalid_argument("Character not in alphabet");
         }
@@ -548,7 +547,7 @@ MultiplicityTreeAcceptor ColinearHankelMatrix::getAcceptor() const{
         }
     }
     acc.setLambda(lambdaVec);
-    cout << "aut dim:" << acc.getDim() << endl;
+    //cout << "aut dim:" << acc.getDim() << endl;
     return acc;
 
 }
@@ -586,4 +585,27 @@ double getCosVectors(vector<double>& v1, vector<double>& v2){
         sum = sum + v1[i]*v2[i];
     }
     return sum/(getNorm(v1)*getNorm(v2));
+}
+
+vector<pair<ParseTree, int>> extendSet(const ParseTree& tree, vector<ParseTree> treeSet, set<rankedChar> alphabet){
+    vector<pair<ParseTree,int>> ans;
+    for(auto c: alphabet){
+        if(c.rank==0){continue;}
+        IndexArray arr(vector<int>(c.rank-1, treeSet.size()));
+        while(!arr.getOverflow()){
+            for(int k=0;k<c.rank;++k){
+                vector<ParseTree> children;
+                ParseTree currTree(c.c);
+                currTree.setSubtree(tree, k);
+                for(int currInd=0;currInd<c.rank-1;++currInd){
+                    int treeIndex = arr[currInd];
+                    ParseTree& child = treeSet[treeIndex];
+                    currTree.setSubtree(child, currInd+(currInd>=k?1:0));
+                }
+                ans.emplace_back(currTree, k);
+            }
+            ++arr;
+        }
+    }
+    return ans;
 }

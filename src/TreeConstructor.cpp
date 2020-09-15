@@ -19,7 +19,7 @@ concatDuplications(false),concatDirection(false){
 
 float TreeConstructor::createTree(const Sequence& seq){
     this->seq = seq;
-    cout << seq << endl;
+    //cout << seq << endl;
     //dpTable = Trees::dpTable(seq.getLength(), seq.getLength());
     dpTable dpTable(this->seq.getLength(), this->seq.getLength());
     if(concatDuplications){

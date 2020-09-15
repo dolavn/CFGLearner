@@ -59,7 +59,6 @@ class CMakeBuild(build_ext):
 setup(
     name='CFGLearner',
     version="0.1",
-    author='Dolav Nitay',
     long_description='',
     install_requires=['pybind11>=2.2'],
     ext_modules=[CMakeExtension('CFGLearner')],

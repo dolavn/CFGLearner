@@ -138,7 +138,7 @@ void ConstructorGenerator::reset(){
 
 bool ConstructorGenerator::hasNext() const{
     if(numTrees==-1){
-        return currLen<maxLen;
+        return currLen<=maxLen;
     }
     return treesGenerated<numTrees;
 }

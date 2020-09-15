@@ -1,9 +1,11 @@
-#include "Learner.h"
+//#include "Learner.h"
 #include "ParseTree.h"
 #include "Logger.h"
-#include "Teacher.h"
+//#include "Teacher.h"
 #include "MultiplicityTeacher.h"
-#include "ObservationTable.h"
+#include "MultiplicityTreeAcceptor.h"
+//#include "ObservationTable.h"
+#include "ColinearHankelMatrix.h"
 #include "utility.h"
 #include <functional>
 #include <vector>
@@ -17,7 +19,7 @@
 #define DEBUG_MODE
 
 using namespace std;
-
+/*
 typedef pair<ParseTree*,ParseTree*> contextTreePair;
 
 ofstream* currStream;
@@ -147,7 +149,8 @@ void extend(ObservationTable& s, ParseTree* t, const Teacher& teacher){
     SAFE_DELETE(tree)
     SAFE_DELETE(context)
 }
-
+*/
+/*
 TreeAcceptor learn(const Teacher& teacher){
     ObservationTable table(teacher);
     ofstream myfile;
@@ -169,7 +172,7 @@ TreeAcceptor learn(const Teacher& teacher){
         myfile << "Counter example given:\\\\" << endl;
         myfile << "\\begin{center}" << endl;
         myfile << counterExample->getLatexTree() << endl;
-        myfile << "\\end{center}" << endl;
+        myfile << "\\end{center}" << endl;*/
         /*
         cout << "counter example given:" << endl;
         cout << *counterExample << endl;
@@ -178,7 +181,7 @@ TreeAcceptor learn(const Teacher& teacher){
         if(!ans.run(*counterExample)){cout << "not ";}
         cout << "accepted by our tree automata" << endl;
         ans.printDescription();
-        */
+        *//*
         begin = clock();
         while(teacher.membership(*counterExample)!=ans.run(*counterExample)) {
             myfile << "Current table:\\\\" << endl;
@@ -190,10 +193,10 @@ TreeAcceptor learn(const Teacher& teacher){
             ans = synthesize(table, teacher, &ans);
         }
         end = clock();
-        double extendTime = 1000*double(end-begin)/CLOCKS_PER_SEC;
+        double extendTime = 1000*double(end-begin)/CLOCKS_PER_SEC;*/
         /*cout << "syntTime:" << syntTime << endl;
         cout << "equivTime:" << equivTime << endl;
-        cout << "extendTime:" << extendTime << endl;*/
+        cout << "extendTime:" << extendTime << endl;*//*
         SAFE_DELETE(counterExample)
     }
     myfile << "Final table:\\\\" << endl;
@@ -202,8 +205,8 @@ TreeAcceptor learn(const Teacher& teacher){
     myfile << "\\end{center}" << endl;
     myfile.close();
     return ans;
-}
-
+}*/
+/*
 MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix& h){
     ofstream myfile;
     Logger& logger = Logger::getLogger();
@@ -225,13 +228,13 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
             logger << counterExample->getProb() << logger.endline;
             logger << acc.run(*counterExample) << logger.endline;
             logger << *counterExample << logger.endline;
-        }
+        }*/
         /*
         if(0 && h.getC().size()>35){
             SAFE_DELETE(counterExample);
             myfile << "stopping learning" << endl;
         }
-         */
+         *//*
         if(counterExample==nullptr){
             myfile << "Final table:\\\\" << endl;
             myfile << "\\begin{center}" << endl;
@@ -263,7 +266,7 @@ MultiplicityTreeAcceptor learn(const MultiplicityTeacher& teacher, HankelMatrix&
         logger << "equivTime:" << equivTime << logger.endline;
     }
 }
-
+*/
 MultiplicityTreeAcceptor learnColin(const MultiplicityTeacher& teacher, ColinearHankelMatrix& h){
 #ifdef DEBUG_MODE
     vector<ParseTree*> counterExamples;
@@ -271,9 +274,9 @@ MultiplicityTreeAcceptor learnColin(const MultiplicityTeacher& teacher, Colinear
     h.complete();
     while(true){
         MultiplicityTreeAcceptor acc = h.getAcceptor();
-        cout << "equiv" << endl;
+        //cout << "equiv" << endl;
         ParseTree* counterExample = teacher.equivalence(acc);
-        cout << "received" << endl;
+        //cout << "received" << endl;
         if(!counterExample){
 #ifdef DEBUG_MODE
             for(auto elem: counterExamples){
@@ -285,9 +288,9 @@ MultiplicityTreeAcceptor learnColin(const MultiplicityTeacher& teacher, Colinear
 #ifndef DEBUG_MODE
             SAFE_DELETE(counterExample)
 #else
-            cout << "counter example given " << *counterExample << endl;
+            /*cout << "counter example given " << *counterExample << endl;
             cout << acc.run(*counterExample) << endl;
-            cout << teacher.membership(*counterExample) << endl;
+            cout << teacher.membership(*counterExample) << endl;*/
             for(auto elem: counterExamples){
                 if(*elem==*counterExample){
                     h.printTable();
@@ -305,7 +308,7 @@ MultiplicityTreeAcceptor learnColin(const MultiplicityTeacher& teacher, Colinear
         }
     }
 }
-
+/*
 ObservationTable* table=nullptr;
 const Teacher* t = nullptr;
 
@@ -347,4 +350,4 @@ void learnerExtend(const ParseTree& tree){
     extend(*table,treeCopy,*t);
     delete(treeCopy);
 
-}
+}*/

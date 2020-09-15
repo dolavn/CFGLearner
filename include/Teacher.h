@@ -1,6 +1,4 @@
-//
-// Created by Dolav Nitay
-//
+
 
 #ifndef CFGLEARNER_TEACHER_H
 #define CFGLEARNER_TEACHER_H

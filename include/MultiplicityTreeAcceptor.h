@@ -5,9 +5,11 @@
 #ifndef CFGLEARNER_MULTIPLICITYTREEACCEPTOR_H
 #define CFGLEARNER_MULTIPLICITYTREEACCEPTOR_H
 
-#include "TreeAcceptor.h"
 #include "MultiLinearMap.h"
-
+#include "RankedChar.h"
+#include "ParseTree.h"
+#include <unordered_map>
+#include <boost/functional/hash.hpp>
 
 class MultiplicityTreeAcceptor{
 public:

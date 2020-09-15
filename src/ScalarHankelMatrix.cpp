@@ -1,4 +1,5 @@
 #include "ObservationTable.h"
+#include "ColinearHankelMatrix.h"
 #include "ConicCombinationFinder.h"
 #include "MultiplicityTeacher.h"
 #include "MultiplicityTreeAcceptor.h"
@@ -511,27 +512,4 @@ void ScalarHankelMatrix::updateTransition(MultiLinearMap& m, const ParseTree& t,
         mapParams[0] = i;
         m.setParam(i==sInd?alpha:0, mapParams);
     }
-}
-
-vector<pair<ParseTree, int>> extendSet(const ParseTree& tree, vector<ParseTree> treeSet, set<rankedChar> alphabet){
-    vector<pair<ParseTree,int>> ans;
-    for(auto c: alphabet){
-        if(c.rank==0){continue;}
-        IndexArray arr(vector<int>(c.rank-1, treeSet.size()));
-        while(!arr.getOverflow()){
-            for(int k=0;k<c.rank;++k){
-                vector<ParseTree> children;
-                ParseTree currTree(c.c);
-                currTree.setSubtree(tree, k);
-                for(int currInd=0;currInd<c.rank-1;++currInd){
-                    int treeIndex = arr[currInd];
-                    ParseTree& child = treeSet[treeIndex];
-                    currTree.setSubtree(child, currInd+(currInd>=k?1:0));
-                }
-                ans.emplace_back(currTree, k);
-            }
-            ++arr;
-        }
-    }
-    return ans;
 }

@@ -1,6 +1,5 @@
 /*
  * A header for the definition of a context free grammar.
- * Created by Dolav Nitay.
  */
 
 #ifndef CFGLEARNER_CFG_H

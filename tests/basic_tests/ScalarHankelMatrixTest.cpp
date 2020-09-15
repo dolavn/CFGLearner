@@ -9,6 +9,7 @@
 #include "../../include/TreeComparator.h"
 #include "../../include/TreeConstructor.h"
 #include "../../include/Logger.h"
+#include "../../include/ColinearHankelMatrix.h"
 #include "TestsHelperFunctions.h"
 
 extern rankedChar a;

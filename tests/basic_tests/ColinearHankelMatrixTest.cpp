@@ -4,6 +4,7 @@
 #include "../../include/MultiplicityTeacher.h"
 #include "../../include/MultiplicityTreeAcceptor.h"
 #include "../../include/ObservationTable.h"
+#include "../../include/ColinearHankelMatrix.h"
 #include "../../include/TreesIterator.h"
 #include "../../include/Learner.h"
 #include "../../include/TreeComparator.h"

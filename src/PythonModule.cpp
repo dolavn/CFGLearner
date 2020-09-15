@@ -1,24 +1,17 @@
 #include <iostream>
 #include <sstream>
-#include "Teacher.h"
-#include "Learner.h"
-#include "TreeAcceptor.h"
-#include "CFG.h"
 #include "TreeComparator.h"
 #include "Definitions.h"
 #include "MultiplicityTreeAcceptor.h"
 #include "MultiplicityTeacher.h"
-#include "Matrix.h"
-#include "ObservationTable.h"
 #include "Logger.h"
 #include "TreeConstructor.h"
+#include "ColinearHankelMatrix.h"
 #include <algorithm>
 #include <vector>
 #include <stack>
-#include <armadillo>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
@@ -31,14 +24,7 @@ using namespace std;
 
 typedef vector<int> intVec;
 
-
-static int test_mat(){
-    arma::mat testMat(2, 2);
-    testMat(0, 0) = 1; testMat(0, 1) = 0;
-    testMat(1, 0) = 1; testMat(1, 1) = 2;
-    int rank = arma::rank(testMat);
-    return rank;
-}
+MultiplicityTreeAcceptor learnColin(const MultiplicityTeacher&, ColinearHankelMatrix&);
 
 static bool checkType(py::object& obj){
     py::object nltk = py::module::import("nltk");
@@ -103,116 +89,6 @@ namespace PythonModule{
 }
 
 PYBIND11_MODULE(CFGLearner, m) {
-    py::class_<Teacher> teacher(m, "Teacher");
-    py::class_<SimpleTeacher> simpleTeacher(m, "SimpleTeacher",teacher);
-    simpleTeacher.def(py::init<>());
-    simpleTeacher.def("addPositiveExample",[](SimpleTeacher& t,py::object nltkTree){
-        if(!checkType(nltkTree)){
-            throw std::invalid_argument("Must give an nltk tree");
-        }
-        string str = py::str(nltkTree);
-        ParseTree* tree = parseTree(str);
-        try{
-            t.addPositiveExample(*tree);
-        }catch(exception& e){
-
-        }
-        delete(tree);
-    });
-    simpleTeacher.def("addNegativeExample",[](SimpleTeacher& t,py::object nltkTree){
-        if(!checkType(nltkTree)){
-            throw std::invalid_argument("Must give an nltk tree");
-        }
-        string str = py::str(nltkTree);
-        ParseTree* tree = parseTree(str);
-        try{
-            t.addPositiveExample(*tree);
-        }catch(exception& e){
-
-        }
-        delete(tree);
-    });
-    simpleTeacher.def("__repr__",[](const SimpleTeacher& t){
-        stringstream stream;
-        stream << "<SimpleTeacher with ";
-        stream << t.getPosNum() << " positive examples and ";
-        stream << t.getNegNum() << " negative examples>";
-        return stream.str();
-    });
-    py::class_<FrequencyTeacher> frequencyTeacher(m, "FrequencyTeacher",teacher);
-    frequencyTeacher.def(py::init<int,float>(),py::arg("minCount")=0, py::arg("minFreq")=0.5f);
-    frequencyTeacher.def("addPositiveExample",[](FrequencyTeacher& t,py::object nltkTree){
-        if(!checkType(nltkTree)){
-            throw std::invalid_argument("Must give an nltk tree");
-        }
-        string str = py::str(nltkTree);
-        ParseTree* tree = parseTree(str);
-        t.addPositiveExample(*tree);
-        delete(tree);
-    });
-    frequencyTeacher.def("addNegativeExample",[](FrequencyTeacher& t,py::object nltkTree){
-        if(!checkType(nltkTree)){
-            throw std::invalid_argument("Must give an nltk tree");
-        }
-        string str = py::str(nltkTree);
-        ParseTree* tree = parseTree(str);
-        t.addNegativeExample(*tree);
-        delete(tree);
-    });
-    frequencyTeacher.def("addPositiveExamples",[](FrequencyTeacher& t,py::object nltkTree, int num){
-        if(!checkType(nltkTree)){
-            throw std::invalid_argument("Must give an nltk tree");
-        }
-        string str = py::str(nltkTree);
-        ParseTree* tree = parseTree(str);
-        t.addPositiveExamples(*tree, num);
-        delete(tree);
-    });
-    frequencyTeacher.def("addNegativeExamples",[](FrequencyTeacher& t,py::object nltkTree, int num){
-        if(!checkType(nltkTree)){
-            throw std::invalid_argument("Must give an nltk tree");
-        }
-        string str = py::str(nltkTree);
-        ParseTree* tree = parseTree(str);
-        t.addNegativeExamples(*tree, num);
-        delete(tree);
-    });
-    frequencyTeacher.def("__repr__",[](const FrequencyTeacher& t){
-        stringstream stream;
-        stream << "<FrequencyTeacher with minCount=";
-        stream << t.getMinCount() << " and minFreq=";
-        stream << t.getMinFreq() << ">";
-        return stream.str();
-    });
-    py::class_<DifferenceTeacher> differenceTeacher(m, "DifferenceTeacher",teacher);
-    differenceTeacher.def(py::init<int>(),py::arg("maxDiff")=0);
-    differenceTeacher.def("addPositiveExample",[](DifferenceTeacher& t,py::object nltkTree, py::object weightsTree){
-        if(!checkType(nltkTree) || !checkType(weightsTree)){
-            throw std::invalid_argument("Must give an nltk tree");
-        }
-        string str = py::str(nltkTree);
-        string weightsStr = py::str(weightsTree);
-        ParseTree* tree = parseTree(str);
-        ParseTree* weightParseTree = parseTree(weightsStr);
-        tree->applyWeights(*weightParseTree);
-        t.addPositiveExample(*tree);
-        delete(tree);
-        delete(weightParseTree);
-    });
-
-    differenceTeacher.def("addNegativeExample",[](DifferenceTeacher& t,py::object nltkTree, py::object weightsTree){
-        if(!checkType(nltkTree) || !checkType(weightsTree)){
-            throw std::invalid_argument("Must give an nltk tree");
-        }
-        string str = py::str(nltkTree);
-        string weightsStr = py::str(weightsTree);
-        ParseTree* tree = parseTree(str);
-        ParseTree* weightParseTree = parseTree(weightsStr);
-        tree->applyWeights(*weightParseTree);
-        t.addNegativeExample(*tree);
-        delete(tree);
-        delete(weightParseTree);
-    });
     py::class_<TreeComparator> treeComparator(m, "TreeComparator");
     py::class_<TreeAligner> treeAligner(m, "TreeAligner",treeComparator);
     treeAligner.def(py::init<int, int, int>());
@@ -224,7 +100,6 @@ PYBIND11_MODULE(CFGLearner, m) {
         if(!checkType(nltkTree1) || !checkType(nltkTree2)){
             throw std::invalid_argument("Must give an nltk tree");
         }
-        cout << "hey" << endl;
         string str1 = py::str(nltkTree1);
         string str2 = py::str(nltkTree2);
         ParseTree* tree1 = parseTree(str1);
@@ -233,9 +108,6 @@ PYBIND11_MODULE(CFGLearner, m) {
         delete(tree1);
         delete(tree2);
         return score;
-    });
-    differenceTeacher.def("setTreeComparator", [](DifferenceTeacher& t, TreeComparator& c){
-        t.setTreeComparator(c);
     });
     py::class_<TreeConstructor> treeConstructor(m, "TreeConstructor");
     treeConstructor.def(py::init<std::map<std::vector<int>,float>>());
@@ -250,17 +122,17 @@ PYBIND11_MODULE(CFGLearner, m) {
 
     });
     treeConstructor.def("set_lambda", [](TreeConstructor& c, float lambda){
-       c.setLambda(lambda);
+        c.setLambda(lambda);
     });
     treeConstructor.def("set_concat", [](TreeConstructor& c, bool concat){
         c.setConcat(concat);
     });
     py::class_<MultiplicityTeacher> multiplicityTeacher(m, "MultiplicityTeacher");
     py::class_<SimpleMultiplicityTeacher> simpleMultiplicityTeacher(m, "SimpleMultiplicityTeacher",
-            multiplicityTeacher);
+                                                                    multiplicityTeacher);
     simpleMultiplicityTeacher.def(py::init<double,double>(),py::arg("epsilon")=0.1, py::arg("default_val")=-1);
     simpleMultiplicityTeacher.def("addExample",[](SimpleMultiplicityTeacher& t,py::object nltkTree,
-            double val){
+                                                  double val){
         if(!checkType(nltkTree)){
             throw std::invalid_argument("Must give an nltk tree");
         }
@@ -271,10 +143,10 @@ PYBIND11_MODULE(CFGLearner, m) {
         delete(tree);
     });
     py::class_<DifferenceMultiplicityTeacher> differenceMultiplicityTeacher(m, "DifferenceMultiplicityTeacher",
-            multiplicityTeacher);
+                                                                            multiplicityTeacher);
     differenceMultiplicityTeacher.def(py::init<TreeComparator&,int,double,double>());
     differenceMultiplicityTeacher.def("addExample",[](DifferenceMultiplicityTeacher& t, py::object nltkTree,
-            double val){
+                                                      double val){
         if(!checkType(nltkTree)){
             throw std::invalid_argument("Must give an nltk tree");
         }
@@ -300,7 +172,7 @@ PYBIND11_MODULE(CFGLearner, m) {
         t.setupDuplicationsGenerator(depth);
     });
     probabilityTeacher.def("setup_constructor_generator",[](ProbabilityTeacher& t, TreeConstructor& c, int maxLen,
-            int numTrees){
+                                                            int numTrees){
         t.setupConstructorGenerator(c, maxLen, numTrees);
     });
     py::enum_<Logger::LoggingLevel >(m, "LoggingLevel")
@@ -314,18 +186,10 @@ PYBIND11_MODULE(CFGLearner, m) {
         Logger& log = Logger::getLogger();
         log.setPrintLevel(lvl);
     });
-    m.def("learnMult",[](const MultiplicityTeacher& t) {
-        py::gil_scoped_release release;
-        HankelMatrix h(t);
-        return learn(t, h);
-    });
     m.def("learnMultPos",[](const MultiplicityTeacher& t) {
         py::gil_scoped_release release;
-        //PositiveHankelMatrix h(t);
-        //ScalarHankelMatrix h(t);
         ColinearHankelMatrix h(t);
         MultiplicityTreeAcceptor acc = learnColin(t, h);
-        h.printTable();
         if(h.getZeroVecInd()!=-1){
             cout << h.getZeroVecInd() << endl;
             return acc.getAcceptorWithoutState(h.getZeroVecInd());
@@ -385,27 +249,8 @@ PYBIND11_MODULE(CFGLearner, m) {
     multiplicityTreeAcceptor.def("print_desc",[](MultiplicityTreeAcceptor& acc){
         return acc.printDesc();
     });
-    multiplicityTreeAcceptor.def("get_normalized_acceptor",[](MultiplicityTreeAcceptor& acc){
-        return acc.getNormalizedAcceptor(false);
-    });
-    multiplicityTreeAcceptor.def("get_normalized_acceptor_softmax",[](MultiplicityTreeAcceptor& acc){
-        return acc.getNormalizedAcceptor(true);
-    });
     multiplicityTreeAcceptor.def("get_dimension", [](MultiplicityTreeAcceptor& acc){
         return acc.getDim();
     });
-    m.def("learn",[](const Teacher& t, std::unordered_map<int,string> map) {
-        py::gil_scoped_release release;
-        TreeAcceptor acc = learn(t);
-        CFG c(acc,map);
-        py::gil_scoped_acquire acquire;
-        py::object nltk = py::module::import("nltk");
-        py::object nltkCFG = nltk.attr("CFG");
-        py::object nltkCFGFromString = nltkCFG.attr("fromstring");
-        return nltkCFGFromString(c.getRepr());
-    });
-    m.def("test_arma",[]() {
-        return test_mat();
-    });
-    m.doc() = "A module used to learn context free grammars from structural data.";
+    m.doc() = "A module used to learn probabilistic context free grammars from structural data.";
 }

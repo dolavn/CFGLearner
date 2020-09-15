@@ -1,14 +1,6 @@
 #include "Sequence.h"
 #include <iostream>
 #include <vector>
-#include <armadillo>
-#include "Learner.h"
-#include "Teacher.h"
-#include "ParseTree.h"
-#include "Logger.h"
-#include "TreeAcceptor.h"
-#include "CFG.h"
-#include "ConicCombinationFinder.h"
 
 using namespace std;
 

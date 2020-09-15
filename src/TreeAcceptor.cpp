@@ -1,6 +1,4 @@
-//
-// Created by dolavn@wincs.cs.bgu.ac.il on 1/17/19.
-//
+
 
 #include <iostream> //TODO: delete
 #include <sstream>
