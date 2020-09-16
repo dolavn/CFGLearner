@@ -59,8 +59,8 @@ void ProbabilityTeacher::setupConstructorGenerator(TreeConstructor& constructor,
     for(auto sym: alphabet){
         if(sym.rank==0){alphabet_vec.push_back(sym.c);}
     }
-    cout << "setup constructor" << endl;
-    constructor.printTable();
+    //cout << "setup constructor" << endl;
+    //constructor.printTable();
     this->generator = new ConstructorGenerator(constructor, maxLen, treesNum, alphabet_vec);
 }
 
@@ -124,7 +124,7 @@ ParseTree* ProbabilityTeacher::equivalence(const MultiplicityTreeAcceptor& acc) 
             if(curr.getProb()>0){
                 logger << "tree:" << curr << logger.endline;
                 logger << "tree-prob:" << curr.getProb() << logger.endline;
-                acc.printDesc();
+                //acc.printDesc();
                 logger << "acceptor(tree):" << acc.run(curr) << logger.endline;
             }
             if(testFunc(curr, true)){

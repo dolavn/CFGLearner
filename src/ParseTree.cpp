@@ -528,7 +528,7 @@ int operator-(const ParseTree& lhs, const ParseTree& rhs){
 }
 
 ostream& operator<<(ostream& output, const ParseTree& tree){
-    output << "( [" << tree.data << "," << tree.weight << "]";
+    output << "(" << tree.data ;
     for(auto& subtree: tree.subtrees){
         if(subtree){
             output << " " << *subtree;

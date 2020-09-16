@@ -25,7 +25,7 @@ float TreeConstructor::createTree(const Sequence& seq){
     if(concatDuplications){
         concat(dpTable);
     }
-    printTable();
+    //printTable();
     for(int i=0;i<seq.getLength();++i){    /*Table initialization*/
         dpTable[i][i] = 0;
         if(i<this->seq.getLength()-1){

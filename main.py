@@ -277,7 +277,7 @@ class MainGUI:
             if oracle_settings['type'] is ProbabilityTeacher:
                 print(oracle_settings)
                 d = oracle_settings['comparator']()
-                teacher = ProbabilityTeacher(d, oracle_settings['args'][0], 0.001)
+                teacher = ProbabilityTeacher(d, oracle_settings['args'][0], 0.000001)
             else:
                 teacher = oracle_settings['type'](*oracle_settings['args'])
             for tree, prob in lst.get_selected_elements():
@@ -290,7 +290,7 @@ class MainGUI:
                 teacher.setup_constructor_generator(con, *oracle_settings['equiv_settings'])
             if oracle_settings['comparator'] is DuplicationComparator:
                 teacher.setup_duplications_generator(2)
-
+            #set_verbose(LOG_DEBUG)
             print('starting')
             t = time()
             acc = learnMultPos(teacher)
@@ -632,35 +632,6 @@ def get_all_score_tuples(seq, alphabet, alphabet_rev):
     yield seq
 
 
-def get_score_table(sequences, alphabet, alphabet_rev, path, key='seq'):
-    with open(path) as json_file:
-        table = json.load(json_file)
-        table = list(filter(lambda a: all(e in alphabet for e in a[0]), table))
-        for ind, t in enumerate(table):
-            table[ind] = ([alphabet[e] for e in t[0]], t[1])
-    table = {tuple(t[0]): t[1] for t in table}
-    for key in table.keys():
-        disp_key = tuple([alphabet_rev[k] for k in key])
-        print('{}={}'.format(disp_key, table[key]))
-    return table
-    table = {}
-    for ngram_len in range(2, len(sequences)):
-        for row in sequences:
-            seq, _ = concat_duplications(row[key])
-            occ = int(row['instances'])
-            for i in range(0, len(seq)-ngram_len+1):
-                subseq = seq[i: i+ngram_len]
-                for tup in get_all_score_tuples(subseq, alphabet, alphabet_rev):
-                    if tup not in table:
-                        table[tup] = occ
-                    else:
-                        table[tup] += occ
-    for key in table.keys():
-        disp_key = tuple([alphabet_rev[k] for k in key])
-        print('{}={}'.format(disp_key,table[key]))
-    return table
-
-
 def pre_process_seq(seq):
     pairs = []
     ans = []
@@ -690,50 +661,6 @@ def pre_process_tree(tree, rev_map, alphabet):
                 occ = int(occ)
                 tree[ind] = Tree(0, [Tree(alphabet[lbl], [])]*occ)
     return tree
-
-
-def read_strings(file_path, csb_path, tree_construct='ANNOT', additional_alphabet=['FimA', 'CitB']):
-    if tree_construct not in ['ANNOT', 'COGS']:
-        raise BaseException("Invalid option for tree construct")
-    key = 'seq' if tree_construct == 'COGS' else 'annot'
-    seq_dict = {}
-    seq_to_annot = {}
-    cogs = {}
-    cogs_rev = {}
-    annotations = {}
-    annotations_rev = {}
-    ids = {}
-    alphabet, alphabet_rev = (cogs, cogs_rev) if tree_construct == 'COGS' else (annotations, annotations_rev)
-    curr_ind_seq = [1]
-    curr_ind_annot = [1]
-    with open(file_path) as file:
-        data = json.load(file)
-        for row in data:
-            # seq = pre_process_seq(seq)
-            convert_string(row['seq'], cogs, cogs_rev, curr_ind_seq)
-            convert_string(row['annotation'], annotations, annotations_rev, curr_ind_annot)
-            s = tuple(row['seq'])
-            ids[s] = row['csb_id']
-            if s not in seq_dict:
-                seq_dict[s] = int(row['instances'])
-                seq_to_annot[s] = tuple(row['annotation'])
-            else:
-                seq_dict[s] += row['instances']
-        for elem in additional_alphabet:
-            if elem not in alphabet:
-                alphabet[elem] = curr_ind_seq[0]
-                alphabet_rev[curr_ind_seq[0]] = elem
-                curr_ind_seq[0] += 1
-                annotations[elem] = curr_ind_annot[0]
-                annotations_rev[curr_ind_annot[0]] = elem
-                curr_ind_annot[0] += 1
-    sequences = []
-    for seq in seq_dict.keys():
-        sequences.append({'csb_id': ids[seq], 'seq': seq, 'annot': seq_to_annot[seq], 'instances': seq_dict[seq]})
-    sequences = sorted(sequences, key=lambda a: a['instances'])
-    total = sum([seq['instances'] for seq in sequences])
-    table = get_score_table(sequences, alphabet, alphabet_rev, csb_path, key=key)
-    return sequences, cogs, cogs_rev, annotations, annotations_rev, table
 
 
 def convert_tree_to_cnf(tree):
@@ -832,29 +759,101 @@ def get_yield(tree, alphabet_rev):
     return ans
 
 
-def auto_tests(args):
-    sequences, alphabet, alphabet_rev, annotations, annotations_rev, table = read_strings(args[1], args[2])
-    trees = create_trees(sequences, table, lambda_val=1.0)
-    tree = create_swapped_tree(trees[0][0])
-    cmp = SwapComparator()
-    g = learn_prob(trees[:4], alphabet_rev, {'equiv_settings': (5, 1000), 'type': ProbabilityTeacher,
-                                             'comparator': SwapComparator, 'args': [0.2]}, table)
+def get_table_tests():
+    return [(('a', 'b'), 5), (('b', 'a'), 0)]
+
+
+def get_trees_tests():
+    tree1 = Tree('?', [Tree('a', []), Tree('b', [])])
+    tree2 = Tree('?', [Tree('a', []), tree1])
+    return [(tree1, 0.6), (tree2, 0.4)]
+
+
+def simple_learning_test():
+    converter = TreesConverter()
+    table = get_table_tests()
+    table = {converter.convert_ngram(key): val for key, val in table}
+    trees = get_trees_tests()
+    con = TreeConstructor(table)
+    con.set_concat(True)
+    con.set_lambda(1.0)
+    teacher = SimpleMultiplicityTeacher(epsilon=0.000001, default_val=0)
+    for tree, prob in trees:
+        teacher.addExample(converter.convert_tree(tree), prob)
+    print('starting')
+    t = time()
+    acc = learnMultPos(teacher)
+    g = convert_pmta_to_pcfg(acc, converter.reverse_dict)
+    g = convert_pcfg_to_str(g)
+    with open('grammar_simple.txt', 'w') as file:
+        file.write(g)
     print(g)
-    swapped_trees = [create_swapped_tree(t[0]) for t in trees]
-    probs = [t[1] for t in trees]
-    viterbi = ViterbiParser(g)
-    for parse in viterbi.parse(get_yield(trees[0][0], alphabet_rev)):
-        a = parse.prob()
-    for parse in viterbi.parse(get_yield(swapped_trees[0], alphabet_rev)):
-        b = parse.prob()
-    for parse in viterbi.parse(get_yield(trees[3][0], alphabet_rev)):
-        c = parse.prob()
-    for parse in viterbi.parse(get_yield(swapped_trees[3], alphabet_rev)):
-        d = parse.prob()
-    print(a/b)
-    print(c/d)
-    print(trees[0])
-    print(trees[3])
+
+
+def swap_learning_test():
+    converter = TreesConverter()
+    table = get_table_tests()
+    table = {converter.convert_ngram(key): val for key, val in table}
+    trees = get_trees_tests()
+    con = TreeConstructor(table)
+    con.set_concat(True)
+    con.set_lambda(1.0)
+    cmp = SwapComparator()
+    teacher = ProbabilityTeacher(cmp, 0.25, 0.0000001)
+    for tree, prob in trees:
+        teacher.addExample(converter.convert_tree(tree), prob)
+    teacher.setup_constructor_generator(con, 4, -1)
+    print('starting')
+    t = time()
+    acc = learnMultPos(teacher)
+    g = convert_pmta_to_pcfg(acc, converter.reverse_dict)
+    g = convert_pcfg_to_str(g)
+    with open('grammar_swap.txt', 'w') as file:
+        file.write(g)
+    print(g)
+
+
+def dup_learning_test():
+    converter = TreesConverter()
+    trees = get_trees_tests()
+    cmp = DuplicationComparator()
+    teacher = ProbabilityTeacher(cmp, 0.2, 0.0000001)
+    for tree, prob in trees:
+        teacher.addExample(converter.convert_tree(tree), prob)
+    teacher.setup_duplications_generator(2)
+    print('starting')
+    t = time()
+    acc = learnMultPos(teacher)
+    g = convert_pmta_to_pcfg(acc, converter.reverse_dict)
+    g = convert_pcfg_to_str(g)
+    with open('grammar_dup.txt', 'w') as file:
+        file.write(g)
+    print(g)
+
+
+
+def auto_tests(args):
+    simple_learning_test()
+    swap_learning_test()
+    dup_learning_test()
+
+"""
+    if oracle_settings['type'] is ProbabilityTeacher:
+        print(oracle_settings)
+        d = oracle_settings['comparator']()
+        teacher = ProbabilityTeacher(d, oracle_settings['args'][0], 0.001)
+    else:
+        teacher = oracle_settings['type'](*oracle_settings['args'])
+"""
+"""
+    if oracle_settings['comparator'] is SwapComparator:
+        con = TreeConstructor(table)
+        con.set_concat(True)
+        con.set_lambda(1.0)
+        teacher.setup_constructor_generator(con, *oracle_settings['equiv_settings'])
+    if oracle_settings['comparator'] is DuplicationComparator:
+        teacher.setup_duplications_generator(2)
+"""
 
 
 if __name__ == '__main__':

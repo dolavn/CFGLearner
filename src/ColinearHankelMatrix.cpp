@@ -285,7 +285,6 @@ bool ColinearHankelMatrix::checkExtension(extension e1, extension e2, const Pars
             toAdd=false;
         }
     }else{
-        cout << "else" << endl;
         if(ABS((teacher.membership(*mergedContext1)/teacher.membership(*mergedContext2))-alpha)<EPSILON){
             toAdd=false;
         }

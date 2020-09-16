@@ -1,11 +1,9 @@
 from TreeGenerator import generate_trees, generate_distribution
-from test import calc_prob_non_uniform, get_trees_swap_test
 from nltk import PCFG
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import product
 import json
-#from test import draw_trees
 from functools import reduce
 from nltk import Tree
 import re
@@ -17,13 +15,6 @@ from nltk.parse import ViterbiParser
     LoggingLevel
 """
 
-lengths = [2, 4]
-gen_iter = lambda: generate_distribution([1, 2], lengths=lengths,
-                                         calc_prob=lambda a: calc_prob_non_uniform(a, [1, 2],
-                                                                                    letter=1,
-                                                                                    letter_prob=0.1,
-                                                                                    total_prob=total_prob,
-                                                                                    lengths=lengths))
 
 
 class Symbol:
